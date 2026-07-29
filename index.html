@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NV-Diamond MagNav — Rabi & Zeeman Visualizer</title>
+<style>
+  :root{
+    --bg:#0a0e1a;
+    --panel:#111827;
+    --panel-line:#1f2b45;
+    --ink:#e6ebf5;
+    --ink-dim:#8b98b5;
+    --ink-faint:#5a6784;
+    --green:#3ddc84;        /* laser / m=0 bright */
+    --green-deep:#1a8f52;
+    --red:#ff5a6e;          /* fluorescence / m=+/-1 */
+    --amber:#ffb454;        /* microwave */
+    --violet:#9d7bff;       /* state vector */
+    --cyan:#4fd6ff;         /* field / detuning */
+    --grid:#182238;
+    --terrain-lo:#1b2a4a;
+    --terrain-hi:#4fd6ff;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+    radial-gradient(1200px 700px at 78% -8%, #14203c 0%, transparent 60%),
+    radial-gradient(900px 600px at 8% 108%, #101a30 0%, transparent 55%),
+    var(--bg);
+    color:var(--ink);
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1320px;margin:0 auto;padding:22px 20px 60px}
+  header{margin-bottom:18px}
+  h1{font-size:23px;font-weight:700;margin:0 0 4px;letter-spacing:.2px}
+  h1 .q{color:var(--cyan)}
+  .sub{color:var(--ink-dim);font-size:13.5px;max-width:860px;line-height:1.5}
+  .sub b{color:var(--ink)}
+
+  .layout{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;margin-top:16px}
+  @media(max-width:1080px){.layout{grid-template-columns:1fr}}
+
+  .panel{background:linear-gradient(180deg,#121a2e 0%,var(--panel) 100%);
+    border:1px solid var(--panel-line);border-radius:14px;padding:14px 15px;position:relative}
+  .panel h2{font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;
+    color:var(--ink-faint);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+  .panel h2 .dot{width:7px;height:7px;border-radius:50%}
+  .tag{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);
+    border:1px solid var(--panel-line);border-radius:5px;padding:1px 6px;margin-left:auto}
+
+  canvas{display:block;width:100%;border-radius:9px}
+
+  /* terrain */
+  .terrain-hint{position:absolute;top:12px;right:14px;font-size:11px;color:var(--ink-faint);
+    font-family:var(--mono);pointer-events:none}
+  .readout-row{display:flex;gap:10px;margin-top:11px;flex-wrap:wrap}
+  .chip{flex:1;min-width:118px;background:#0c1424;border:1px solid var(--panel-line);
+    border-radius:9px;padding:8px 11px}
+  .chip .k{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint)}
+  .chip .v{font-family:var(--mono);font-size:17px;font-weight:600;margin-top:3px}
+  .chip .u{font-size:10.5px;color:var(--ink-dim);margin-left:2px}
+  .v.cyan{color:var(--cyan)} .v.amber{color:var(--amber)} .v.violet{color:var(--violet)}
+  .v.red{color:var(--red)} .v.green{color:var(--green)}
+
+  /* controls */
+  .controls{margin-top:14px}
+  .ctrl{margin-bottom:15px}
+  .ctrl:last-child{margin-bottom:4px}
+  .ctrl .lab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+  .ctrl .lab .name{font-size:13px;font-weight:600}
+  .ctrl .lab .name small{color:var(--ink-faint);font-weight:400;font-size:11px;margin-left:6px}
+  .ctrl .lab .val{font-family:var(--mono);font-size:13px;color:var(--cyan)}
+  input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:4px;
+    background:#22314f;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;
+    border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid #0a0e1a;
+    box-shadow:0 0 0 1px var(--cyan),0 2px 6px rgba(0,0,0,.5)}
+  input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;
+    background:var(--cyan);cursor:pointer;border:2px solid #0a0e1a}
+  input[type=range].amber::-webkit-slider-thumb{background:var(--amber);box-shadow:0 0 0 1px var(--amber),0 2px 6px rgba(0,0,0,.5)}
+  input[type=range].amber::-moz-range-thumb{background:var(--amber)}
+  input[type=range].violet::-webkit-slider-thumb{background:var(--violet);box-shadow:0 0 0 1px var(--violet),0 2px 6px rgba(0,0,0,.5)}
+  input[type=range].violet::-moz-range-thumb{background:var(--violet)}
+
+  .btnrow{display:flex;gap:9px;margin-top:6px;flex-wrap:wrap}
+  button{background:#182642;color:var(--ink);border:1px solid var(--panel-line);
+    border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;
+    font-family:inherit;transition:.15s}
+  button:hover{background:#213255;border-color:#2f4670}
+  button.primary{background:linear-gradient(180deg,#1c6b40,#155232);border-color:#2a8a56;color:#dfffce9}
+  button.primary:hover{background:linear-gradient(180deg,#227e4b,#1a6640)}
+  button.active{background:linear-gradient(180deg,#7a3d1a,#5c2f14);border-color:#a55e2a;color:#ffe9d6}
+
+  .dualgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.dualgrid{grid-template-columns:1fr}}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;font-size:11px;color:var(--ink-dim)}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:11px;height:3px;border-radius:2px;display:inline-block}
+
+  .explain{font-size:12px;color:var(--ink-dim);line-height:1.55;margin-top:11px;
+    border-top:1px solid var(--panel-line);padding-top:10px}
+  .explain b{color:var(--ink)}
+  .kbd{font-family:var(--mono);background:#0c1424;border:1px solid var(--panel-line);
+    border-radius:4px;padding:0 5px;font-size:11px;color:var(--cyan)}
+
+  .status{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;
+    font-family:var(--mono);padding:3px 9px;border-radius:20px;margin-left:auto}
+  .status.on-res{background:rgba(61,220,132,.12);color:var(--green);border:1px solid rgba(61,220,132,.3)}
+  .status.off-res{background:rgba(255,90,110,.1);color:var(--red);border:1px solid rgba(255,90,110,.28)}
+
+  footer{margin-top:26px;font-size:11.5px;color:var(--ink-faint);line-height:1.6;
+    border-top:1px solid var(--panel-line);padding-top:16px}
+  footer code{font-family:var(--mono);color:var(--ink-dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>NV-Diamond MagNav — <span class="q">Rabi Oscillations & the Zeeman Effect</span></h1>
+    <div class="sub">Drag the <b>vehicle</b> across the terrain. Elevation stands in for the local <b>crustal magnetic field</b> B. That field shifts the NV center's spin resonance (<b>Zeeman effect</b>), which detunes the microwave drive and reshapes the <b>Rabi oscillation</b> — the quantum signal a real magnetometer reads to know where it is.</div>
+  </header>
+
+  <div class="layout">
+    <!-- LEFT COLUMN -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- TERRAIN -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--cyan)"></span>Terrain &amp; local field
+          <span class="tag">drag the vehicle ▸</span></h2>
+        <canvas id="terrain" height="230"></canvas>
+        <div class="readout-row">
+          <div class="chip"><div class="k">Position</div><div class="v cyan" id="r-pos">—</div></div>
+          <div class="chip"><div class="k">Local field B∥</div><div class="v cyan" id="r-b">—<span class="u">mT</span></div></div>
+          <div class="chip"><div class="k">Resonance f₊</div><div class="v amber" id="r-fres">—<span class="u">GHz</span></div></div>
+          <div class="chip"><div class="k">Detuning δ</div><div class="v red" id="r-det">—<span class="u">MHz</span></div></div>
+        </div>
+      </div>
+
+      <!-- RABI -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--violet)"></span>Rabi oscillation — P(m=±1) vs time
+          <span class="status on-res" id="res-status">on resonance</span></h2>
+        <canvas id="rabi" height="210"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--violet)"></i> live population P(t)</span>
+          <span><i style="background:var(--green);opacity:.5"></i> on-resonance reference (δ=0)</span>
+          <span><i style="background:var(--red);opacity:.6"></i> amplitude envelope Ω₀²/Ω²</span>
+        </div>
+        <div class="explain">
+          The generalized Rabi formula: <b>P(t) = (Ω₀²/Ω²)·½(1−cos Ωt)</b>, with effective frequency
+          <b>Ω = √(Ω₀² + δ²)</b>. Detuning does two things at once — it <b>speeds up</b> the wobble and
+          <b>shrinks</b> its amplitude (the spin can no longer fully flip). Watch both as you drive off the resonant sweet spot.
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- BLOCH + ENERGY side by side -->
+      <div class="dualgrid">
+        <div class="panel">
+          <h2><span class="dot" style="background:var(--violet)"></span>Bloch sphere</h2>
+          <canvas id="bloch" height="240"></canvas>
+          <div class="explain" style="border:none;padding-top:8px;margin-top:4px">
+            The spin state as a vector. On resonance it sweeps the full poles
+            (|0⟩→|±1⟩). Off resonance the axis tilts and it traces a tight cone —
+            never quite reaching the south pole.
+          </div>
+        </div>
+        <div class="panel">
+          <h2><span class="dot" style="background:var(--red)"></span>Energy levels</h2>
+          <canvas id="levels" height="240"></canvas>
+          <div class="explain" style="border:none;padding-top:8px;margin-top:4px">
+            Zero field: m=±1 are degenerate at <b>2.87 GHz</b>. The field pries
+            them apart by <b>±γB</b> (γ≈28 MHz/mT). The microwave (amber) is fixed;
+            the gap moves — that mismatch <i>is</i> the detuning.
+          </div>
+        </div>
+      </div>
+
+      <!-- ODMR -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--green)"></span>ODMR — fluorescence vs microwave frequency
+          <span class="tag" id="odmr-tag">sweep</span></h2>
+        <canvas id="odmr" height="150"></canvas>
+        <div class="explain" style="border:none;padding-top:8px;margin-top:2px">
+          What the photodetector actually sees: red fluorescence dips where the microwave hits a spin
+          resonance. The field splits one dip into <b>two</b> (m=−1 and m=+1). The amber line is your fixed
+          drive frequency — the horizontal distance from it to the nearest dip is the detuning you feel in the Rabi trace.
+        </div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--amber)"></span>Controls</h2>
+        <div class="controls">
+          <div class="ctrl">
+            <div class="lab"><span class="name">Microwave amplitude <small>sets Ω₀, the drive strength</small></span>
+              <span class="val" id="v-rabi">6.0 MHz</span></div>
+            <input type="range" id="s-rabi" class="amber" min="1" max="20" step="0.1" value="6">
+          </div>
+          <div class="ctrl">
+            <div class="lab"><span class="name">Microwave frequency <small>your fixed drive tone</small></span>
+              <span class="val" id="v-mw">2.8700 GHz</span></div>
+            <input type="range" id="s-mw" class="amber" min="2.82" max="2.92" step="0.0002" value="2.87">
+          </div>
+          <div class="ctrl">
+            <div class="lab"><span class="name">Coherence time T₂* <small>how fast the wobble damps</small></span>
+              <span class="val" id="v-t2">2.0 µs</span></div>
+            <input type="range" id="s-t2" class="violet" min="0.3" max="6" step="0.1" value="2">
+          </div>
+          <div class="ctrl">
+            <div class="lab"><span class="name">Field sensitivity <small>terrain height → B scaling</small></span>
+              <span class="val" id="v-sens">1.0×</span></div>
+            <input type="range" id="s-sens" min="0.2" max="2.5" step="0.05" value="1">
+          </div>
+          <div class="btnrow">
+            <button class="primary" id="btn-play">⏸ Pause time</button>
+            <button id="btn-auto">▶ Auto-drive</button>
+            <button id="btn-tune">⌖ Snap to resonance</button>
+            <button id="btn-reset">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <b style="color:var(--ink-dim)">Physics.</b> Two-level NV model. Generalized Rabi: <code>Ω=√(Ω₀²+δ²)</code>,
+    <code>P(t)=(Ω₀²/Ω²)·½(1−cos Ωt)·e^(−t/T₂*)</code>. Zeeman splitting of the ground-state triplet:
+    <code>f± = 2.87 GHz ± γB</code>, <code>γ≈28 MHz/mT</code>. Detuning <code>δ = f_drive − f_nearest-resonance</code>.
+    All computed client-side in closed form — no server, GitHub Pages-ready. Terrain elevation is a stand-in for crustal
+    field magnitude; the mapping is illustrative, the equations are faithful.
+    <br><span style="color:var(--ink-faint)">Next iteration: refactor the Bloch geometry into an alternate projected shape.</span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* ---------- constants ---------- */
+const F0 = 2.87;          // GHz, zero-field resonance
+const GAMMA = 28.0;       // MHz per mT (electron gyromagnetic ~28 MHz/mT)
+const TWO_PI = Math.PI*2;
+
+/* ---------- state ---------- */
+const S = {
+  vx: 0.42,               // vehicle x, 0..1 along terrain
+  B: 0,                   // local field mT (derived)
+  rabi0: 6.0,             // MHz, on-resonance Rabi freq (Ω0/2π)
+  mw: 2.87,               // GHz drive freq
+  t2: 2.0,                // µs
+  sens: 1.0,
+  t: 0,                   // µs sim clock
+  playing: true,
+  auto: false,
+  autoDir: 1,
+  dragging: false,
+};
+
+/* ---------- terrain: fixed pseudo-random field profile ---------- */
+// sum of sines → smooth "crustal anomaly" curve, deterministic
+function fieldAt(x){ // x in 0..1 -> returns signed field in mT (roughly -1.8..1.8)
+  const v = 0.9*Math.sin(6.3*x+0.4)
+          + 0.5*Math.sin(13.1*x+1.7)
+          + 0.35*Math.sin(21.7*x+3.1)
+          + 0.22*Math.sin(33.0*x+0.9);
+  return v; // baseline amplitude; scaled by sens elsewhere
+}
+function heightAt(x){ // 0..1 visual height (higher = stronger |field| region)
+  return 0.5 + 0.24*fieldAt(x); // center around mid
+}
+
+/* ---------- canvases ---------- */
+function setup(cv){
+  const dpr = window.devicePixelRatio||1;
+  const cssW = cv.clientWidth, cssH = cv.clientHeight;
+  cv.width = cssW*dpr; cv.height = cssH*dpr;
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx, w:cssW, h:cssH};
+}
+const C = {};
+function setupAll(){
+  ['terrain','rabi','bloch','levels','odmr'].forEach(id=>{
+    C[id]=setup(document.getElementById(id));
+  });
+}
+
+/* ---------- derived quantities ---------- */
+function recompute(){
+  S.B = fieldAt(S.vx)*S.sens;                 // mT
+  const fRes = F0 + GAMMA*S.B/1000;           // GHz  (γB in MHz -> /1000 to GHz)
+  const fResMinus = F0 - GAMMA*S.B/1000;
+  // detuning to nearest resonance (in MHz)
+  const dPlus = (S.mw - fRes)*1000;
+  const dMinus = (S.mw - fResMinus)*1000;
+  const det = Math.abs(dPlus)<Math.abs(dMinus)? dPlus : dMinus;
+  return {fRes, fResMinus, det};
+}
+
+/* ---------- drawing helpers ---------- */
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+const COL = {};
+function cacheCol(){
+  ['--ink','--ink-dim','--ink-faint','--green','--red','--amber','--violet','--cyan','--grid','--panel-line']
+  .forEach(k=>COL[k]=css(k));
+}
+
+/* ---------- TERRAIN ---------- */
+function drawTerrain(){
+  const {ctx,w,h}=C.terrain; ctx.clearRect(0,0,w,h);
+  const N=220, padB=26;
+  // field magnitude heat band behind
+  // terrain fill
+  ctx.beginPath();
+  ctx.moveTo(0,h-padB);
+  for(let i=0;i<=N;i++){
+    const x=i/N, px=x*w, py=(h-padB) - heightAt(x)*(h-padB-16);
+    ctx.lineTo(px,py);
+  }
+  ctx.lineTo(w,h-padB); ctx.closePath();
+  const g=ctx.createLinearGradient(0,0,0,h);
+  g.addColorStop(0,'rgba(79,214,255,.32)');
+  g.addColorStop(1,'rgba(27,42,74,.15)');
+  ctx.fillStyle=g; ctx.fill();
+  // terrain top stroke, colored by |field|
+  ctx.lineWidth=2;
+  for(let i=0;i<N;i++){
+    const x0=i/N, x1=(i+1)/N;
+    const y0=(h-padB)-heightAt(x0)*(h-padB-16);
+    const y1=(h-padB)-heightAt(x1)*(h-padB-16);
+    const mag=Math.min(1,Math.abs(fieldAt((x0+x1)/2))/1.6);
+    ctx.strokeStyle=`rgba(${lerp(90,79,mag)|0},${lerp(120,214,mag)|0},${lerp(180,255,mag)|0},.95)`;
+    ctx.beginPath();ctx.moveTo(x0*w,y0);ctx.lineTo(x1*w,y1);ctx.stroke();
+  }
+  // baseline
+  ctx.strokeStyle=COL['--panel-line'];ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,h-padB);ctx.lineTo(w,h-padB);ctx.stroke();
+  // field zero mid-line label ticks
+  ctx.fillStyle=COL['--ink-faint'];ctx.font='10px '+MONO;
+  ctx.fillText('0',4,h-8);ctx.fillText('1',w-12,h-8);ctx.fillText('position along route',w/2-52,h-8);
+
+  // vehicle
+  const vx=S.vx*w, vy=(h-padB)-heightAt(S.vx)*(h-padB-16);
+  // sensor beam (green laser down into terrain)
+  ctx.strokeStyle='rgba(61,220,132,.5)';ctx.lineWidth=2;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(vx,vy-2);ctx.lineTo(vx,h-padB);ctx.stroke();ctx.setLineDash([]);
+  // field vector arrow (up, length ∝ B)
+  const bLen=Math.max(-40,Math.min(40, S.B*22));
+  ctx.strokeStyle=COL['--cyan'];ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(vx,vy);ctx.lineTo(vx,vy-bLen);ctx.stroke();
+  const ah=bLen>=0?-1:1;
+  ctx.beginPath();ctx.moveTo(vx,vy-bLen);ctx.lineTo(vx-4,vy-bLen+ah*6);ctx.lineTo(vx+4,vy-bLen+ah*6);ctx.closePath();
+  ctx.fillStyle=COL['--cyan'];ctx.fill();
+  // vehicle body
+  ctx.save();ctx.translate(vx,vy-11);
+  ctx.fillStyle='#e6ebf5';
+  roundRect(ctx,-13,-6,26,12,3);ctx.fill();
+  ctx.fillStyle=COL['--amber'];roundRect(ctx,-6,-10,12,6,2);ctx.fill();
+  ctx.fillStyle='#0a0e1a';ctx.beginPath();ctx.arc(-7,7,3.2,0,TWO_PI);ctx.arc(7,7,3.2,0,TWO_PI);ctx.fill();
+  ctx.restore();
+  // handle glow if dragging
+  if(S.dragging){ctx.strokeStyle='rgba(79,214,255,.6)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(vx,vy-11,20,0,TWO_PI);ctx.stroke();}
+}
+
+/* ---------- RABI ---------- */
+function drawRabi(det){
+  const {ctx,w,h}=C.rabi; ctx.clearRect(0,0,w,h);
+  const padL=34,padR=10,padT=12,padB=22;
+  const x0=padL,x1=w-padR,y0=padT,y1=h-padB;
+  // axes grid
+  ctx.strokeStyle=COL['--grid'];ctx.lineWidth=1;
+  for(let p=0;p<=4;p++){const y=y0+(y1-y0)*p/4;ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();}
+  ctx.fillStyle=COL['--ink-faint'];ctx.font='10px '+MONO;
+  ctx.fillText('1.0',6,y0+4);ctx.fillText('0.5',6,(y0+y1)/2+3);ctx.fillText('0',14,y1+3);
+  ctx.fillText('P',6,y0-2 <8? 12:8);
+  ctx.fillText('time (µs) →',x1-70,y1+16);
+
+  const Twin = 3.0;                         // µs window shown
+  const O0 = S.rabi0*TWO_PI;                // rad/µs (MHz*2π)
+  const dr = det*TWO_PI;                    // rad/µs
+  const Oeff = Math.sqrt(O0*O0+dr*dr);
+  const amp = (O0*O0)/(O0*O0+dr*dr);        // 0..1
+
+  // amplitude envelope (red)
+  ctx.strokeStyle='rgba(255,90,110,.55)';ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
+  const envY = y1-(amp)*(y1-y0);
+  ctx.beginPath();ctx.moveTo(x0,envY);ctx.lineTo(x1,envY);ctx.stroke();ctx.setLineDash([]);
+
+  // on-resonance faint reference
+  ctx.strokeStyle='rgba(61,220,132,.4)';ctx.lineWidth=1.3;ctx.beginPath();
+  for(let px=x0;px<=x1;px++){
+    const tt=(px-x0)/(x1-x0)*Twin;
+    const P=0.5*(1-Math.cos(O0*tt))*Math.exp(-tt/S.t2);
+    const py=y1-P*(y1-y0);
+    px===x0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  } ctx.stroke();
+
+  // live population (violet)
+  ctx.strokeStyle=COL['--violet'];ctx.lineWidth=2.2;ctx.beginPath();
+  for(let px=x0;px<=x1;px++){
+    const tt=(px-x0)/(x1-x0)*Twin;
+    const P=amp*0.5*(1-Math.cos(Oeff*tt))*Math.exp(-tt/S.t2);
+    const py=y1-P*(y1-y0);
+    px===x0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  } ctx.stroke();
+
+  // moving time cursor
+  const tc=(S.t % Twin);
+  const cx=x0+(tc/Twin)*(x1-x0);
+  ctx.strokeStyle='rgba(230,235,245,.35)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx,y0);ctx.lineTo(cx,y1);ctx.stroke();
+  const Pnow=amp*0.5*(1-Math.cos(Oeff*tc))*Math.exp(-tc/S.t2);
+  const cyN=y1-Pnow*(y1-y0);
+  ctx.fillStyle=COL['--violet'];ctx.beginPath();ctx.arc(cx,cyN,4,0,TWO_PI);ctx.fill();
+  return {Pnow, amp, Oeff, O0, dr};
+}
+
+/* ---------- BLOCH ---------- */
+let blochRot=0;
+function drawBloch(rb, det){
+  const {ctx,w,h}=C.bloch; ctx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2+6, R=Math.min(w,h)*0.34;
+  blochRot+=0.006;
+  // sphere wire
+  ctx.strokeStyle=COL['--panel-line'];ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,R,0,TWO_PI);ctx.stroke();
+  // equator (ellipse)
+  ctx.strokeStyle='rgba(90,103,132,.4)';
+  ctx.beginPath();ctx.ellipse(cx,cy,R,R*0.32,0,0,TWO_PI);ctx.stroke();
+  // vertical meridian
+  ctx.beginPath();ctx.ellipse(cx,cy,R*0.32,R,0,0,TWO_PI);ctx.stroke();
+  // poles
+  ctx.fillStyle=COL['--green'];ctx.beginPath();ctx.arc(cx,cy-R,3,0,TWO_PI);ctx.fill();
+  ctx.fillStyle=COL['--red'];ctx.beginPath();ctx.arc(cx,cy+R,3,0,TWO_PI);ctx.fill();
+  ctx.fillStyle=COL['--ink-dim'];ctx.font='11px '+MONO;
+  ctx.fillText('|0⟩',cx+6,cy-R+2);ctx.fillText('|±1⟩',cx+6,cy+R+4);
+
+  // spin vector on Bloch sphere.
+  // Rotation axis tilted by angle θ where tanθ = Ω0/δ ; precession about that axis.
+  const O0=rb.O0, dr=rb.dr;
+  const Oeff=Math.sqrt(O0*O0+dr*dr)||1e-9;
+  const tc=S.t;
+  // Bloch vector for driven two-level starting at north pole:
+  // components (rotating frame): standard solution
+  const st=Math.sin(Oeff*tc), ct=Math.cos(Oeff*tc);
+  const nX=O0/Oeff, nZ=dr/Oeff; // axis in x-z
+  // Rodrigues around axis n=(nX,0,nZ), initial v=(0,0,1)
+  // v(t)= v_par + (v_perp)cos + (n×v)sin
+  const v0=[0,0,1];
+  const dot=v0[0]*nX+v0[2]*nZ;
+  const par=[nX*dot,0,nZ*dot];
+  const perp=[v0[0]-par[0],v0[1]-0,v0[2]-par[2]];
+  const cross=[ (0*v0[2]-nZ*v0[1]), (nZ*v0[0]-nX*v0[2]), (nX*v0[1]-0*v0[0]) ];
+  let bx=par[0]+perp[0]*ct+cross[0]*st;
+  let by=par[1]+perp[1]*ct+cross[1]*st;
+  let bz=par[2]+perp[2]*ct+cross[2]*st;
+  // rotate whole sphere slowly about vertical for depth
+  const ca=Math.cos(blochRot), sa=Math.sin(blochRot);
+  const rx=bx*ca - by*sa, ry=bx*sa + by*ca;
+  // project (simple iso): screen x = rx*R, screen y = -bz*R + ry*R*0.32
+  const sx=cx+rx*R, sy=cy - bz*R + ry*R*0.32;
+  // draw tilted rotation axis
+  const axca=Math.cos(blochRot),axsa=Math.sin(blochRot);
+  const axrx=nX*axca, axry=nX*axsa;
+  const axsx=cx+axrx*R, axsy=cy - nZ*R + axry*R*0.32;
+  ctx.strokeStyle='rgba(255,180,84,.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(cx- (axsx-cx),cy-(axsy-cy));ctx.lineTo(axsx,axsy);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,180,84,.8)';ctx.font='10px '+MONO;
+  ctx.fillText('drive axis',axsx+4,axsy);
+
+  // trail
+  ctx.strokeStyle='rgba(157,123,255,.25)';ctx.lineWidth=1.4;ctx.beginPath();
+  for(let k=0;k<48;k++){
+    const tt=tc - k*0.03;
+    const s2=Math.sin(Oeff*tt),c2=Math.cos(Oeff*tt);
+    let tx=par[0]+perp[0]*c2+cross[0]*s2;
+    let ty=par[1]+perp[1]*c2+cross[1]*s2;
+    let tz=par[2]+perp[2]*c2+cross[2]*s2;
+    const trx=tx*ca-ty*sa, tryy=tx*sa+ty*ca;
+    const psx=cx+trx*R, psy=cy-tz*R+tryy*R*0.32;
+    k===0?ctx.moveTo(psx,psy):ctx.lineTo(psx,psy);
+  } ctx.stroke();
+
+  // vector
+  ctx.strokeStyle=COL['--violet'];ctx.lineWidth=2.6;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(sx,sy);ctx.stroke();
+  ctx.fillStyle=COL['--violet'];ctx.beginPath();ctx.arc(sx,sy,4.5,0,TWO_PI);ctx.fill();
+}
+
+/* ---------- ENERGY LEVELS ---------- */
+function drawLevels(d){
+  const {ctx,w,h}=C.levels; ctx.clearRect(0,0,w,h);
+  const cx=w/2, midY=h*0.46, gsY=h-26;
+  const PXPERMHZ=1.3;                 // single consistent vertical scale
+  const clampY=v=>Math.max(midY-64,Math.min(gsY-10,v));
+
+  // ground state m=0
+  ctx.strokeStyle=COL['--green'];ctx.lineWidth=2.5;
+  line(ctx, cx-64, gsY, cx+64, gsY);
+  ctx.fillStyle=COL['--ink-dim'];ctx.font='11px '+MONO;
+  ctx.fillText('m=0',cx+70,gsY+3);
+
+  // split excited levels around midY, split ∝ γB
+  const splitMHz = GAMMA*S.B/1000*1000;   // = γB in MHz
+  const split = splitMHz*PXPERMHZ;
+  const yPlus=midY-split, yMinus=midY+split;
+  ctx.strokeStyle=COL['--red'];ctx.lineWidth=2.5;
+  line(ctx,cx-64,yPlus,cx+64,yPlus);
+  line(ctx,cx-64,yMinus,cx+64,yMinus);
+  ctx.fillStyle=COL['--red'];
+  ctx.fillText('m='+(S.B>=0?'+1':'−1'),cx+70,yPlus+3);
+  ctx.fillText('m='+(S.B>=0?'−1':'+1'),cx+70,yMinus+3);
+
+  // degenerate reference (zero-field 2.87)
+  ctx.strokeStyle='rgba(255,90,110,.22)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  line(ctx,cx-64,midY,cx+64,midY);ctx.setLineDash([]);
+  ctx.fillStyle=COL['--ink-faint'];ctx.font='10px '+MONO;
+  ctx.fillText('2.87 GHz',cx-64,midY-6);
+
+  // microwave drive line: freq offset from 2.87 in MHz
+  const driveOffMHz=(S.mw-F0)*1000;
+  const driveY=clampY(midY - driveOffMHz*PXPERMHZ);
+  ctx.strokeStyle=COL['--amber'];ctx.lineWidth=2;
+  drawArrow(ctx,cx,gsY,cx,driveY);
+  ctx.fillStyle=COL['--amber'];ctx.fillText('µw',cx-30,(gsY+driveY)/2);
+
+  // detuning bracket from drive to nearest level
+  const nearestY=Math.abs(driveY-yPlus)<Math.abs(driveY-yMinus)?yPlus:yMinus;
+  ctx.strokeStyle='rgba(79,214,255,.7)';ctx.lineWidth=1.4;ctx.setLineDash([2,2]);
+  line(ctx,cx+42,driveY,cx+42,nearestY);ctx.setLineDash([]);
+  ctx.fillStyle=COL['--cyan'];
+  ctx.fillText('δ '+(d.det>=0?'+':'')+d.det.toFixed(1),cx+46,(driveY+nearestY)/2+3);
+}
+
+/* ---------- ODMR ---------- */
+function drawODMR(d){
+  const {ctx,w,h}=C.odmr; ctx.clearRect(0,0,w,h);
+  const padL=8,padR=8,padT=10,padB=20;
+  const x0=padL,x1=w-padR,y0=padT,y1=h-padB;
+  const fLo=2.82,fHi=2.92;
+  // baseline fluorescence 1.0 at top
+  ctx.strokeStyle=COL['--grid'];ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y0);ctx.stroke();
+  // two Lorentzian dips at f±
+  const fp=F0+GAMMA*S.B/1000, fm=F0-GAMMA*S.B/1000;
+  const width=0.0016 + S.rabi0*0.00016; // GHz, power-broadened a touch
+  const contrast=0.62;
+  ctx.strokeStyle=COL['--red'];ctx.lineWidth=2.2;ctx.beginPath();
+  for(let px=x0;px<=x1;px++){
+    const f=fLo+(fHi-fLo)*(px-x0)/(x1-x0);
+    const L1=contrast/(1+((f-fp)/width)**2);
+    const L2=contrast/(1+((f-fm)/width)**2);
+    const val=1-Math.min(0.62, L1+L2);   // fluorescence 0.38..1
+    const yy=y1-val*(y1-y0);
+    px===x0?ctx.moveTo(px,yy):ctx.lineTo(px,yy);
+  } ctx.stroke();
+
+  // drive frequency marker (amber vertical)
+  const dx=x0+(S.mw-fLo)/(fHi-fLo)*(x1-x0);
+  ctx.strokeStyle=COL['--amber'];ctx.lineWidth=1.8;ctx.setLineDash([4,3]);
+  line(ctx,dx,y0-2,dx,y1+2);ctx.setLineDash([]);
+  ctx.fillStyle=COL['--amber'];ctx.font='10px '+MONO;
+  ctx.fillText('drive',dx+3,y0+8);
+
+  // resonance tick labels
+  ctx.fillStyle=COL['--ink-faint'];
+  ctx.fillText('2.82',x0,y1+14);ctx.fillText('2.92 GHz',x1-46,y1+14);
+  ctx.fillStyle=COL['--red'];
+  const pxp=x0+(fp-fLo)/(fHi-fLo)*(x1-x0);
+  const pxm=x0+(fm-fLo)/(fHi-fLo)*(x1-x0);
+  ctx.fillText('f₋',pxm-4,y1+14);ctx.fillText('f₊',pxp-4,y1+14);
+}
+
+/* ---------- tiny canvas utils ---------- */
+const MONO="'SFMono-Regular',Consolas,Menlo,monospace";
+function line(ctx,a,b,c,d){ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke();}
+function lerp(a,b,t){return a+(b-a)*t;}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function drawArrow(ctx,x1,y1,x2,y2){
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath();ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-7*Math.cos(a-0.4),y2-7*Math.sin(a-0.4));
+  ctx.lineTo(x2-7*Math.cos(a+0.4),y2-7*Math.sin(a+0.4));
+  ctx.closePath();ctx.fill();
+}
+
+/* ---------- readouts ---------- */
+function updateReadouts(d){
+  document.getElementById('r-pos').textContent=(S.vx*100).toFixed(0)+'%';
+  document.getElementById('r-b').innerHTML=(S.B>=0?'+':'')+S.B.toFixed(3)+'<span class="u">mT</span>';
+  document.getElementById('r-fres').innerHTML=d.fRes.toFixed(4)+'<span class="u">GHz</span>';
+  document.getElementById('r-det').innerHTML=(d.det>=0?'+':'')+d.det.toFixed(1)+'<span class="u">MHz</span>';
+  const st=document.getElementById('res-status');
+  if(Math.abs(d.det)<1.5){st.className='status on-res';st.textContent='on resonance';}
+  else{st.className='status off-res';st.textContent='detuned '+d.det.toFixed(1)+' MHz';}
+}
+
+/* ---------- main loop ---------- */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(S.playing) S.t += dt*2.2;               // sim speed
+  if(S.auto && !S.dragging){
+    S.vx += S.autoDir*dt*0.09;
+    if(S.vx>0.98){S.vx=0.98;S.autoDir=-1;}
+    if(S.vx<0.02){S.vx=0.02;S.autoDir=1;}
+  }
+  const d=recompute();
+  drawTerrain();
+  const rb=drawRabi(d.det);
+  drawBloch(rb,d.det);
+  drawLevels(d);
+  drawODMR(d);
+  updateReadouts(d);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- interaction ---------- */
+function bindDrag(){
+  const cv=document.getElementById('terrain');
+  function toX(e){
+    const r=cv.getBoundingClientRect();
+    const clientX=(e.touches?e.touches[0].clientX:e.clientX);
+    return Math.max(0.01,Math.min(0.99,(clientX-r.left)/r.width));
+  }
+  function down(e){S.dragging=true;S.vx=toX(e);e.preventDefault();}
+  function move(e){if(S.dragging){S.vx=toX(e);e.preventDefault();}}
+  function up(){S.dragging=false;}
+  cv.addEventListener('mousedown',down);
+  window.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',up);
+  cv.addEventListener('touchstart',down,{passive:false});
+  window.addEventListener('touchmove',move,{passive:false});
+  window.addEventListener('touchend',up);
+  cv.style.cursor='grab';
+  cv.addEventListener('mousedown',()=>cv.style.cursor='grabbing');
+  window.addEventListener('mouseup',()=>cv.style.cursor='grab');
+}
+
+function bindControls(){
+  const bind=(id,fn,fmt)=>{
+    const el=document.getElementById(id);
+    el.addEventListener('input',()=>{fn(parseFloat(el.value));fmt(el.value);});
+  };
+  bind('s-rabi',v=>S.rabi0=v,v=>document.getElementById('v-rabi').textContent=parseFloat(v).toFixed(1)+' MHz');
+  bind('s-mw',v=>S.mw=v,v=>document.getElementById('v-mw').textContent=parseFloat(v).toFixed(4)+' GHz');
+  bind('s-t2',v=>S.t2=v,v=>document.getElementById('v-t2').textContent=parseFloat(v).toFixed(1)+' µs');
+  bind('s-sens',v=>S.sens=v,v=>document.getElementById('v-sens').textContent=parseFloat(v).toFixed(2)+'×');
+
+  document.getElementById('btn-play').addEventListener('click',e=>{
+    S.playing=!S.playing;
+    e.target.textContent=S.playing?'⏸ Pause time':'▶ Resume time';
+    e.target.classList.toggle('primary',S.playing);
+  });
+  document.getElementById('btn-auto').addEventListener('click',e=>{
+    S.auto=!S.auto;
+    e.target.textContent=S.auto?'⏹ Stop drive':'▶ Auto-drive';
+    e.target.classList.toggle('active',S.auto);
+  });
+  document.getElementById('btn-tune').addEventListener('click',()=>{
+    // set drive to nearest resonance for current B
+    const fp=F0+GAMMA*S.B/1000, fm=F0-GAMMA*S.B/1000;
+    S.mw=Math.abs(S.mw-fp)<Math.abs(S.mw-fm)?fp:fm;
+    S.mw=Math.max(2.82,Math.min(2.92,S.mw));
+    const el=document.getElementById('s-mw');el.value=S.mw;
+    document.getElementById('v-mw').textContent=S.mw.toFixed(4)+' GHz';
+  });
+  document.getElementById('btn-reset').addEventListener('click',()=>{
+    S.vx=0.42;S.rabi0=6;S.mw=2.87;S.t2=2;S.sens=1;S.t=0;S.auto=false;
+    document.getElementById('s-rabi').value=6;document.getElementById('v-rabi').textContent='6.0 MHz';
+    document.getElementById('s-mw').value=2.87;document.getElementById('v-mw').textContent='2.8700 GHz';
+    document.getElementById('s-t2').value=2;document.getElementById('v-t2').textContent='2.0 µs';
+    document.getElementById('s-sens').value=1;document.getElementById('v-sens').textContent='1.0×';
+    const a=document.getElementById('btn-auto');a.textContent='▶ Auto-drive';a.classList.remove('active');
+  });
+}
+
+/* ---------- init ---------- */
+function init(){
+  cacheCol();setupAll();bindDrag();bindControls();
+  window.addEventListener('resize',()=>{setupAll();});
+  requestAnimationFrame(frame);
+}
+init();
+</script>
+</body>
+</html>

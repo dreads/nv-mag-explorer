@@ -1,117 +1,57 @@
-# NV-Center Magnetometry Explorer
+# NV-Diamond MagNav — Rabi & Zeeman Visualizer
 
-Interactive, faithful-physics demos of how a nitrogen-vacancy (NV) center in
-diamond senses a magnetic field. A follow-on to the Bell State Explorer: same
-"visualize what's actually happening between input and output" philosophy, one
-level of physics deeper.
+An interactive, single-file visualizer showing how an NV-diamond quantum magnetometer turns *position over terrain* into a *quantum signal*. Drag a vehicle across a magnetic landscape and watch the spin resonance shift (Zeeman), the microwave drive detune, and the Rabi oscillation change shape in real time.
 
-The engine models the real NV ground-state Hamiltonian and every visual is a
-readout of it — no cartoons, no hand-waving.
+Companion piece to the MagNav system diagram. This is v1 — the Rabi/Zeeman core. The Bloch-geometry refactor comes next.
 
-## Status
+## Deploy to GitHub Pages
 
-| Piece | State |
-|-------|-------|
-| Physics engine (`src/`) | Built, 100% test coverage |
-| Demo 1 — Spin state & the qutrit | **Built** — `demo1-spin-state.html` |
-| Demo 2 — ODMR & Zeeman splitting | Engine ready; UI next |
-| Demo 3 — Ramsey / spin precession | **Further work** |
-| Demo 4 — Magnetography pixel map | **Further work** |
+No build step, no server. It's one static file.
 
-## The physics engine
+1. Put `index.html` at the repo root (or in `/docs`).
+2. Repo **Settings → Pages → Source**: deploy from branch, pick `main` and `/root` (or `/docs`).
+3. Live at `https://<user>.github.io/<repo>/` within a minute.
 
-Everything derives from one function: the NV ground-state spin-1 Hamiltonian
+That's the whole deploy. Same pattern as the bell-visualizer.
 
-```
-H = D·Sz² + E·(Sx² − Sy²) + γ·(Bx·Sx + By·Sy + Bz·Sz)
-```
+## Why no Python
 
-in the basis { |+1⟩, |0⟩, |−1⟩}, energies in GHz, field in Tesla.
+Rabi oscillations and the Zeeman effect are **closed-form** — there's an exact formula, no differential-equation solver needed. Everything is computed in the browser in JavaScript. A quantum library like QuTiP would be overkill *and* can't run on GitHub Pages (it needs a Python runtime). If a future feature needs full density-matrix simulation (e.g. Lindblad decoherence, multi-level dynamics beyond the two-level model), that's the point where you'd pre-compute data or add a backend — not before.
 
-- **D ≈ 2.87 GHz** — zero-field splitting, separates |0⟩ from |±1⟩
-- **E** — transverse strain, lifts the |±1⟩ degeneracy and introduces the
-  complex-valued, phase-carrying terms that make the *hue* channel necessary
-- **γ ≈ 28.024 GHz/T** — electron gyromagnetic ratio; the Zeeman term is the
-  sensing knob
-- **B** — the field being sensed; its projection on the NV axis (Bz) does the
-  measurable work
+## What each panel shows
 
-From this single object:
-- `levels()` → the three energy eigenvalues and eigenstates
-- `resonancesFromZero()` → the two ODMR microwave resonances (Demo 2)
-- `matrixField()` → per-entry magnitude + phase for the domain-colored 3×3 view
-- `subspaceBloch()` → an *honest projection* onto a driven two-level subspace
-  (Demo 1's Bloch sphere)
+- **Terrain & local field** — Drag the vehicle. Elevation is a stand-in for local crustal field magnitude B. The cyan arrow is the field vector the sensor feels; the green dashed line is the laser reading the diamond.
+- **Rabi oscillation** — The spin-flip probability P(t). On resonance it swings 0→1 (full flip). Detune it and the amplitude shrinks while the frequency rises — the two signatures of `Ω = √(Ω₀²+δ²)`.
+- **Bloch sphere** — The spin state as a vector precessing about the (tilted) drive axis. On resonance the axis is equatorial and the vector reaches both poles; off resonance the axis tilts toward vertical and the vector traces a shrinking cone.
+- **Energy levels** — The ground-state triplet. m=±1 are degenerate at 2.87 GHz until the field splits them by ±γB. The amber microwave line is fixed; the gap between it and the nearest level is the detuning.
+- **ODMR** — What the photodetector sees: red fluorescence dips at each spin resonance. Field splits one dip into two. The amber line is your drive; its distance to the nearest dip is the detuning.
 
-## The teaching beat: why one Bloch sphere isn't enough
+## Controls
 
-The NV ground state is a **qutrit** (spin-1, three levels), not a qubit. That
-costs you something visual, and confronting it is the point of Demo 1:
+| Control | What it changes |
+|---|---|
+| Microwave amplitude | Ω₀, the on-resonance Rabi frequency (drive strength) |
+| Microwave frequency | Your fixed drive tone — move it onto a dip to null the detuning |
+| Coherence time T₂* | How quickly the oscillation damps out |
+| Field sensitivity | Terrain-height → B scaling (how "magnetically dramatic" the landscape is) |
+| Pause time | Freeze/resume the simulation clock |
+| Auto-drive | Vehicle sweeps the route on its own |
+| Snap to resonance | Sets the drive exactly onto the nearest resonance for the current B |
+| Reset | Back to defaults |
 
-- A **qubit** has 2 free real parameters after normalization and global phase →
-  the Bloch sphere surface holds it losslessly.
-- A **qutrit** pure state has 4 free real parameters; a mixed one has 8 (the
-  SU(3) / Gell-Mann generalized Bloch vector lives in 8 dimensions). No sphere,
-  and no finite pile of spheres, holds that faithfully.
+## The physics (verified)
 
-So the division of labor is deliberate:
-- the **3×3 matrix** (hue = phase, brightness = magnitude) is the complete,
-  faithful readout — the source of truth;
-- the **single Bloch sphere** is an intuitive but explicitly *partial*
-  projection onto the two-level subspace you actually drive with microwaves.
+- Generalized Rabi frequency: **Ω = √(Ω₀² + δ²)**
+- Population: **P(t) = (Ω₀²/Ω²)·½(1 − cos Ωt)·e^(−t/T₂\*)**
+- Zeeman split of the NV ground-state triplet: **f± = 2.87 GHz ± γB**, with **γ ≈ 28 MHz/mT**
+- Detuning: **δ = f_drive − f_nearest-resonance**
 
-We show one sphere, labeled as a projection, and let the matrix carry the full
-qutrit truth.
+These were checked numerically: the amplitude term halves at δ=Ω₀ and the Zeeman split is linear at 2γB. Terrain→field mapping is illustrative; the spin physics is faithful to the two-level NV model.
 
-## Development
+Values in the sensible NV range: 2.87 GHz zero-field resonance, ~1–20 MHz Rabi, µs-scale T₂\*. The two-level model ignores hyperfine structure (the real 14N triplet) and optical-pumping dynamics — fine for building intuition, and the natural things to add if you want more realism later.
 
-Requires Node 18+ (uses the built-in test runner; no dependencies).
+## Known-simple / next steps
 
-```bash
-npm test          # run all tests
-npm run coverage  # run with coverage report (targets 100% on src/)
-```
-
-Opens cleanly in PyCharm (JavaScript). Point the Node.js test configuration at
-`--test` to run the suite from the IDE.
-
-### Running Demo 1
-
-`demo1-spin-state.html` imports the engine as an ES module, so it must be served
-over http (opening the file directly will hit a CORS block on the import). From
-the project root:
-
-```bash
-python3 -m http.server 8000
-# then open http://localhost:8000/demo1-spin-state.html
-```
-
-In PyCharm, right-click the HTML file and choose "Open in Browser" with the
-built-in web server, which serves over http automatically.
-
-**What it shows.** Five controls (field strength, polar angle to the NV axis,
-transverse azimuth φ, strain E, and D) drive two synchronized views: a Bloch
-sphere of the driven |0⟩↔|−1⟩ subspace (the lossy projection) and the full 3×3
-Hamiltonian rendered with fill = magnitude and hue = phase (the faithful qutrit).
-Sweeping φ walks the off-diagonal phase through the full circle, moving the hue
-while magnitude stays fixed — the cleanest demonstration that the sphere throws
-phase away and the matrix keeps it. The matrix is always magnitude-symmetric and
-hue-antisymmetric across the diagonal: a visible signature of Hermiticity.
-
-## Layout
-
-```
-demo1-spin-state.html  Demo 1 UI — Bloch projection + hue-colored qutrit matrix
-src/
-  complex.js         complex-number + 3×3 complex-matrix utilities
-  eigen.js           Hermitian 3×3 eigensolver (complex Jacobi rotations)
-  nv-hamiltonian.js  the NV Hamiltonian and all physical readouts
-test/
-  complex.test.js
-  eigen.test.js
-  nv-hamiltonian.test.js
-```
-
-## License
-
-MIT
+- Two-level model only (no hyperfine triplet, no explicit laser-pumping rate equations).
+- Terrain is a fixed deterministic profile (sum of sines), not a real anomaly map.
+- **Next:** refactor the Bloch-sphere geometry into an alternate projected shape — the conceptual experiment you flagged.
