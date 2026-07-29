@@ -120,49 +120,93 @@ h1 .q {
   line-height: 1.6;
 }
 
-nav.explore {
-  margin-top: 18px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+main {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-@media (max-width: 600px) {
-  nav.explore {
+/* ---- Hero row: "Explore the visualizers" beside the Bloch hero video ----
+   Two matching panels, side by side, roughly equal visual weight so
+   neither reads as an afterthought next to the other. */
+.hero-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+@media (max-width: 760px) {
+  .hero-row {
     grid-template-columns: 1fr;
   }
 }
 
-nav.explore h2 {
-  grid-column: 1 / -1;
+.explore-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* A real title, not a micro-label — sized and weighted to hold its own
+   next to the video and the explanation blocks below it. The monospace
+   face + accent dot match the "instrument panel" chip/label language
+   used throughout index_rabi.html / index_ramsey.html. */
+.explore-col .explore-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.explore-title .dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan);
+}
+
+.explore-col h3 {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1.6px;
   text-transform: uppercase;
   color: var(--ink-faint);
-  margin: 0;
+  margin: 4px 0 0;
 }
 
-nav.explore a {
-  display: block;
+.card {
   background: linear-gradient(180deg, #121a2e 0%, var(--panel) 100%);
   border: 1px solid var(--panel-line);
   border-radius: 12px;
   padding: 12px 14px;
+}
+
+.card:hover,
+.card:focus-within {
+  border-color: var(--cyan);
+}
+
+.explore-col a {
+  display: block;
   color: var(--ink);
   text-decoration: none;
 }
 
-nav.explore a:hover {
-  border-color: var(--cyan);
-}
-
-nav.explore a .label {
+.explore-col a .label {
   font-weight: 700;
   font-size: 13.5px;
 }
 
-nav.explore a .note {
+.explore-col a .note {
   display: block;
   color: var(--ink-dim);
   font-size: 12px;
@@ -170,11 +214,13 @@ nav.explore a .note {
   line-height: 1.4;
 }
 
-main {
-  margin-top: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.explore-col .note-detail {
+  color: var(--ink-dim);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--panel-line);
 }
 
 .panel {
@@ -203,34 +249,96 @@ main {
   color: var(--ink);
 }
 
-/* ---- Rabi vs. Ramsey timeline diagram ----
-   The <svg> is aria-hidden: it's a purely visual comparison of bar
-   lengths/labels with no faithful native ARIA mapping. The .sr-only <p>
-   next to it (data-i18n="diagram.srDescription") is the accessible
-   equivalent, same pattern as bell-state-explorer's SVG visuals. */
-.diagram svg {
+/* ---- Hero video: Bloch vector precessing during an auto-sweep ----
+   Decorative — autoplay/muted/loop with no controls conveys nothing a
+   sighted user can act on, and the interactive original lives on
+   index_rabi.html. aria-hidden here; the visible .hero-caption <p> is the
+   accessible description, same convention as the SVG visuals below. */
+.hero-video {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.bloch-hero {
+  display: block;
   width: 100%;
   height: auto;
-  display: block;
+  background: #0c1424;
+}
+
+.hero-video .hero-caption {
+  font-size: 12.5px;
+  color: var(--ink-dim);
+  padding: 10px 16px 14px;
+  margin: 0;
+  text-align: center;
+}
+
+/* ---- Rabi vs. Ramsey timeline diagram ----
+   Each <svg> is aria-hidden: it's a purely visual comparison of bar
+   lengths/labels with no faithful native ARIA mapping. The link's own
+   accessible name comes from the visible .timeline-cta text instead — an
+   interactive element must never live inside aria-hidden content, so the
+   SVG stays decorative and the link gets its name from sibling text. The
+   .sr-only <p> below (data-i18n="diagram.srDescription") is the accessible
+   equivalent of the visual comparison as a whole, same pattern as
+   bell-state-explorer's SVG visuals. */
+.timeline-links {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
   margin-top: 8px;
 }
 
-.diagram .timeline-label {
+.timeline-link {
+  display: block;
+  background: #0c1424;
+  border: 1px solid var(--panel-line);
+  border-radius: 10px;
+  padding: 8px 10px 10px;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.timeline-link:hover,
+.timeline-link:focus-visible {
+  border-color: var(--cyan);
+}
+
+.timeline-link svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.timeline-cta {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cyan);
+  text-align: right;
+}
+
+.timeline-label {
   font-family: var(--mono);
   font-size: 11px;
 }
 
-.diagram .bar-rabi {
+.bar-rabi {
   fill: rgba(157, 123, 255, 0.28);
   stroke: var(--violet);
 }
 
-.diagram .bar-pulse {
+.bar-pulse {
   fill: rgba(61, 220, 132, 0.35);
   stroke: var(--green);
 }
 
-.diagram .bar-wait {
+.bar-wait {
   fill: rgba(79, 214, 255, 0.16);
   stroke: var(--cyan);
   stroke-dasharray: 4 3;

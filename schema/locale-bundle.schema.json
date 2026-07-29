@@ -61,6 +61,13 @@
             "navDesignNote": { "type": "string" }
           }
         },
+        "hero": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "blochCaption": { "type": "string" }
+          }
+        },
         "purpose": {
           "type": "object",
           "additionalProperties": false,
@@ -104,6 +111,8 @@
             "ramseyCaption": { "type": "string" },
             "ramseyPulseLabel": { "type": "string" },
             "ramseyWaitLabel": { "type": "string" },
+            "rabiLinkLabel": { "type": "string" },
+            "ramseyLinkLabel": { "type": "string" },
             "srDescription": { "type": "string" }
           }
         },

@@ -20,6 +20,9 @@
       "navDesignLabel": "Bantu Ramsey",
       "navDesignNote": "Zora oru — bantu roqavel, tresqui elgorai, du senvara Bloch kuresh."
     },
+    "hero": {
+      "blochCaption": "Bloch senvara tresqui achkedo magnet bantu velmori — kuresh zora Rabi elgorai, du roqa mockup."
+    },
     "purpose": {
       "heading": "Bantu roqa, du roqa zantul nav",
       "body": "Achkedo \"MagNav\" zora, bantu roqa du roqa zantul nav — kuresh velmori tresqui elgorai. Rabi bantu, kuresh phase, fringe visroka: elgorai bantu tresqui roqa equalu senda du roqa zora bantu. Achkedo tresqui roqa velmori du roqa bantu senvara — kuresh, Bloch velmori, fringe bantu — tresqui kuresh, du roqa achkedo senda bantu."
@@ -43,6 +46,8 @@
       "ramseyCaption": "Ramsey: kuresh, zora, kuresh",
       "ramseyPulseLabel": "π/2",
       "ramseyWaitLabel": "velmori zora — tresqui τ",
+      "rabiLinkLabel": "Achkedo bantu Rabi →",
+      "ramseyLinkLabel": "Achkedo bantu Ramsey →",
       "srDescription": "Tal roqavel tresqui bantu senda. Rabi roqavel bantu kuresh velmori oru zantul. Ramsey roqavel tal senvara: kuresh pi roqa tal, velmori zora achkedo tresqui tau, du sekundu kuresh pi roqa tal."
     },
     "footer": {

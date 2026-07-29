@@ -29,6 +29,11 @@ export default {
       navDesignLabel: 'Ramsey visualizer',
       navDesignNote: 'In design — pulse-sequence timeline, fringe plot, and a phase-accumulating Bloch sphere.',
     },
+    hero: {
+      blochCaption:
+        'The Bloch vector precessing as the magnet auto-sweeps its full range — captured live from the Rabi ' +
+        'visualizer, not a rendered mockup.',
+    },
     purpose: {
       heading: 'A lab bench, not a nav demo',
       body:
@@ -74,6 +79,8 @@ export default {
       ramseyCaption: 'Ramsey: pulse, wait, pulse',
       ramseyPulseLabel: 'π/2',
       ramseyWaitLabel: 'drive off — free evolution τ',
+      rabiLinkLabel: 'Open the Rabi visualizer →',
+      ramseyLinkLabel: 'Open the Ramsey visualizer →',
       srDescription:
         'Two horizontal timelines compared. The Rabi timeline is a single unbroken bar labeled drive on for its ' +
         'entire length. The Ramsey timeline has three segments: a short pulse labeled pi over two, a much longer ' +

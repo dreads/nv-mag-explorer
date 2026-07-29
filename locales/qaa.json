@@ -20,6 +20,9 @@
       "navDesignLabel": "Vïsüälïséür Rämséy",
       "navDesignNote": "Éñ cöñcéptïöñ — chrönölögïé dé séquéñcé d’ïmpülsïöñs, träcé dé fräñgés, ét üñé sphère dé Blöch àccümülâñt lä phâsé."
     },
+    "hero": {
+      "blochCaption": "Lé véctéür dé Blöch précéssâñt tâñdïs qüé l’äïmâñt bäläyé tôüté sä pläge — câptüré éñ dïréct dépüïs lé vïsüälïséür Räbï, päs ün mockup réñdü."
+    },
     "purpose": {
       "heading": "Ün bäñc dé läböràtöïré, päs üñé démö dé nävïgâtïöñ",
       "body": "Mälgré lé nöm « MägNäv », lé pöïñt dé cés pägés n’ést päs lä plänïfïcâtïöñ d’ïtïñérâïre — c’ést d’öbsérvér lä dÿnâmïqüé qüäñtïqüé sé prödüïre. Lés öscïllâtïöñs dé Räbï, l’äccümülâtïöñ dé phâsé, lä vïsïbïlïté dés fräñgés: lä plüpärt dés mänüéls ét ârtïclés né möñtréñt qü’üné équâtïöñ clösé öü ün séül träcé stätïqüé. Icï vöüs fâïtés glïssér üné värïâblé ét vöüs vöyéz töüté lä ïmâgé témpörélle — l’öscïllâtïöñ, lé véctéür dé Blöch, lé mötïf dé fräñgés — répöñdré éñ cöñtïnü, dé lä mêmé fâçöñ döñt vöüs cârâctérïséréz ün câptéür réél sür ün bâñc."
@@ -43,6 +46,8 @@
       "ramseyCaption": "Rämséy: ïmpülsïöñ, âttéñtè, ïmpülsïöñ",
       "ramseyPulseLabel": "π/2",
       "ramseyWaitLabel": "éñtrâîñémeñt étéïñt — évölütïöñ lïbré τ",
+      "rabiLinkLabel": "Ôüvrïr lé vïsüälïséür Räbï →",
+      "ramseyLinkLabel": "Ôüvrïr lé vïsüälïséür Rämséy →",
       "srDescription": "Déüx chrönölögïés hörïzöñtâlés cömpâréés. Lâ chrönölögïé Räbï ést üné séülé bârré ïñïñtérrömpüé étïquétéé éñtrâîñémeñt äctïf pöür töüté sâ löñguéür. Lâ chrönölögïé Rämséy â tröïs ségméñts: üné cöürté ïmpülsïöñ étïquétéé pï süür déüx, üñ écârt bïéñ plüs löñg étïquété éñtrâîñémeñt étéïñt, évölütïöñ lïbré täü, ét üné sécöñdé cöürté ïmpülsïöñ étïquétéé pï süür déüx."
     },
     "footer": {

@@ -20,6 +20,9 @@
       "navDesignLabel": "Ramsey visualizer",
       "navDesignNote": "In design — pulse-sequence timeline, fringe plot, and a phase-accumulating Bloch sphere."
     },
+    "hero": {
+      "blochCaption": "The Bloch vector precessing as the magnet auto-sweeps its full range — captured live from the Rabi visualizer, not a rendered mockup."
+    },
     "purpose": {
       "heading": "A lab bench, not a nav demo",
       "body": "Despite the \"MagNav\" name, the point of these pages isn't route-planning — it's watching quantum dynamics happen. Rabi oscillations, phase accumulation, fringe visibility: most textbooks and papers only ever show a closed-form equation or a single static plot. Here you drag a variable and watch the whole time-domain picture — the oscillation, the Bloch vector, the fringe pattern — respond continuously, the same way you'd characterize a real sensor on a bench."
@@ -43,6 +46,8 @@
       "ramseyCaption": "Ramsey: pulse, wait, pulse",
       "ramseyPulseLabel": "π/2",
       "ramseyWaitLabel": "drive off — free evolution τ",
+      "rabiLinkLabel": "Open the Rabi visualizer →",
+      "ramseyLinkLabel": "Open the Ramsey visualizer →",
       "srDescription": "Two horizontal timelines compared. The Rabi timeline is a single unbroken bar labeled drive on for its entire length. The Ramsey timeline has three segments: a short pulse labeled pi over two, a much longer gap labeled drive off, free evolution tau, and a second short pulse labeled pi over two."
     },
     "footer": {

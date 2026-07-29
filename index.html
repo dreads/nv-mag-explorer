@@ -20,67 +20,80 @@
       <option value="en" data-i18n-exempt>English</option>
     </select>
   </div>
-
-  <nav class="explore" aria-label="Visualizers">
-    <h2 data-i18n="ui.navHeading">Explore the visualizers</h2>
-    <a href="index_ramsey.html">
-      <span class="label" data-i18n="ui.navDesignLabel">Ramsey visualizer</span>
-      <span class="note" data-i18n="ui.navDesignNote">In design — pulse-sequence timeline, fringe plot, and a phase-accumulating Bloch sphere.
-      <p>Ramsey interferometry breaks the wobble into three clean steps: a short π/2 pulse tips the spin onto the
-      equator, the microwave then switches off entirely for a free-evolution window τ, and a second π/2 pulse
-      converts whatever happened during that silence back into a population you can read. While the drive is off,
-      the spin simply precesses at the detuning rate, banking a phase φ = δτ. Sweep τ and the readout traces
-      P(τ) = ½(1 + cos δτ) — a fringe pattern whose frequency is δ, full stop. No amplitude coupling, no
-      drive-strength ambiguity: read the fringe spacing, invert for the field.</p></span>
-    </a>
-    <a href="index_rabi.html">
-      <span class="label" data-i18n="ui.navRabiLabel">Rabi &amp; Zeeman visualizer</span>
-      <span class="note" data-i18n="ui.navRabiNote">The continuously-driven oscillation.
-        <p>Rabi oscillations, phase accumulation, fringe visibility: most textbooks and papers only ever show
-      a closed-form equation or a single static plot. Here you drag a variable and watch the whole time-domain
-      picture — the oscillation, the Bloch vector, the fringe pattern — respond continuously, the same way you'd
-      characterize a real sensor on a bench.</p>
-      </span>
-
-    </a>
-  </nav>
 </header>
 
 <main id="main">
-  <section class="panel diagram">
-    <h2 data-i18n="diagram.heading">Drive timelines, side by side</h2>
-    <svg viewBox="0 0 640 200" aria-hidden="true">
-      <text x="10" y="16" class="timeline-label" fill="var(--ink-faint)" data-i18n="diagram.rabiCaption">Rabi: continuous drive</text>
-      <rect class="bar-rabi" x="10" y="26" width="620" height="30" rx="4"></rect>
-      <text x="320" y="46" class="timeline-label" fill="var(--ink)" text-anchor="middle" data-i18n="diagram.rabiOnLabel">drive on — the whole time</text>
+  <div class="hero-row">
+    <nav class="panel explore-col" aria-label="Visualizers">
+      <h2 class="explore-title" data-i18n="ui.navHeading"><span class="dot" aria-hidden="true"></span>Explore the visualizers</h2>
+      <div class="card">
+        <a href="index_ramsey.html">
+          <span class="label" data-i18n="ui.navDesignLabel">Ramsey visualizer</span>
+          <span class="note" data-i18n="ui.navDesignNote">In design — pulse-sequence timeline, fringe plot, and a phase-accumulating Bloch sphere.</span>
+        </a>
+        <p class="note-detail" data-i18n="ramseyPayoff.body">
+          Ramsey interferometry breaks the wobble into three clean steps: a short π/2 pulse tips the spin onto the
+          equator, the microwave then switches off entirely for a free-evolution window τ, and a second π/2 pulse
+          converts whatever happened during that silence back into a population you can read.
+        </p>
+      </div>
+      <div class="card">
+        <a href="index_rabi.html">
+          <span class="label" data-i18n="ui.navRabiLabel">Rabi &amp; Zeeman visualizer</span>
+          <span class="note" data-i18n="ui.navRabiNote">The continuously-driven oscillation.</span>
+        </a>
+        <p class="note-detail" data-i18n="purpose.body">
+          A view of Rabi oscillations, phase accumulation, and fringe visibility. Here you drag a variable and watch the whole time-domain
+          picture — the oscillation, the Bloch vector, the fringe pattern — respond continuously.
+        </p>
+      </div>
 
-      <text x="10" y="100" class="timeline-label" fill="var(--ink-faint)" data-i18n="diagram.ramseyCaption">Ramsey: pulse, wait, pulse</text>
-      <rect class="bar-pulse" x="10" y="110" width="56" height="30" rx="4"></rect>
-      <text x="38" y="130" class="timeline-label" fill="var(--ink)" text-anchor="middle" data-i18n="diagram.ramseyPulseLabel">π/2</text>
-      <rect class="bar-wait" x="74" y="110" width="492" height="30" rx="4"></rect>
-      <text x="320" y="130" class="timeline-label" fill="var(--ink)" text-anchor="middle" data-i18n="diagram.ramseyWaitLabel">drive off — free evolution τ</text>
-      <rect class="bar-pulse" x="574" y="110" width="56" height="30" rx="4"></rect>
-      <text x="602" y="130" class="timeline-label" fill="var(--ink)" text-anchor="middle" data-i18n="diagram.ramseyPulseLabel">π/2</text>
-    </svg>
-    <p class="sr-only" data-i18n="diagram.srDescription">
-      Two horizontal timelines compared. The Rabi timeline is a single unbroken bar labeled drive on for its
-      entire length. The Ramsey timeline has three segments: a short pulse labeled pi over two, a much longer
-      gap labeled drive off, free evolution tau, and a second short pulse labeled pi over two.
-    </p>
-  </section>
+      <h3 data-i18n="diagram.heading">Drive timelines, side by side</h3>
+      <div class="timeline-links">
+        <a class="timeline-link" href="index_rabi.html">
+          <svg viewBox="0 0 640 70" aria-hidden="true">
+            <text x="10" y="16" class="timeline-label" fill="var(--ink-faint)" data-i18n="diagram.rabiCaption">Rabi: continuous drive</text>
+            <rect class="bar-rabi" x="10" y="26" width="620" height="30" rx="4"></rect>
+            <text x="320" y="46" class="timeline-label" fill="var(--ink)" text-anchor="middle" data-i18n="diagram.rabiOnLabel">drive on — the whole time</text>
+          </svg>
+          <span class="timeline-cta" data-i18n="diagram.rabiLinkLabel">Open the Rabi visualizer →</span>
+        </a>
+        <a class="timeline-link" href="index_ramsey.html">
+          <svg viewBox="0 0 640 70" aria-hidden="true">
+            <text x="10" y="16" class="timeline-label" fill="var(--ink-faint)" data-i18n="diagram.ramseyCaption">Ramsey: pulse, wait, pulse</text>
+            <rect class="bar-pulse" x="10" y="26" width="56" height="30" rx="4"></rect>
+            <text x="38" y="46" class="timeline-label" fill="var(--ink)" text-anchor="middle" data-i18n="diagram.ramseyPulseLabel">π/2</text>
+            <rect class="bar-wait" x="74" y="26" width="492" height="30" rx="4"></rect>
+            <text x="320" y="46" class="timeline-label" fill="var(--ink)" text-anchor="middle" data-i18n="diagram.ramseyWaitLabel">drive off — free evolution τ</text>
+            <rect class="bar-pulse" x="574" y="26" width="56" height="30" rx="4"></rect>
+            <text x="602" y="46" class="timeline-label" fill="var(--ink)" text-anchor="middle" data-i18n="diagram.ramseyPulseLabel">π/2</text>
+          </svg>
+          <span class="timeline-cta" data-i18n="diagram.ramseyLinkLabel">Open the Ramsey visualizer →</span>
+        </a>
+      </div>
+      <p class="sr-only" data-i18n="diagram.srDescription">
+        Two horizontal timelines compared. The Rabi timeline is a single unbroken bar labeled drive on for its
+        entire length. The Ramsey timeline has three segments: a short pulse labeled pi over two, a much longer
+        gap labeled drive off, free evolution tau, and a second short pulse labeled pi over two.
+      </p>
+    </nav>
 
-  <section class="panel">
-    <h2 data-i18n="coherenceBudget.heading">The coherence budget</h2>
+    <section class="panel hero-video">
+      <video class="bloch-hero" autoplay loop muted playsinline aria-hidden="true">
+        <source src="doc/media/bloch-sweep.mp4" type="video/mp4">
+      </video>
+      <p class="hero-caption" data-i18n="hero.blochCaption">
+        The Bloch vector precessing as the magnet auto-sweeps its full range — captured live from the Rabi
+        visualizer, not a rendered mockup.
+      </p>
+      <h2 data-i18n="coherenceBudget.heading">The coherence budget</h2>
     <p data-i18n="coherenceBudget.body">
       That clean readout isn't free. bell-state-explorer's dephasing slider makes the same trade visible on a
       two-qubit density matrix: damping the off-diagonal coherences by a factor of (1 − p) leaves the populations
-      untouched, but it erases exactly the information that made the state's correlations legible. A Ramsey
-      free-evolution window spends the identical currency — fringe visibility here decays as e^(−τ/T₂*), so
-      waiting longer to bank more phase also bleeds away the coherence needed to read that phase back out. There
-      is an optimal τ, set by T₂*, and past it you are measuring noise, not field.
+      untouched, but it erases exactly the information that made the state's correlations legible. 
     </p>
-  </section>
-
+    </section>
+  </div>
 </main>
 
 <footer>
