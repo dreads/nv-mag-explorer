@@ -20,59 +20,33 @@
       <option value="en" data-i18n-exempt>English</option>
     </select>
   </div>
-  <h1><span class="q" data-i18n="ui.heading">Why Ramsey Interferometry</span></h1>
-  <p class="sub" data-i18n="ui.subtitle">
-    The Rabi visualizer shows a magnetometer's raw quantum wobble. A real device doesn't read that wobble directly — it runs a smarter two-pulse sequence called Ramsey interferometry. This page explains why, and how the same coherence budget that limits entanglement in bell-state-explorer limits this measurement too.
-  </p>
 
   <nav class="explore" aria-label="Visualizers">
     <h2 data-i18n="ui.navHeading">Explore the visualizers</h2>
     <a href="index_ramsey.html">
       <span class="label" data-i18n="ui.navDesignLabel">Ramsey visualizer</span>
-      <span class="note" data-i18n="ui.navDesignNote">In design — pulse-sequence timeline, fringe plot, and a phase-accumulating Bloch sphere.</span>
+      <span class="note" data-i18n="ui.navDesignNote">In design — pulse-sequence timeline, fringe plot, and a phase-accumulating Bloch sphere.
+      <p>Ramsey interferometry breaks the wobble into three clean steps: a short π/2 pulse tips the spin onto the
+      equator, the microwave then switches off entirely for a free-evolution window τ, and a second π/2 pulse
+      converts whatever happened during that silence back into a population you can read. While the drive is off,
+      the spin simply precesses at the detuning rate, banking a phase φ = δτ. Sweep τ and the readout traces
+      P(τ) = ½(1 + cos δτ) — a fringe pattern whose frequency is δ, full stop. No amplitude coupling, no
+      drive-strength ambiguity: read the fringe spacing, invert for the field.</p></span>
     </a>
     <a href="index_rabi.html">
       <span class="label" data-i18n="ui.navRabiLabel">Rabi &amp; Zeeman visualizer</span>
-      <span class="note" data-i18n="ui.navRabiNote">The continuously-driven oscillation.</span>
+      <span class="note" data-i18n="ui.navRabiNote">The continuously-driven oscillation.
+        <p>Rabi oscillations, phase accumulation, fringe visibility: most textbooks and papers only ever show
+      a closed-form equation or a single static plot. Here you drag a variable and watch the whole time-domain
+      picture — the oscillation, the Bloch vector, the fringe pattern — respond continuously, the same way you'd
+      characterize a real sensor on a bench.</p>
+      </span>
+
     </a>
   </nav>
 </header>
 
 <main id="main">
-
-  <section class="panel">
-    <h2 data-i18n="purpose.heading">A lab bench, not a nav demo</h2>
-    <p data-i18n="purpose.body">
-      Despite the "MagNav" name, the point of these pages isn't route-planning — it's watching quantum dynamics
-      happen. Rabi oscillations, phase accumulation, fringe visibility: most textbooks and papers only ever show
-      a closed-form equation or a single static plot. Here you drag a variable and watch the whole time-domain
-      picture — the oscillation, the Bloch vector, the fringe pattern — respond continuously, the same way you'd
-      characterize a real sensor on a bench.
-    </p>
-  </section>
-
-  <section class="panel">
-    <h2 data-i18n="ramseyPayoff.heading">What Ramsey buys you</h2>
-    <p data-i18n="ramseyPayoff.body">
-      Ramsey interferometry breaks the wobble into three clean steps: a short π/2 pulse tips the spin onto the
-      equator, the microwave then switches off entirely for a free-evolution window τ, and a second π/2 pulse
-      converts whatever happened during that silence back into a population you can read. While the drive is off,
-      the spin simply precesses at the detuning rate, banking a phase φ = δτ. Sweep τ and the readout traces
-      P(τ) = ½(1 + cos δτ) — a fringe pattern whose frequency is δ, full stop. No amplitude coupling, no
-      drive-strength ambiguity: read the fringe spacing, invert for the field.
-    </p>
-  </section>
-
-  <section class="panel">
-    <h2 data-i18n="rabiProblem.heading">The problem with reading Rabi directly</h2>
-    <p data-i18n="rabiProblem.body">
-      Sweep the microwave off resonance in the Rabi visualizer and two things happen at once: the oscillation
-      speeds up, since the effective Rabi frequency is Ω = √(Ω₀² + δ²), and its amplitude shrinks, since the
-      flip probability scales with Ω₀²/Ω². Both signatures move together, driven by the same detuning δ you are
-      trying to measure. Fit a Rabi curve to recover the field and you are extracting one number, δ, from a shape
-      that also depends on the drive strength Ω₀ — a fine way to explore the physics, a clumsy way to build an instrument.
-    </p>
-  </section>
   <section class="panel diagram">
     <h2 data-i18n="diagram.heading">Drive timelines, side by side</h2>
     <svg viewBox="0 0 640 200" aria-hidden="true">
