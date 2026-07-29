@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NV Magnetometry — Ramsey Interferometry</title>
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#111827; --panel-line:#1f2b45;
+    --ink:#e6ebf5; --ink-dim:#8b98b5; --ink-faint:#5a6784;
+    --green:#3ddc84; --green-deep:#1a8f52;
+    --red:#ff5a6e; --amber:#ffb454; --violet:#9d7bff; --cyan:#4fd6ff;
+    --grid:#182238;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+    radial-gradient(1200px 700px at 78% -8%, #14203c 0%, transparent 60%),
+    radial-gradient(900px 600px at 8% 108%, #101a30 0%, transparent 55%),
+    var(--bg);
+    color:var(--ink);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1320px;margin:0 auto;padding:22px 20px 60px}
+  header{margin-bottom:6px}
+  h1{font-size:23px;font-weight:700;margin:0 0 4px;letter-spacing:.2px}
+  h1 .q{color:var(--violet)}
+  .sub{color:var(--ink-dim);font-size:13.5px;max-width:880px;line-height:1.5}
+  .sub b{color:var(--ink)}
+  .nav{font-size:12px;color:var(--ink-faint);margin-top:6px}
+  .nav a{color:var(--cyan);text-decoration:none}
+
+  .layout{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-top:16px}
+  @media(max-width:1080px){.layout{grid-template-columns:1fr}}
+  .col{display:flex;flex-direction:column;gap:14px}
+
+  .panel{background:linear-gradient(180deg,#121a2e 0%,var(--panel) 100%);
+    border:1px solid var(--panel-line);border-radius:14px;padding:14px 15px;position:relative}
+  .panel h2{font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;
+    color:var(--ink-faint);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+  .panel h2 .dot{width:7px;height:7px;border-radius:50%}
+  .tag{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);
+    border:1px solid var(--panel-line);border-radius:5px;padding:1px 6px;margin-left:auto}
+  canvas{display:block;width:100%;border-radius:9px}
+
+  .readout-row{display:flex;gap:10px;margin-top:11px;flex-wrap:wrap}
+  .chip{flex:1;min-width:110px;background:#0c1424;border:1px solid var(--panel-line);
+    border-radius:9px;padding:8px 11px}
+  .chip .k{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint)}
+  .chip .v{font-family:var(--mono);font-size:17px;font-weight:600;margin-top:3px}
+  .chip .u{font-size:10.5px;color:var(--ink-dim);margin-left:2px}
+  .v.cyan{color:var(--cyan)} .v.amber{color:var(--amber)} .v.violet{color:var(--violet)}
+  .v.red{color:var(--red)} .v.green{color:var(--green)}
+
+  .controls{margin-top:4px}
+  .ctrl{margin-bottom:15px}
+  .ctrl .lab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+  .ctrl .lab .name{font-size:13px;font-weight:600}
+  .ctrl .lab .name small{color:var(--ink-faint);font-weight:400;font-size:11px;margin-left:6px}
+  .ctrl .lab .val{font-family:var(--mono);font-size:13px;color:var(--cyan)}
+  input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:4px;background:#22314f;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;
+    background:var(--cyan);cursor:pointer;border:2px solid #0a0e1a;box-shadow:0 0 0 1px var(--cyan),0 2px 6px rgba(0,0,0,.5)}
+  input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid #0a0e1a}
+  input[type=range].violet::-webkit-slider-thumb{background:var(--violet);box-shadow:0 0 0 1px var(--violet),0 2px 6px rgba(0,0,0,.5)}
+  input[type=range].violet::-moz-range-thumb{background:var(--violet)}
+  input[type=range].amber::-webkit-slider-thumb{background:var(--amber);box-shadow:0 0 0 1px var(--amber),0 2px 6px rgba(0,0,0,.5)}
+  input[type=range].amber::-moz-range-thumb{background:var(--amber)}
+
+  .btnrow{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
+  button{background:#182642;color:var(--ink);border:1px solid var(--panel-line);border-radius:8px;
+    padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
+  button:hover{background:#213255;border-color:#2f4670}
+  button.primary{background:linear-gradient(180deg,#5b3aa8,#472e85);border-color:#6f4fc4;color:#efe9ff}
+  button.primary:hover{background:linear-gradient(180deg,#6a46c4,#543597)}
+  button.snap{font-size:11.5px;padding:7px 10px}
+  button.snap.active{background:linear-gradient(180deg,#1c6b40,#155232);border-color:#2a8a56;color:#dfffce}
+
+  .stagelbl{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-family:var(--mono);
+    padding:3px 10px;border-radius:20px;margin-left:auto}
+  .stagelbl.s0{background:rgba(61,220,132,.12);color:var(--green);border:1px solid rgba(61,220,132,.3)}
+  .stagelbl.s1{background:rgba(79,214,255,.12);color:var(--cyan);border:1px solid rgba(79,214,255,.3)}
+  .stagelbl.s2{background:rgba(255,180,84,.12);color:var(--amber);border:1px solid rgba(255,180,84,.3)}
+  .stagelbl.s3{background:rgba(157,123,255,.12);color:var(--violet);border:1px solid rgba(157,123,255,.3)}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;font-size:11px;color:var(--ink-dim)}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:11px;height:3px;border-radius:2px;display:inline-block}
+
+  .explain{font-size:12px;color:var(--ink-dim);line-height:1.55;margin-top:11px;
+    border-top:1px solid var(--panel-line);padding-top:10px}
+  .explain b{color:var(--ink)}
+
+  .circwrap{display:flex;align-items:center;gap:2px;font-family:var(--mono);font-size:12px;
+    color:var(--ink-dim);margin-top:4px;flex-wrap:wrap;justify-content:center}
+  .gate{background:#0c1424;border:1.5px solid var(--panel-line);border-radius:6px;padding:6px 9px;
+    color:var(--ink);font-weight:600;white-space:nowrap}
+  .gate.p{border-color:var(--green);color:var(--green)}
+  .gate.wait{border-color:var(--cyan);color:var(--cyan);border-style:dashed}
+  .gate.m{border-color:var(--violet);color:var(--violet)}
+  .wire{width:20px;height:1.5px;background:var(--panel-line)}
+
+  footer{margin-top:26px;font-size:11.5px;color:var(--ink-faint);line-height:1.6;
+    border-top:1px solid var(--panel-line);padding-top:16px}
+  footer code{font-family:var(--mono);color:var(--ink-dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>NV Magnetometry — <span class="q">Ramsey Interferometry</span></h1>
+    <div class="sub">The sequence a real NV magnetometer runs to <b>measure</b> a field. A π/2 pulse tips the spin onto the equator; during a protected <b>free-evolution window τ</b> it precesses at the detuning rate, banking phase φ=δτ; a second π/2 pulse converts that phase into population you can read. Sweep τ and the readout oscillates as <b>cos(δτ)</b> — the fringe frequency <i>is</i> the field.</div>
+    <div class="nav">Companion to the Rabi visualizer. Rabi shows the wobble; Ramsey shows the measurement.</div>
+  </header>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <div class="col">
+      <!-- SEQUENCE TIMELINE -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--violet)"></span>Pulse sequence
+          <span class="stagelbl s0" id="stage-lbl">stage</span></h2>
+        <canvas id="seq" height="150"></canvas>
+        <div class="circwrap">
+          <span class="gate">|0⟩</span><span class="wire"></span>
+          <span class="gate p">RY(π/2)</span><span class="wire"></span>
+          <span class="gate wait">wait τ · φ=δτ</span><span class="wire"></span>
+          <span class="gate p">RY(π/2)</span><span class="wire"></span>
+          <span class="gate m">measure Z</span>
+        </div>
+        <div class="explain">
+          The whole thing is a <b>two-gate quantum circuit</b> with a phase-accumulating gap. Unlike continuous Rabi
+          driving, the microwave is <b>off</b> during τ — the spin is a free-running clock whose rate is the field.
+          That protected window is why Ramsey resolves the field far more finely than a Rabi fit.
+        </div>
+      </div>
+
+      <!-- RAMSEY FRINGES -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--cyan)"></span>Ramsey fringes — P(|0⟩) vs free-evolution time τ</h2>
+        <canvas id="fringe" height="200"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--cyan)"></i> P(τ) = ½(1+cos δτ)·e^(−τ/T₂*)</span>
+          <span><i style="background:var(--red);opacity:.55"></i> T₂* envelope</span>
+          <span><i style="background:var(--violet)"></i> current τ</span>
+        </div>
+        <div class="explain">
+          The fringe spacing is set entirely by the detuning: bigger field → faster precession → <b>tighter fringes</b>.
+          Reading the fringe frequency and inverting gives B. The red envelope is dephasing — wait past it and the
+          phase information is gone, which caps the useful τ.
+        </div>
+      </div>
+
+      <!-- TERRAIN -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--cyan)"></span>Terrain &amp; local field
+          <span class="tag">drag the vehicle ▸</span></h2>
+        <canvas id="terrain" height="170"></canvas>
+        <div class="readout-row">
+          <div class="chip"><div class="k">Local field B∥</div><div class="v cyan" id="r-b">—<span class="u">mT</span></div></div>
+          <div class="chip"><div class="k">Detuning δ</div><div class="v red" id="r-det">—<span class="u">MHz</span></div></div>
+          <div class="chip"><div class="k">Phase at τ</div><div class="v amber" id="r-phase">—<span class="u">rad</span></div></div>
+          <div class="chip"><div class="k">Readout P(0)</div><div class="v violet" id="r-pop">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col">
+      <!-- BLOCH -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--violet)"></span>Bloch sphere — driven by the sequence</h2>
+        <canvas id="bloch" height="300"></canvas>
+        <div class="explain" style="padding-top:8px">
+          <b>Watch the three beats:</b> the first π/2 lays the vector onto the equator (green). During free evolution
+          it sweeps the equator (cyan) — that sweep angle is the banked phase. The second π/2 folds the equator back
+          toward the poles; where the vector had rotated to decides how far north or south it lands, and that height
+          is what you measure.
+        </div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--amber)"></span>Controls</h2>
+        <div class="controls">
+          <div class="ctrl">
+            <div class="lab"><span class="name">Free-evolution time τ <small>the sensing window</small></span>
+              <span class="val" id="v-tau">0.50 µs</span></div>
+            <input type="range" id="s-tau" min="0" max="3" step="0.01" value="0.5">
+          </div>
+          <div class="ctrl">
+            <div class="lab"><span class="name">Microwave frequency <small>fixed drive; offset from f₊ sets δ</small></span>
+              <span class="val" id="v-mw">2.8700 GHz</span></div>
+            <input type="range" id="s-mw" class="amber" min="2.82" max="2.92" step="0.0002" value="2.87">
+          </div>
+          <div class="ctrl">
+            <div class="lab"><span class="name">Coherence time T₂* <small>caps the useful τ</small></span>
+              <span class="val" id="v-t2">2.0 µs</span></div>
+            <input type="range" id="s-t2" class="violet" min="0.3" max="6" step="0.1" value="2">
+          </div>
+          <div class="ctrl">
+            <div class="lab"><span class="name">Field sensitivity <small>terrain height → B scaling</small></span>
+              <span class="val" id="v-sens">1.0×</span></div>
+            <input type="range" id="s-sens" min="0.2" max="2.5" step="0.05" value="1">
+          </div>
+
+          <div style="font-size:11px;color:var(--ink-faint);letter-spacing:.6px;text-transform:uppercase;margin:2px 0 7px">Jump to stage</div>
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="snap" data-stage="0">① start |0⟩</button>
+            <button class="snap" data-stage="1">② after 1st π/2</button>
+            <button class="snap" data-stage="2">③ end of τ</button>
+            <button class="snap" data-stage="3">④ after 2nd π/2</button>
+          </div>
+          <div class="btnrow">
+            <button class="primary" id="btn-play">▶ Play sequence</button>
+            <button id="btn-reset">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <b style="color:var(--ink-dim)">Physics.</b> Ramsey readout <code>P(|0⟩)=½(1+cos(δτ))·e^(−τ/T₂*)</code>; accumulated phase <code>φ=δτ</code>.
+    Detuning <code>δ = 2π·(f_drive − f₊)</code>, with Zeeman resonance <code>f₊ = 2.87 GHz + γB</code>, <code>γ≈28 MHz/mT</code>.
+    Equivalent circuit: <code>|0⟩ – RY(π/2) – [free phase δτ] – RY(π/2) – measure</code>. Closed-form, computed client-side, no server.
+    The coherent evolution is exact; T₂* dephasing is the one open-system effect, added as the fringe envelope.
+    <br><span style="color:var(--ink-faint)">Terrain height is an illustrative stand-in for crustal field magnitude; the spin physics is faithful to the two-level NV model.</span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const F0=2.87, GAMMA=28.0, TWO_PI=Math.PI*2;
+const MONO="'SFMono-Regular',Consolas,Menlo,monospace";
+
+const S={
+  vx:0.42, B:0, mw:2.87, t2:2.0, sens:1.0,
+  tau:0.5,           // µs, free evolution
+  play:false, playT:0, playDur:2.6,   // seconds for a full sequence playthrough
+  stageJump:null,    // when set (0..3), Bloch shows that stage statically
+  dragging:false,
+};
+
+/* pulse-sequence layout in normalized sequence-time u∈[0,1]:
+   [0,0.14] first π/2 | [0.14,0.86] free evolution τ | [0.86,1.0] second π/2 + measure */
+const P1_END=0.14, FREE_END=0.86;
+
+function fieldAt(x){
+  return 0.9*Math.sin(6.3*x+0.4)+0.5*Math.sin(13.1*x+1.7)
+       +0.35*Math.sin(21.7*x+3.1)+0.22*Math.sin(33.0*x+0.9);
+}
+function heightAt(x){return 0.5+0.24*fieldAt(x);}
+
+const C={};
+function setup(cv){const dpr=window.devicePixelRatio||1;const w=cv.clientWidth,h=cv.clientHeight;
+  cv.width=w*dpr;cv.height=h*dpr;const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return {ctx,w,h};}
+function setupAll(){['seq','fringe','terrain','bloch'].forEach(id=>C[id]=setup(document.getElementById(id)));}
+
+const COL={};
+function cacheCol(){['--ink','--ink-dim','--ink-faint','--green','--red','--amber','--violet','--cyan','--grid','--panel-line']
+  .forEach(k=>COL[k]=getComputedStyle(document.documentElement).getPropertyValue(k).trim());}
+
+function detuning(){ // rad/µs
+  const fRes=F0+GAMMA*S.B/1000;
+  return TWO_PI*(S.mw-fRes)*1000; // (GHz diff)*1000 = MHz, *2π = rad/µs
+}
+function detMHz(){const fRes=F0+GAMMA*S.B/1000;return (S.mw-fRes)*1000;}
+
+/* ---- current sequence phase u (0..1) from play state or stage jump ---- */
+function currentU(){
+  if(S.stageJump!==null){
+    return [0.0, P1_END, FREE_END, 1.0][S.stageJump];
+  }
+  if(S.play){ return Math.min(1, S.playT/S.playDur); }
+  // idle: sit at end-of-tau so the phase is visible
+  return FREE_END;
+}
+
+/* ---- Bloch vector for a given sequence position ---- */
+function blochVec(u){
+  const d=detuning(), tau=S.tau;
+  // stage boundaries
+  if(u<=P1_END){ // first π/2: rotate about X from |0> (z=1) toward -y... use RY(π/2): z-> x
+    const frac=u/P1_END; const ang=frac*Math.PI/2;
+    // RY(theta): (x,y,z) start (0,0,1) -> (sin,0,cos)
+    return [Math.sin(ang),0,Math.cos(ang)];
+  } else if(u<=FREE_END){ // free precession about Z by phase = d*tau*(elapsed frac)
+    const frac=(u-P1_END)/(FREE_END-P1_END);
+    const phi=d*tau*frac;
+    // start on equator at +x, rotate about Z
+    return [Math.cos(phi),Math.sin(phi),0];
+  } else { // second π/2 RY(π/2): rotate current equator vec about Y
+    const frac=(u-FREE_END)/(1-FREE_END); const ang=frac*Math.PI/2;
+    const phi=d*tau;
+    const v=[Math.cos(phi),Math.sin(phi),0];
+    // RY(ang): x' = x cos + z sin ; z' = -x sin + z cos ; y unchanged
+    const ca=Math.cos(ang), sa=Math.sin(ang);
+    return [v[0]*ca+v[2]*sa, v[1], -v[0]*sa+v[2]*ca];
+  }
+}
+function stageOf(u){
+  if(u<P1_END-1e-6) return 0;
+  if(u<=P1_END+1e-6) return 1;
+  if(u<FREE_END-1e-6) return 1.5;
+  if(u<=FREE_END+1e-6) return 2;
+  return 3;
+}
+
+/* ================= SEQUENCE TIMELINE ================= */
+function drawSeq(u){
+  const {ctx,w,h}=C.seq; ctx.clearRect(0,0,w,h);
+  const padL=14,padR=14,y=h*0.5, x0=padL,x1=w-padR;
+  const xP1a=x0, xP1b=x0+(x1-x0)*P1_END;
+  const xFb=x0+(x1-x0)*FREE_END;
+  // baseline wire
+  ctx.strokeStyle=COL['--panel-line'];ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();
+  // free-evolution band
+  ctx.fillStyle='rgba(79,214,255,.08)';
+  ctx.fillRect(xP1b,y-40,xFb-xP1b,80);
+  ctx.strokeStyle='rgba(79,214,255,.3)';ctx.setLineDash([4,3]);ctx.lineWidth=1;
+  ctx.strokeRect(xP1b,y-40,xFb-xP1b,80);ctx.setLineDash([]);
+  ctx.fillStyle=COL['--cyan'];ctx.font='11px '+MONO;
+  ctx.fillText('free evolution τ — microwave OFF, phase φ=δτ accrues',xP1b+8,y-46);
+
+  // pulse blocks
+  function pulse(cx,label){
+    ctx.fillStyle='rgba(61,220,132,.9)';
+    roundRect(ctx,cx-9,y-30,18,60,3);ctx.fill();
+    ctx.fillStyle='#07120b';ctx.font='bold 11px '+MONO;
+    ctx.save();ctx.translate(cx,y);ctx.rotate(-Math.PI/2);ctx.textAlign='center';
+    ctx.fillText('π/2',0,4);ctx.restore();
+    ctx.fillStyle=COL['--ink-dim'];ctx.font='10px '+MONO;ctx.textAlign='center';
+    ctx.fillText(label,cx,y+44);ctx.textAlign='left';
+  }
+  pulse(xP1b,'pulse 1');
+  pulse(xFb,'pulse 2');
+  // measure block
+  ctx.fillStyle='rgba(157,123,255,.9)';
+  roundRect(ctx,x1-16,y-24,20,48,4);ctx.fill();
+  ctx.fillStyle='#0e0a1a';ctx.font='bold 13px '+MONO;ctx.textAlign='center';
+  ctx.fillText('M',x1-6,y+5);ctx.textAlign='left';
+  // laser init marker
+  ctx.fillStyle=COL['--green'];ctx.font='10px '+MONO;
+  ctx.fillText('|0⟩ init',x0-2,y+44);
+
+  // playhead
+  const px=x0+(x1-x0)*u;
+  ctx.strokeStyle=COL['--amber'];ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(px,y-48);ctx.lineTo(px,y+30);ctx.stroke();
+  ctx.fillStyle=COL['--amber'];ctx.beginPath();
+  ctx.moveTo(px,y-48);ctx.lineTo(px-4,y-54);ctx.lineTo(px+4,y-54);ctx.closePath();ctx.fill();
+}
+
+/* ================= RAMSEY FRINGES ================= */
+function drawFringe(){
+  const {ctx,w,h}=C.fringe; ctx.clearRect(0,0,w,h);
+  const padL=32,padR=10,padT=12,padB=22, x0=padL,x1=w-padR,y0=padT,y1=h-padB;
+  ctx.strokeStyle=COL['--grid'];ctx.lineWidth=1;
+  for(let p=0;p<=4;p++){const y=y0+(y1-y0)*p/4;ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();}
+  ctx.fillStyle=COL['--ink-faint'];ctx.font='10px '+MONO;
+  ctx.fillText('1.0',6,y0+4);ctx.fillText('0.5',6,(y0+y1)/2+3);ctx.fillText('0',14,y1+3);
+  ctx.fillText('τ (µs) →',x1-56,y1+16);
+
+  const d=detuning(), TAUMAX=3.0;
+  // envelope (red)
+  ctx.strokeStyle='rgba(255,90,110,.5)';ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
+  ctx.beginPath();
+  for(let px=x0;px<=x1;px++){const tt=(px-x0)/(x1-x0)*TAUMAX;
+    const env=0.5+0.5*Math.exp(-tt/S.t2);const py=y1-env*(y1-y0);px===x0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+  ctx.stroke();
+  ctx.beginPath();
+  for(let px=x0;px<=x1;px++){const tt=(px-x0)/(x1-x0)*TAUMAX;
+    const env=0.5-0.5*Math.exp(-tt/S.t2);const py=y1-env*(y1-y0);px===x0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+  ctx.stroke();ctx.setLineDash([]);
+
+  // fringes (cyan)
+  ctx.strokeStyle=COL['--cyan'];ctx.lineWidth=2.2;ctx.beginPath();
+  for(let px=x0;px<=x1;px++){const tt=(px-x0)/(x1-x0)*TAUMAX;
+    const P=0.5*(1+Math.cos(d*tt))*Math.exp(-tt/S.t2)+0.5*(1-Math.exp(-tt/S.t2));
+    const py=y1-P*(y1-y0);px===x0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+  ctx.stroke();
+
+  // current tau cursor
+  const cx=x0+(S.tau/TAUMAX)*(x1-x0);
+  ctx.strokeStyle=COL['--violet'];ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(cx,y0);ctx.lineTo(cx,y1);ctx.stroke();
+  const Pnow=0.5*(1+Math.cos(d*S.tau))*Math.exp(-S.tau/S.t2)+0.5*(1-Math.exp(-S.tau/S.t2));
+  const cyN=y1-Pnow*(y1-y0);
+  ctx.fillStyle=COL['--violet'];ctx.beginPath();ctx.arc(cx,cyN,4.5,0,TWO_PI);ctx.fill();
+  return Pnow;
+}
+
+/* ================= TERRAIN ================= */
+function drawTerrain(){
+  const {ctx,w,h}=C.terrain; ctx.clearRect(0,0,w,h);
+  const N=200,padB=22;
+  ctx.beginPath();ctx.moveTo(0,h-padB);
+  for(let i=0;i<=N;i++){const x=i/N;ctx.lineTo(x*w,(h-padB)-heightAt(x)*(h-padB-14));}
+  ctx.lineTo(w,h-padB);ctx.closePath();
+  const g=ctx.createLinearGradient(0,0,0,h);
+  g.addColorStop(0,'rgba(79,214,255,.30)');g.addColorStop(1,'rgba(27,42,74,.12)');
+  ctx.fillStyle=g;ctx.fill();
+  for(let i=0;i<N;i++){const x0=i/N,x1=(i+1)/N;
+    const y0=(h-padB)-heightAt(x0)*(h-padB-14),y1=(h-padB)-heightAt(x1)*(h-padB-14);
+    const mag=Math.min(1,Math.abs(fieldAt((x0+x1)/2))/1.6);
+    ctx.strokeStyle=`rgba(${(90+(79-90)*mag)|0},${(120+(214-120)*mag)|0},${(180+(255-180)*mag)|0},.95)`;
+    ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x0*w,y0);ctx.lineTo(x1*w,y1);ctx.stroke();}
+  ctx.strokeStyle=COL['--panel-line'];ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,h-padB);ctx.lineTo(w,h-padB);ctx.stroke();
+  ctx.fillStyle=COL['--ink-faint'];ctx.font='10px '+MONO;
+  ctx.fillText('position along route',w/2-52,h-7);
+
+  const vx=S.vx*w, vy=(h-padB)-heightAt(S.vx)*(h-padB-14);
+  ctx.strokeStyle='rgba(61,220,132,.5)';ctx.lineWidth=2;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(vx,vy-2);ctx.lineTo(vx,h-padB);ctx.stroke();ctx.setLineDash([]);
+  const bLen=Math.max(-34,Math.min(34,S.B*20));
+  ctx.strokeStyle=COL['--cyan'];ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(vx,vy);ctx.lineTo(vx,vy-bLen);ctx.stroke();
+  const ah=bLen>=0?-1:1;ctx.beginPath();ctx.moveTo(vx,vy-bLen);ctx.lineTo(vx-4,vy-bLen+ah*6);ctx.lineTo(vx+4,vy-bLen+ah*6);ctx.closePath();ctx.fillStyle=COL['--cyan'];ctx.fill();
+  ctx.save();ctx.translate(vx,vy-11);ctx.fillStyle='#e6ebf5';roundRect(ctx,-13,-6,26,12,3);ctx.fill();
+  ctx.fillStyle=COL['--amber'];roundRect(ctx,-6,-10,12,6,2);ctx.fill();
+  ctx.fillStyle='#0a0e1a';ctx.beginPath();ctx.arc(-7,7,3.2,0,TWO_PI);ctx.arc(7,7,3.2,0,TWO_PI);ctx.fill();ctx.restore();
+  if(S.dragging){ctx.strokeStyle='rgba(79,214,255,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(vx,vy-11,20,0,TWO_PI);ctx.stroke();}
+}
+
+/* ================= BLOCH ================= */
+let blochRot=0;
+function drawBloch(u){
+  const {ctx,w,h}=C.bloch; ctx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2+4, R=Math.min(w,h)*0.34;
+  blochRot+=0.005;
+  const ca=Math.cos(blochRot), sa=Math.sin(blochRot);
+  function proj(v){ // rotate about vertical, iso project
+    const rx=v[0]*ca - v[1]*sa, ry=v[0]*sa + v[1]*ca;
+    return [cx+rx*R, cy - v[2]*R + ry*R*0.32];
+  }
+  // sphere
+  ctx.strokeStyle=COL['--panel-line'];ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,R,0,TWO_PI);ctx.stroke();
+  ctx.strokeStyle='rgba(90,103,132,.4)';
+  ctx.beginPath();ctx.ellipse(cx,cy,R,R*0.32,0,0,TWO_PI);ctx.stroke();
+  ctx.beginPath();ctx.ellipse(cx,cy,R*0.32,R,0,0,TWO_PI);ctx.stroke();
+  // poles
+  ctx.fillStyle=COL['--green'];ctx.beginPath();ctx.arc(cx,cy-R,3,0,TWO_PI);ctx.fill();
+  ctx.fillStyle=COL['--red'];ctx.beginPath();ctx.arc(cx,cy+R,3,0,TWO_PI);ctx.fill();
+  ctx.fillStyle=COL['--ink-dim'];ctx.font='11px '+MONO;
+  ctx.fillText('|0⟩',cx+6,cy-R+2);ctx.fillText('|1⟩',cx+6,cy+R+4);
+
+  const d=detuning(), phi=d*S.tau;
+  const stg=stageOf(u);
+
+  // during/after free evolution: draw the equatorial phase arc traced so far
+  if(u>P1_END){
+    const fracFree = u<=FREE_END ? (u-P1_END)/(FREE_END-P1_END) : 1;
+    const sweep=phi*fracFree;
+    ctx.strokeStyle='rgba(79,214,255,.5)';ctx.lineWidth=1.6;ctx.beginPath();
+    const steps=Math.max(2,Math.min(140,Math.abs(sweep)/0.05));
+    for(let k=0;k<=steps;k++){const a=sweep*k/steps;const pp=proj([Math.cos(a),Math.sin(a),0]);k===0?ctx.moveTo(pp[0],pp[1]):ctx.lineTo(pp[0],pp[1]);}
+    ctx.stroke();
+  }
+
+  // vector + color by stage
+  const v=blochVec(u);
+  const p=proj(v);
+  let vcol=COL['--violet'];
+  if(stg===1||u<=P1_END) vcol=COL['--green'];
+  else if(u<=FREE_END) vcol=COL['--cyan'];
+  else vcol=COL['--violet'];
+
+  // faint trail
+  ctx.strokeStyle='rgba(157,123,255,.18)';ctx.lineWidth=1.3;ctx.beginPath();
+  for(let k=0;k<40;k++){const uu=Math.max(0,u-k*0.006);const vv=blochVec(uu);const pp=proj(vv);k===0?ctx.moveTo(pp[0],pp[1]):ctx.lineTo(pp[0],pp[1]);}
+  ctx.stroke();
+
+  ctx.strokeStyle=vcol;ctx.lineWidth=2.8;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(p[0],p[1]);ctx.stroke();
+  ctx.fillStyle=vcol;ctx.beginPath();ctx.arc(p[0],p[1],5,0,TWO_PI);ctx.fill();
+
+  // phase annotation during free evolution
+  if(u>P1_END && u<=FREE_END){
+    ctx.fillStyle=COL['--cyan'];ctx.font='11px '+MONO;
+    ctx.fillText('φ = '+(phi*((u-P1_END)/(FREE_END-P1_END))).toFixed(2)+' rad',cx-R,cy+R+22);
+  }
+  // stage caption
+  const caps={0:'① |0⟩ — initialized at north pole',1:'② after π/2 — on the equator',
+    2:'③ end of τ — phase φ=δτ banked',3:'④ after 2nd π/2 — phase → population'};
+  let capKey = u<=P1_END?0 : (u<FREE_END?1 : (u<=FREE_END+1e-6?2 : 3));
+  if(Math.abs(u-FREE_END)<1e-6) capKey=2;
+  ctx.fillStyle=COL['--ink-faint'];ctx.font='11px '+MONO;ctx.textAlign='center';
+  ctx.fillText(caps[capKey],cx,cy-R-14);ctx.textAlign='left';
+}
+
+/* ================= readouts + stage label ================= */
+function updateReadouts(u,Pnow){
+  S.B=fieldAt(S.vx)*S.sens;
+  document.getElementById('r-b').innerHTML=(S.B>=0?'+':'')+S.B.toFixed(3)+'<span class="u">mT</span>';
+  const dm=detMHz();
+  document.getElementById('r-det').innerHTML=(dm>=0?'+':'')+dm.toFixed(1)+'<span class="u">MHz</span>';
+  const phi=detuning()*S.tau;
+  document.getElementById('r-phase').innerHTML=phi.toFixed(2)+'<span class="u">rad</span>';
+  document.getElementById('r-pop').textContent=Pnow.toFixed(3);
+
+  const lbl=document.getElementById('stage-lbl');
+  const stg = u<=P1_END?0 : (u<FREE_END?1 : (Math.abs(u-FREE_END)<1e-6?2 : 3));
+  const info=[['s0','initialize |0⟩'],['s1','free evolution'],['s2','phase banked'],['s3','measure']][stg];
+  lbl.className='stagelbl '+info[0];lbl.textContent=info[1];
+}
+
+/* ================= utils ================= */
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  if(S.play){S.playT+=dt;if(S.playT>=S.playDur){S.play=false;S.playT=0;
+    const b=document.getElementById('btn-play');b.textContent='▶ Play sequence';}}
+  S.B=fieldAt(S.vx)*S.sens;
+  const u=currentU();
+  drawSeq(u);
+  const Pnow=drawFringe();
+  drawTerrain();
+  drawBloch(u);
+  updateReadouts(u,Pnow);
+  requestAnimationFrame(frame);
+}
+
+/* ================= interaction ================= */
+function bindDrag(){
+  const cv=document.getElementById('terrain');
+  const toX=e=>{const r=cv.getBoundingClientRect();const cxp=(e.touches?e.touches[0].clientX:e.clientX);
+    return Math.max(0.01,Math.min(0.99,(cxp-r.left)/r.width));};
+  const down=e=>{S.dragging=true;S.vx=toX(e);e.preventDefault();};
+  const move=e=>{if(S.dragging){S.vx=toX(e);e.preventDefault();}};
+  const up=()=>{S.dragging=false;};
+  cv.addEventListener('mousedown',down);window.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
+  cv.addEventListener('touchstart',down,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
+  cv.style.cursor='grab';
+}
+function bindControls(){
+  const bind=(id,fn,fmt)=>{const el=document.getElementById(id);
+    el.addEventListener('input',()=>{fn(parseFloat(el.value));fmt(el.value);});};
+  bind('s-tau',v=>{S.tau=v;S.stageJump=null;},v=>document.getElementById('v-tau').textContent=parseFloat(v).toFixed(2)+' µs');
+  bind('s-mw',v=>S.mw=v,v=>document.getElementById('v-mw').textContent=parseFloat(v).toFixed(4)+' GHz');
+  bind('s-t2',v=>S.t2=v,v=>document.getElementById('v-t2').textContent=parseFloat(v).toFixed(1)+' µs');
+  bind('s-sens',v=>S.sens=v,v=>document.getElementById('v-sens').textContent=parseFloat(v).toFixed(2)+'×');
+
+  document.querySelectorAll('.snap').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      S.play=false;S.playT=0;S.stageJump=parseInt(btn.dataset.stage);
+      document.getElementById('btn-play').textContent='▶ Play sequence';
+      document.querySelectorAll('.snap').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  document.getElementById('btn-play').addEventListener('click',e=>{
+    S.stageJump=null;document.querySelectorAll('.snap').forEach(b=>b.classList.remove('active'));
+    if(S.play){S.play=false;e.target.textContent='▶ Play sequence';}
+    else{S.play=true;S.playT=0;e.target.textContent='⏸ Playing…';}
+  });
+  document.getElementById('btn-reset').addEventListener('click',()=>{
+    S.vx=0.42;S.mw=2.87;S.t2=2;S.sens=1;S.tau=0.5;S.play=false;S.playT=0;S.stageJump=null;
+    document.getElementById('s-tau').value=0.5;document.getElementById('v-tau').textContent='0.50 µs';
+    document.getElementById('s-mw').value=2.87;document.getElementById('v-mw').textContent='2.8700 GHz';
+    document.getElementById('s-t2').value=2;document.getElementById('v-t2').textContent='2.0 µs';
+    document.getElementById('s-sens').value=1;document.getElementById('v-sens').textContent='1.0×';
+    document.getElementById('btn-play').textContent='▶ Play sequence';
+    document.querySelectorAll('.snap').forEach(b=>b.classList.remove('active'));
+  });
+}
+function init(){cacheCol();setupAll();bindDrag();bindControls();
+  window.addEventListener('resize',setupAll);requestAnimationFrame(frame);}
+init();
+</script>
+</body>
+</html>

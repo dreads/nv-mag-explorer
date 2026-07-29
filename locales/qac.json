@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "code": "qac",
+    "endonym": "Partial",
+    "englishName": "Mock: partial bundle (fallback test)",
+    "direction": "ltr",
+    "targetsVersion": "1"
+  },
+  "strings": {
+    "ui": {
+      "heading": "[qac] Roqa Ramsey elgorai",
+      "languageLabel": "[qac] Roqavel"
+    },
+    "rabiProblem": {
+      "heading": "[qac] Zora vintal Rabi tresqui"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "nv-mag-explorer",
+  "version": "1.0.0",
+  "description": "Interactive NV-diamond magnetometer visualizer — Rabi/Zeeman core, with a Ramsey interferometry explainer",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:coverage": "node --test --experimental-test-coverage test/*.test.js",
+    "lint:i18n": "node scripts/check-i18n-coverage.js",
+    "serve": "python3 -m http.server 8000"
+  },
+  "keywords": [
+    "quantum",
+    "nv-diamond",
+    "magnetometer",
+    "ramsey",
+    "rabi",
+    "visualization"
+  ],
+  "license": "MIT"
+}

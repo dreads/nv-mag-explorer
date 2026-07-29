@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "code": "qab",
+    "endonym": "Mock RTL",
+    "englishName": "Mock: right-to-left",
+    "direction": "rtl",
+    "targetsVersion": "1"
+  },
+  "strings": {
+    "ui": {
+      "docTitle": "Zantul senvara elgorai — roqa Ramsey?",
+      "metaDescription": "Achkedo elgorai roqavel NV tresqui Ramsey du roqa Rabi zora, du kuresh velmori maldeen visroka fen bantu bell-state-explorer.",
+      "languageLabel": "Roqavel",
+      "skipLink": "Zora tresqui bantu",
+      "heading": "Roqa Ramsey elgorai",
+      "subtitle": "Zantul senvara Rabi elgorai bantu oru. Roqavel du roqa zora tresqui — kuresh velmori partielu bantu Ramsey. Achkedo tresqui roqa, du kuresh velmori maldeen visroka fen bantu bell-state-explorer elgorai.",
+      "navHeading": "Tresqui bantu roqavel",
+      "navRabiLabel": "Bantu Rabi du Zeeman",
+      "navRabiNote": "Kuresh velmori achkedo tal senvara.",
+      "navDesignLabel": "Bantu Ramsey",
+      "navDesignNote": "Zora oru — bantu roqavel, tresqui elgorai, du senvara Bloch kuresh."
+    },
+    "purpose": {
+      "heading": "Bantu roqa, du roqa zantul nav",
+      "body": "Achkedo \"MagNav\" zora, bantu roqa du roqa zantul nav — kuresh velmori tresqui elgorai. Rabi bantu, kuresh phase, fringe visroka: elgorai bantu tresqui roqa equalu senda du roqa zora bantu. Achkedo tresqui roqa velmori du roqa bantu senvara — kuresh, Bloch velmori, fringe bantu — tresqui kuresh, du roqa achkedo senda bantu."
+    },
+    "rabiProblem": {
+      "heading": "Zora vintal Rabi tresqui",
+      "body": "Achkedo bantu Rabi du roqa velmori: kuresh Ω = √(Ω₀² + δ²) elgorai tresqui, du senvara Ω₀²/Ω² maldeen. Bantu zantul roqa δ elgorai senda. Tresqui bantu Rabi du roqa elgorai δ, du kuresh Ω₀ velmori — bonavel tresqui, du roqa maldeen visroka fen bantu instrumentu."
+    },
+    "ramseyPayoff": {
+      "heading": "Ramsey elgorai tresqui",
+      "body": "Ramsey bantu tresqui tal senvara: π/2 kuresh roqa elgorai equalu, achkedo velmori zora tresqui bantu τ, du sekundu π/2 kuresh roqa senvara tresqui elgorai. Achkedo velmori zora, senvara roqa φ = δτ. Tresqui τ du elgorai P(τ) = ½(1 + cos δτ) — bantu δ, roqa zora. Zantul kuresh Ω₀ maldeen, roqa achkedo tresqui: elgorai bantu, roqa δ."
+    },
+    "coherenceBudget": {
+      "heading": "Kuresh bantu elgorai",
+      "body": "Zantul tresqui du roqa zora. Bell-state-explorer vintal kuresh elgorai tresqui senvara bantu classiqa: roqa (1 − p) du senvara maldeen, du roqa elgorai kuresh bantu tresqui. Ramsey achkedo velmori roqa zantul: elgorai fringe e^(−τ/T₂*) tresqui, du roqa τ bantu velmori kuresh tresqui roqa. Bantu τ optimalu, T₂* elgorai, du achkedo tresqui roqa bantu noise, du roqa field."
+    },
+    "diagram": {
+      "heading": "Roqavel tresqui, bantu senda",
+      "rabiCaption": "Rabi: kuresh velmori",
+      "rabiOnLabel": "velmori oru — bantu zantul",
+      "ramseyCaption": "Ramsey: kuresh, zora, kuresh",
+      "ramseyPulseLabel": "π/2",
+      "ramseyWaitLabel": "velmori zora — tresqui τ",
+      "srDescription": "Tal roqavel tresqui bantu senda. Rabi roqavel bantu kuresh velmori oru zantul. Ramsey roqavel tal senvara: kuresh pi roqa tal, velmori zora achkedo tresqui tau, du sekundu kuresh pi roqa tal."
+    },
+    "footer": {
+      "physicsNote": "Roqavel: Ω = √(Ω₀² + δ²); P(τ) = ½(1 + cos δτ)·e^(−τ/T₂*); φ = δτ. Zeeman f± = 2.87 GHz ± γB, γ ≈ 28 MHz/mT. Zantul bantu, kuresh client-side, GitHub Pages zora.",
+      "companionNote": "Rabi elgorai bantu tresqui achkedo zora; kuresh bell-state-explorer velmori maldeen visroka."
+    }
+  }
+}
