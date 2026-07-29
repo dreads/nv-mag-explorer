@@ -119,7 +119,7 @@
       <div class="panel">
         <h2><span class="dot" style="background:var(--violet)"></span>Pulse sequence
           <span class="stagelbl s0" id="stage-lbl">stage</span></h2>
-        <canvas id="seq" height="150"></canvas>
+        <canvas id="seq" height="100"></canvas>
         <div class="circwrap">
           <span class="gate">|0⟩</span><span class="wire"></span>
           <span class="gate p">RY(π/2)</span><span class="wire"></span>
@@ -134,53 +134,35 @@
         </div>
       </div>
 
-      <!-- RAMSEY FRINGES -->
-      <div class="panel">
-        <h2><span class="dot" style="background:var(--cyan)"></span>Ramsey fringes — P(|0⟩) vs free-evolution time τ</h2>
-        <canvas id="fringe" height="200"></canvas>
-        <div class="legend">
-          <span><i style="background:var(--cyan)"></i> P(τ) = ½(1+cos δτ)·e^(−τ/T₂*)</span>
-          <span><i style="background:var(--red);opacity:.55"></i> T₂* envelope</span>
-          <span><i style="background:var(--violet)"></i> current τ</span>
-        </div>
-        <div class="explain">
-          The fringe spacing is set entirely by the detuning: bigger field → faster precession → <b>tighter fringes</b>.
-          Reading the fringe frequency and inverting gives B. The red envelope is dephasing — wait past it and the
-          phase information is gone, which caps the useful τ.
-        </div>
-      </div>
+<!--      &lt;!&ndash; RAMSEY FRINGES &ndash;&gt;-->
+<!--      <div class="panel">-->
+<!--        <h2><span class="dot" style="background:var(&#45;&#45;cyan)"></span>Ramsey fringes — P(|0⟩) vs free-evolution time τ</h2>-->
+<!--        <canvas id="fringe" height="150"></canvas>-->
+<!--        <div class="legend">-->
+<!--          <span><i style="background:var(&#45;&#45;cyan)"></i> P(τ) = ½(1+cos δτ)·e^(−τ/T₂*)</span>-->
+<!--          <span><i style="background:var(&#45;&#45;red);opacity:.55"></i> T₂* envelope</span>-->
+<!--          <span><i style="background:var(&#45;&#45;violet)"></i> current τ</span>-->
+<!--        </div>-->
+<!--        <div class="explain">-->
+<!--          The fringe spacing is set entirely by the detuning: bigger field → faster precession → <b>tighter fringes</b>.-->
+<!--          Reading the fringe frequency and inverting gives B. The red envelope is dephasing — wait past it and the-->
+<!--          phase information is gone, which caps the useful τ.-->
+<!--        </div>-->
+<!--      </div>-->
 
-      <!-- TERRAIN -->
+      <!-- TERRAIN + CONTROLS, COMBINED -->
       <div class="panel">
         <h2><span class="dot" style="background:var(--cyan)"></span>Terrain &amp; local field
           <span class="tag">drag the vehicle ▸</span></h2>
-        <canvas id="terrain" height="170"></canvas>
+        <canvas id="terrain" height="90"></canvas>
         <div class="readout-row">
           <div class="chip"><div class="k">Local field B∥</div><div class="v cyan" id="r-b">—<span class="u">mT</span></div></div>
           <div class="chip"><div class="k">Detuning δ</div><div class="v red" id="r-det">—<span class="u">MHz</span></div></div>
           <div class="chip"><div class="k">Phase at τ</div><div class="v amber" id="r-phase">—<span class="u">rad</span></div></div>
           <div class="chip"><div class="k">Readout P(0)</div><div class="v violet" id="r-pop">—</div></div>
         </div>
-      </div>
-    </div>
 
-    <!-- RIGHT -->
-    <div class="col">
-      <!-- BLOCH -->
-      <div class="panel">
-        <h2><span class="dot" style="background:var(--violet)"></span>Bloch sphere — driven by the sequence</h2>
-        <canvas id="bloch" height="300"></canvas>
-        <div class="explain" style="padding-top:8px">
-          <b>Watch the three beats:</b> the first π/2 lays the vector onto the equator (green). During free evolution
-          it sweeps the equator (cyan) — that sweep angle is the banked phase. The second π/2 folds the equator back
-          toward the poles; where the vector had rotated to decides how far north or south it lands, and that height
-          is what you measure.
-        </div>
-      </div>
-
-      <!-- CONTROLS -->
-      <div class="panel">
-        <h2><span class="dot" style="background:var(--amber)"></span>Controls</h2>
+        <h2 style="margin-top:16px"><span class="dot" style="background:var(--amber)"></span>Controls</h2>
         <div class="controls">
           <div class="ctrl">
             <div class="lab"><span class="name">Free-evolution time τ <small>the sensing window</small></span>
@@ -216,6 +198,37 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col">
+      <!-- BLOCH -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--violet)"></span>Bloch sphere — driven by the sequence</h2>
+        <canvas id="bloch" height="150"></canvas>
+        <div class="explain" style="padding-top:8px">
+          <b>Watch the three beats:</b> the first π/2 lays the vector onto the equator (green). During free evolution
+          it sweeps the equator (cyan) — that sweep angle is the banked phase. The second π/2 folds the equator back
+          toward the poles; where the vector had rotated to decides how far north or south it lands, and that height
+          is what you measure.
+        </div>
+      </div>
+           <!-- RAMSEY FRINGES -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--cyan)"></span>Ramsey fringes — P(|0⟩) vs free-evolution time τ</h2>
+        <canvas id="fringe" height="150"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--cyan)"></i> P(τ) = ½(1+cos δτ)·e^(−τ/T₂*)</span>
+          <span><i style="background:var(--red);opacity:.55"></i> T₂* envelope</span>
+          <span><i style="background:var(--violet)"></i> current τ</span>
+        </div>
+        <div class="explain">
+          The fringe spacing is set entirely by the detuning: bigger field → faster precession → <b>tighter fringes</b>.
+          Reading the fringe frequency and inverting gives B. The red envelope is dephasing — wait past it and the
+          phase information is gone, which caps the useful τ.
+        </div>
+      </div>
+
     </div>
   </div>
 
