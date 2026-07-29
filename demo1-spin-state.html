@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NV Spin State — the qutrit up close</title>
+<style>
+  :root {
+    --substrate: #0d0f12;
+    --substrate-2: #14171b;
+    --panel: #191d22;
+    --line: #2a2f36;
+    --line-strong: #3a424b;
+    --ink: #e8eaed;
+    --ink-dim: #9aa2ab;
+    --ink-faint: #626a73;
+    --nv-red: #ff5a4d;
+    --nv-red-dim: #b83c33;
+    --laser: #4bd07a;
+    --axis: #5f6873;
+    --font-mono: "SF Mono", "JetBrains Mono", "Roboto Mono", ui-monospace, monospace;
+    --font-disp: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--substrate);
+    color: var(--ink);
+    font-family: var(--font-disp);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 28px 24px 48px; }
+  header { margin-bottom: 20px; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--nv-red);
+    margin: 0 0 6px;
+  }
+  h1 { font-size: 30px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-dim); font-size: 15px; max-width: 62ch; margin: 0; }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin: 24px 0 18px;
+  }
+  @media (max-width: 760px) { .stage { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px 18px;
+  }
+  .card h2 {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
+    margin: 0 0 2px; color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 10px; letter-spacing: 0.06em;
+    padding: 2px 7px; border-radius: 20px;
+    border: 1px solid var(--line-strong); color: var(--ink-dim);
+  }
+  .tag.lossy { color: var(--nv-red); border-color: var(--nv-red-dim); }
+  .tag.faithful { color: var(--laser); border-color: #2c6b45; }
+  .card p.note { font-size: 12.5px; color: var(--ink-faint); margin: 2px 0 12px; }
+
+  svg { display: block; width: 100%; height: auto; }
+  .mono { font-family: var(--font-mono); }
+
+  .readout {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    margin-top: 14px;
+  }
+  .stat { background: var(--substrate-2); border-radius: 8px; padding: 8px 10px; }
+  .stat .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .stat .v { font-family: var(--font-mono); font-size: 16px; color: var(--ink); margin-top: 2px; }
+  .stat .v small { color: var(--ink-dim); font-size: 11px; }
+
+  .controls {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px 20px;
+  }
+  .ctrl-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 28px; }
+  @media (max-width: 620px) { .ctrl-grid { grid-template-columns: 1fr; } }
+  .field label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12.5px; color: var(--ink-dim); margin-bottom: 6px;
+  }
+  .field label b { font-family: var(--font-mono); font-weight: 500; color: var(--ink); font-size: 13px; }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
+    background: var(--line-strong); border-radius: 4px; outline: none; margin: 4px 0;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--nv-red); cursor: pointer;
+    border: 2px solid var(--substrate);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%; background: var(--nv-red);
+    cursor: pointer; border: 2px solid var(--substrate);
+  }
+  .field .hint { font-size: 11px; color: var(--ink-faint); margin-top: 3px; }
+
+  .teach {
+    margin-top: 18px; border: 1px solid var(--line);
+    border-left: 3px solid var(--nv-red); border-radius: 0 10px 10px 0;
+    background: var(--substrate-2); padding: 14px 18px;
+  }
+  .teach h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
+  .teach p { margin: 0 0 8px; font-size: 13px; color: var(--ink-dim); }
+  .teach p:last-child { margin-bottom: 0; }
+  .teach .count { font-family: var(--font-mono); color: var(--laser); }
+  .teach .count.no { color: var(--nv-red); text-decoration: line-through; }
+
+  .legend { display: flex; align-items: center; gap: 14px; margin-top: 12px; flex-wrap: wrap; }
+  .legend .item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-faint); font-family: var(--font-mono); }
+  .hue-strip { width: 60px; height: 10px; border-radius: 5px;
+    background: linear-gradient(90deg,
+      hsl(0,70%,55%), hsl(60,70%,55%), hsl(120,70%,55%),
+      hsl(180,70%,55%), hsl(240,70%,55%), hsl(300,70%,55%), hsl(360,70%,55%)); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">NV-center magnetometry · demo 1</p>
+    <h1>The spin state, up close</h1>
+    <p class="sub">The nitrogen-vacancy center's ground state is a spin-1 <b>qutrit</b> — three levels, not two.
+      Push the magnetic field around and watch the same physical state told two ways: a Bloch sphere that can only show
+      part of it, and a 3×3 matrix that shows all of it.</p>
+  </header>
+
+  <div class="stage">
+    <div class="card">
+      <h2>Driven subspace <span class="tag lossy">projection · lossy</span></h2>
+      <p class="note">The |0⟩ ↔ |−1⟩ transition you actually drive, as a qubit Bloch sphere.</p>
+      <svg id="bloch" viewBox="0 0 320 300" role="img" aria-label="Bloch sphere of the driven two-level subspace"></svg>
+    </div>
+
+    <div class="card">
+      <h2>Hamiltonian <span class="tag faithful">complete · faithful</span></h2>
+      <p class="note">Every entry: fill = magnitude, hue = phase. This is the whole qutrit.</p>
+      <svg id="matrix" viewBox="0 0 320 300" role="img" aria-label="Three by three Hamiltonian matrix, colored by magnitude and phase"></svg>
+      <div class="legend">
+        <div class="item">phase <span class="hue-strip"></span></div>
+        <div class="item">−π … +π</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout" id="readout"></div>
+
+  <div class="controls">
+    <div class="ctrl-grid">
+      <div class="field">
+        <label>Field strength <b><span id="bval">1.0</span> mT</b></label>
+        <input type="range" id="B" min="0" max="10" step="0.05" value="1.0" />
+        <div class="hint">Magnitude of the applied magnetic field.</div>
+      </div>
+      <div class="field">
+        <label>Field angle to NV axis <b><span id="thval">0</span>°</b></label>
+        <input type="range" id="theta" min="0" max="90" step="1" value="0" />
+        <div class="hint">0° = along the axis (pure Zeeman); 90° = fully transverse.</div>
+      </div>
+      <div class="field">
+        <label>Transverse azimuth φ <b><span id="phval">0</span>°</b></label>
+        <input type="range" id="phi" min="0" max="360" step="5" value="0" />
+        <div class="hint">Rotates the transverse field in the x–y plane — this is what shifts the off-diagonal <em>phase</em>, i.e. the hue.</div>
+      </div>
+      <div class="field">
+        <label>Transverse strain E <b><span id="eval">5</span> MHz</b></label>
+        <input type="range" id="E" min="0" max="20" step="0.5" value="5" />
+        <div class="hint">Lattice strain that splits |±1⟩ even at zero field — the source of complex phase.</div>
+      </div>
+      <div class="field">
+        <label>Axial zero-field splitting D <b><span id="dval">2.870</span> GHz</b></label>
+        <input type="range" id="D" min="2.84" max="2.90" step="0.001" value="2.87" />
+        <div class="hint">Temperature-sensitive; usually fixed near 2.87 GHz.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="teach">
+    <h3>Why isn't one Bloch sphere enough?</h3>
+    <p>A qubit has 2 free real numbers after normalization and global phase — the sphere's surface holds it losslessly.
+      A qutrit pure state has 4; a mixed one has 8 (the SU(3) Bloch vector lives in 8 dimensions).
+      You can't fit that on <span class="count no">18 spheres</span> — or any number.
+      The faithful object is <span class="count">8-dimensional</span>.</p>
+    <p>So the matrix on the right isn't decoration — it's the source of truth. The sphere on the left is an honest
+      shadow of it: the two-level slice you drive with microwaves. Watch the off-diagonal cells light up with hue as
+      you add transverse field or strain — that phase is exactly what the single sphere throws away.</p>
+  </div>
+</div>
+
+<script type="module">
+import { levels, matrixField, subspaceBloch, D_ZFS, GAMMA } from './src/nv-hamiltonian.js';
+
+const $ = (id) => document.getElementById(id);
+const state = { B: 1.0, theta: 0, phi: 0, E: 5, D: 2.87 };
+
+// --- helpers -------------------------------------------------------------
+const mTtoT = (mT) => mT * 1e-3;         // millitesla -> tesla
+const MHztoGHz = (m) => m * 1e-3;
+
+function params() {
+  const Btot = mTtoT(state.B);
+  const th = (state.theta * Math.PI) / 180;
+  const phi = (state.phi * Math.PI) / 180;   // azimuth of the transverse component
+  const Btrans = Btot * Math.sin(th);
+  return {
+    D: state.D,
+    E: MHztoGHz(state.E),
+    Bz: Btot * Math.cos(th),        // axial component
+    Bx: Btrans * Math.cos(phi),     // transverse, real part
+    By: Btrans * Math.sin(phi),     // transverse, imaginary part -> phase/hue
+    gamma: GAMMA,
+  };
+}
+
+// phase (radians, -pi..pi) -> hsl hue color
+function phaseColor(phase, magnitude, maxMag) {
+  const hue = ((phase + Math.PI) / (2 * Math.PI)) * 360;
+  const light = 22 + 46 * Math.min(1, magnitude / (maxMag || 1));
+  return `hsl(${hue.toFixed(0)}, 68%, ${light.toFixed(0)}%)`;
+}
+
+// --- matrix view ---------------------------------------------------------
+const BASIS = ['|+1⟩', '|0⟩', '|−1⟩'];
+function drawMatrix() {
+  const field = matrixField(params());
+  let maxMag = 0;
+  field.forEach((r) => r.forEach((c) => { if (c.magnitude > maxMag) maxMag = c.magnitude; }));
+
+  const cell = 74, pad = 46, gap = 6;
+  let svg = '';
+  // axis labels
+  for (let i = 0; i < 3; i++) {
+    const x = pad + i * (cell + gap) + cell / 2;
+    svg += `<text x="${x}" y="26" text-anchor="middle" fill="var(--ink-faint)" font-family="var(--font-mono)" font-size="12">${BASIS[i]}</text>`;
+    const y = pad + i * (cell + gap) + cell / 2 + 4;
+    svg += `<text x="30" y="${y}" text-anchor="end" fill="var(--ink-faint)" font-family="var(--font-mono)" font-size="12">${BASIS[i]}</text>`;
+  }
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      const cellData = field[r][c];
+      const x = pad + c * (cell + gap);
+      const y = pad + r * (cell + gap);
+      const isZero = cellData.magnitude < 1e-9;
+      const fill = isZero ? 'var(--substrate-2)' : phaseColor(cellData.phase, cellData.magnitude, maxMag);
+      svg += `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="8" fill="${fill}" stroke="var(--line)" stroke-width="1"/>`;
+      if (!isZero) {
+        // magnitude ring: radius scales with magnitude
+        const rad = 6 + 22 * Math.min(1, cellData.magnitude / maxMag);
+        const cx = x + cell / 2, cy = y + cell / 2;
+        svg += `<circle cx="${cx}" cy="${cy}" r="${rad}" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>`;
+        svg += `<text x="${cx}" y="${cy - rad - 5}" text-anchor="middle" fill="var(--ink)" font-family="var(--font-mono)" font-size="10">${cellData.magnitude.toFixed(2)}</text>`;
+      } else {
+        svg += `<text x="${x + cell/2}" y="${y + cell/2 + 4}" text-anchor="middle" fill="var(--ink-faint)" font-family="var(--font-mono)" font-size="11">0</text>`;
+      }
+    }
+  }
+  $('matrix').innerHTML = svg;
+}
+
+// --- bloch sphere --------------------------------------------------------
+function drawBloch() {
+  const b = subspaceBloch(params(), { subspace: ['0', '-1'] });
+  const cx = 160, cy = 150, R = 100;
+  // simple oblique projection: x right, z up, y into-screen (foreshortened)
+  const proj = (x, y, z) => [cx + x * R + y * R * 0.34, cy - z * R + y * R * 0.20];
+
+  let svg = '';
+  // outer circle
+  svg += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--line-strong)" stroke-width="1"/>`;
+  // equator ellipse
+  svg += `<ellipse cx="${cx}" cy="${cy}" rx="${R}" ry="${R*0.28}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+  // vertical meridian
+  svg += `<ellipse cx="${cx}" cy="${cy}" rx="${R*0.28}" ry="${R}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+  // axes
+  const [zx1, zy1] = proj(0, 0, 1.14), [zx2, zy2] = proj(0, 0, -1.14);
+  svg += `<line x1="${zx1}" y1="${zy1}" x2="${zx2}" y2="${zy2}" stroke="var(--axis)" stroke-width="1" stroke-dasharray="2 3"/>`;
+  // pole labels (basis states of the driven subspace)
+  svg += `<text x="${zx1}" y="${zy1 - 8}" text-anchor="middle" fill="var(--ink-dim)" font-family="var(--font-mono)" font-size="11">|0⟩</text>`;
+  svg += `<text x="${zx2}" y="${zy2 + 16}" text-anchor="middle" fill="var(--ink-dim)" font-family="var(--font-mono)" font-size="11">|−1⟩</text>`;
+
+  // state vector
+  const [vx, vy] = proj(b.x, b.y, b.z);
+  svg += `<line x1="${cx}" y1="${cy}" x2="${vx}" y2="${vy}" stroke="var(--nv-red)" stroke-width="2.5"/>`;
+  svg += `<circle cx="${vx}" cy="${vy}" r="5" fill="var(--nv-red)"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="2.5" fill="var(--ink-dim)"/>`;
+
+  $('bloch').innerHTML = svg;
+  return b;
+}
+
+// --- numeric readouts ----------------------------------------------------
+function drawReadout(b) {
+  const { values } = levels(params());
+  const gap01 = (values[1] - values[0]);
+  const gap12 = (values[2] - values[1]);
+  const cards = [
+    { k: 'Level splitting', v: `${(gap01 * 1000).toFixed(1)}<small> MHz</small>`, note: '|0⟩→lower' },
+    { k: '±1 separation', v: `${((values[2]-values[1]) >= 0 ? gap12*1000 : 0).toFixed(1)}<small> MHz</small>` },
+    { k: 'Bloch |r|', v: `${Math.hypot(b.x, b.y, b.z).toFixed(3)}` },
+  ];
+  $('readout').innerHTML = cards.map((c) =>
+    `<div class="stat"><div class="k">${c.k}</div><div class="v">${c.v}</div></div>`
+  ).join('');
+}
+
+// --- wire up -------------------------------------------------------------
+function render() {
+  drawMatrix();
+  const b = drawBloch();
+  drawReadout(b);
+}
+function bind(id, key, fmt) {
+  const el = $(id);
+  el.addEventListener('input', () => {
+    state[key] = parseFloat(el.value);
+    $(fmt.out).textContent = fmt.fn(state[key]);
+    render();
+  });
+}
+bind('B', 'B', { out: 'bval', fn: (v) => v.toFixed(2) });
+bind('theta', 'theta', { out: 'thval', fn: (v) => v.toFixed(0) });
+bind('phi', 'phi', { out: 'phval', fn: (v) => v.toFixed(0) });
+bind('E', 'E', { out: 'eval', fn: (v) => v.toFixed(1) });
+bind('D', 'D', { out: 'dval', fn: (v) => v.toFixed(3) });
+render();
+</script>
+</body>
+</html>
