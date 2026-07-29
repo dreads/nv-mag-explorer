@@ -126,76 +126,19 @@
   <div class="layout">
     <!-- LEFT COLUMN -->
     <div style="display:flex;flex-direction:column;gap:14px">
-      <!-- TERRAIN -->
+      <!-- MAGNET + CONTROLS, COMBINED -->
       <div class="panel">
         <h2><span class="dot" style="background:var(--cyan)"></span>Sensor &amp; magnet distance
           <span class="tag">drag the magnet ▸</span></h2>
-        <canvas id="bench" height="200"></canvas>
+        <canvas id="bench" height="110"></canvas>
         <div class="readout-row">
           <div class="chip"><div class="k">Distance d</div><div class="v cyan" id="r-dist">—<span class="u">cm</span></div></div>
           <div class="chip"><div class="k">Local field B∥</div><div class="v cyan" id="r-b">—<span class="u">mT</span></div></div>
           <div class="chip"><div class="k">Resonance f₊</div><div class="v amber" id="r-fres">—<span class="u">GHz</span></div></div>
           <div class="chip"><div class="k">Detuning δ</div><div class="v red" id="r-det">—<span class="u">MHz</span></div></div>
         </div>
-      </div>
 
-      <!-- RABI -->
-      <div class="panel">
-        <h2><span class="dot" style="background:var(--violet)"></span>Rabi oscillation — P(m=±1) vs time
-          <span class="status on-res" id="res-status">on resonance</span></h2>
-        <canvas id="rabi" height="210"></canvas>
-        <div class="legend">
-          <span><i style="background:var(--violet)"></i> live population P(t)</span>
-          <span><i style="background:var(--green);opacity:.5"></i> on-resonance reference (δ=0)</span>
-          <span><i style="background:var(--red);opacity:.6"></i> amplitude envelope Ω₀²/Ω²</span>
-        </div>
-        <div class="explain">
-          The generalized Rabi formula: <b>P(t) = (Ω₀²/Ω²)·½(1−cos Ωt)</b>, with effective frequency
-          <b>Ω = √(Ω₀² + δ²)</b>. Detuning does two things at once — it <b>speeds up</b> the wobble and
-          <b>shrinks</b> its amplitude (the spin can no longer fully flip). Watch both as you drive off the resonant sweet spot.
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT COLUMN -->
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <!-- BLOCH + ENERGY side by side -->
-      <div class="dualgrid">
-        <div class="panel">
-          <h2><span class="dot" style="background:var(--violet)"></span>Bloch sphere</h2>
-          <canvas id="bloch" height="240"></canvas>
-          <div class="explain" style="border:none;padding-top:8px;margin-top:4px">
-            The spin state as a vector. On resonance it sweeps the full poles
-            (|0⟩→|±1⟩). Off resonance the axis tilts and it traces a tight cone —
-            never quite reaching the south pole.
-          </div>
-        </div>
-        <div class="panel">
-          <h2><span class="dot" style="background:var(--red)"></span>Energy levels</h2>
-          <canvas id="levels" height="240"></canvas>
-          <div class="explain" style="border:none;padding-top:8px;margin-top:4px">
-            Zero field: m=±1 are degenerate at <b>2.87 GHz</b>. The field pries
-            them apart by <b>±γB</b> (γ≈28 MHz/mT). The microwave (amber) is fixed;
-            the gap moves — that mismatch <i>is</i> the detuning.
-          </div>
-        </div>
-      </div>
-
-      <!-- ODMR -->
-      <div class="panel">
-        <h2><span class="dot" style="background:var(--green)"></span>ODMR — fluorescence vs microwave frequency
-          <span class="tag" id="odmr-tag">sweep</span></h2>
-        <canvas id="odmr" height="150"></canvas>
-        <div class="explain" style="border:none;padding-top:8px;margin-top:2px">
-          What the photodetector actually sees: red fluorescence dips where the microwave hits a spin
-          resonance. The field splits one dip into <b>two</b> (m=−1 and m=+1). The amber line is your fixed
-          drive frequency — the horizontal distance from it to the nearest dip is the detuning you feel in the Rabi trace.
-        </div>
-      </div>
-
-      <!-- CONTROLS -->
-      <div class="panel">
-        <h2><span class="dot" style="background:var(--amber)"></span>Controls</h2>
+        <h2 style="margin-top:16px"><span class="dot" style="background:var(--amber)"></span>Controls</h2>
         <div class="controls">
           <div class="ctrl">
             <div class="lab"><span class="name">Magnet distance d <small>the sensing lever — field falls off as 1/d³</small></span>
@@ -228,6 +171,60 @@
             <button id="btn-tune">⌖ Snap to resonance</button>
             <button id="btn-flip">⇅ Flip polarity</button>
             <button id="btn-reset">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RABI -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--violet)"></span>Rabi oscillation — P(m=±1) vs time
+          <span class="status on-res" id="res-status">on resonance</span></h2>
+        <canvas id="rabi" height="210"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--violet)"></i> live population P(t)</span>
+          <span><i style="background:var(--green);opacity:.5"></i> on-resonance reference (δ=0)</span>
+          <span><i style="background:var(--red);opacity:.6"></i> amplitude envelope Ω₀²/Ω²</span>
+        </div>
+        <div class="explain">
+          The generalized Rabi formula: <b>P(t) = (Ω₀²/Ω²)·½(1−cos Ωt)</b>, with effective frequency
+          <b>Ω = √(Ω₀² + δ²)</b>. Detuning does two things at once — it <b>speeds up</b> the wobble and
+          <b>shrinks</b> its amplitude (the spin can no longer fully flip). Watch both as you drive off the resonant sweet spot.
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- BLOCH SPHERE, PROMINENT -->
+      <div class="panel">
+        <h2><span class="dot" style="background:var(--violet)"></span>Bloch sphere</h2>
+        <canvas id="bloch" height="280"></canvas>
+        <div class="explain" style="border:none;padding-top:8px;margin-top:4px">
+          The spin state as a vector. On resonance it sweeps the full poles
+          (|0⟩→|±1⟩). Off resonance the axis tilts and it traces a tight cone —
+          never quite reaching the south pole.
+        </div>
+      </div>
+
+      <!-- ENERGY LEVELS + ODMR side by side -->
+      <div class="dualgrid">
+        <div class="panel">
+          <h2><span class="dot" style="background:var(--red)"></span>Energy levels</h2>
+          <canvas id="levels" height="200"></canvas>
+          <div class="explain" style="border:none;padding-top:8px;margin-top:4px">
+            Zero field: m=±1 are degenerate at <b>2.87 GHz</b>. The field pries
+            them apart by <b>±γB</b> (γ≈28 MHz/mT). The microwave (amber) is fixed;
+            the gap moves — that mismatch <i>is</i> the detuning.
+          </div>
+        </div>
+        <div class="panel">
+          <h2><span class="dot" style="background:var(--green)"></span>ODMR
+            <span class="tag" id="odmr-tag">sweep</span></h2>
+          <canvas id="odmr" height="200"></canvas>
+          <div class="explain" style="border:none;padding-top:8px;margin-top:2px">
+            Red fluorescence dips where the microwave hits a spin resonance. The field splits one dip into
+            <b>two</b> (m=−1 and m=+1). The amber line is your fixed drive frequency — its distance to the
+            nearest dip is the detuning you feel in the Rabi trace.
           </div>
         </div>
       </div>
