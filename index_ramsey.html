@@ -127,6 +127,13 @@
           <span class="gate p">RY(π/2)</span><span class="wire"></span>
           <span class="gate m">measure Z</span>
         </div>
+        <div style="font-size:11px;color:var(--ink-faint);letter-spacing:.6px;text-transform:uppercase;margin:2px 0 7px">Jump to stage</div>
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="snap" data-stage="0">① start |0⟩</button>
+            <button class="snap" data-stage="1">② after 1st π/2</button>
+            <button class="snap" data-stage="2">③ end of τ</button>
+            <button class="snap" data-stage="3">④ after 2nd π/2</button>
+          </div>
         <div class="explain">
           The whole thing is a <b>two-gate quantum circuit</b> with a phase-accumulating gap. Unlike continuous Rabi
           driving, the microwave is <b>off</b> during τ — the spin is a free-running clock whose rate is the field.
@@ -185,13 +192,13 @@
             <input type="range" id="s-sens" min="0.2" max="2.5" step="0.05" value="1">
           </div>
 
-          <div style="font-size:11px;color:var(--ink-faint);letter-spacing:.6px;text-transform:uppercase;margin:2px 0 7px">Jump to stage</div>
-          <div class="btnrow" style="margin-bottom:10px">
-            <button class="snap" data-stage="0">① start |0⟩</button>
-            <button class="snap" data-stage="1">② after 1st π/2</button>
-            <button class="snap" data-stage="2">③ end of τ</button>
-            <button class="snap" data-stage="3">④ after 2nd π/2</button>
-          </div>
+<!--          <div style="font-size:11px;color:var(&#45;&#45;ink-faint);letter-spacing:.6px;text-transform:uppercase;margin:2px 0 7px">Jump to stage</div>-->
+<!--          <div class="btnrow" style="margin-bottom:10px">-->
+<!--            <button class="snap" data-stage="0">① start |0⟩</button>-->
+<!--            <button class="snap" data-stage="1">② after 1st π/2</button>-->
+<!--            <button class="snap" data-stage="2">③ end of τ</button>-->
+<!--            <button class="snap" data-stage="3">④ after 2nd π/2</button>-->
+<!--          </div>-->
           <div class="btnrow">
             <button class="primary" id="btn-play">▶ Play sequence</button>
             <button id="btn-reset">↺ Reset</button>
