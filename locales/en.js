@@ -37,11 +37,9 @@ export default {
     purpose: {
       heading: 'A lab bench, not a nav demo',
       body:
-        'Despite the "MagNav" name, the point of these pages isn\'t route-planning — it\'s watching quantum ' +
-        'dynamics happen. Rabi oscillations, phase accumulation, fringe visibility: most textbooks and papers only ' +
-        'ever show a closed-form equation or a single static plot. Here you drag a variable and watch the whole ' +
-        'time-domain picture — the oscillation, the Bloch vector, the fringe pattern — respond continuously, the ' +
-        "same way you'd characterize a real sensor on a bench.",
+        'A view of Rabi oscillations, phase accumulation, and fringe visibility. Here you drag a variable and ' +
+        'watch the whole time-domain picture — the oscillation, the Bloch vector, the fringe pattern — respond ' +
+        'continuously.',
     },
     rabiProblem: {
       heading: 'The problem with reading Rabi directly',
@@ -57,20 +55,14 @@ export default {
       body:
         'Ramsey interferometry breaks the wobble into three clean steps: a short π/2 pulse tips the spin onto the ' +
         'equator, the microwave then switches off entirely for a free-evolution window τ, and a second π/2 pulse ' +
-        'converts whatever happened during that silence back into a population you can read. While the drive is off, ' +
-        'the spin simply precesses at the detuning rate, banking a phase φ = δτ. Sweep τ and the readout traces ' +
-        'P(τ) = ½(1 + cos δτ) — a fringe pattern whose frequency is δ, full stop. No amplitude coupling, no ' +
-        'drive-strength ambiguity: read the fringe spacing, invert for the field.',
+        'converts whatever happened during that silence back into a population you can read.',
     },
     coherenceBudget: {
       heading: 'The coherence budget',
       body:
         "That clean readout isn't free. bell-state-explorer's dephasing slider makes the same trade visible on a " +
         'two-qubit density matrix: damping the off-diagonal coherences by a factor of (1 − p) leaves the populations ' +
-        'untouched, but it erases exactly the information that made the state’s correlations legible. A Ramsey ' +
-        'free-evolution window spends the identical currency — fringe visibility here decays as e^(−τ/T₂*), so ' +
-        'waiting longer to bank more phase also bleeds away the coherence needed to read that phase back out. There ' +
-        'is an optimal τ, set by T₂*, and past it you are measuring noise, not field.',
+        "untouched, but it erases exactly the information that made the state's correlations legible.",
     },
     diagram: {
       heading: 'Drive timelines, side by side',
