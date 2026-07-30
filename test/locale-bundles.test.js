@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import en from '../locales/en.js';
 
 // This is the shape check a contributed locale PR is expected to pass (see
 // README's i18n/l10n/a11y section): every locales/*.json file gets
@@ -20,6 +19,10 @@ function bundleFiles() {
 function readBundle(file) {
   return JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, file), 'utf8'));
 }
+
+// en.json is the single source of truth for English strings — no separate
+// .js copy to keep in sync (see README's i18n/l10n/a11y section).
+const en = readBundle('en.json');
 
 test('at least one locale bundle exists to validate', () => {
   assert.ok(bundleFiles().length > 0);
@@ -44,15 +47,16 @@ test('every locale bundle has all required meta fields, a valid direction, and a
   });
 });
 
-test('every locale bundle only references sections/keys that exist in locales/en.js (catches typos)', () => {
+test('every locale bundle only references sections/keys that exist in locales/en.json (catches typos)', () => {
   bundleFiles().forEach((file) => {
+    if (file === 'en.json') return; // it IS the reference, nothing to check against itself
     const { strings } = readBundle(file);
     Object.entries(strings).forEach(([section, sectionStrings]) => {
-      assert.ok(en.strings[section], `${file} has an unknown strings section "${section}" (not in locales/en.js)`);
+      assert.ok(en.strings[section], `${file} has an unknown strings section "${section}" (not in locales/en.json)`);
       Object.keys(sectionStrings).forEach((key) => {
         assert.ok(
           key in en.strings[section],
-          `${file}'s strings.${section} has an unknown key "${key}" (not in locales/en.js — check for a typo)`
+          `${file}'s strings.${section} has an unknown key "${key}" (not in locales/en.json — check for a typo)`
         );
       });
     });
@@ -70,7 +74,7 @@ test('every value in every locale bundle is a string (no accidental objects/numb
   });
 });
 
-test('the qaa and qab mock bundles are complete (cover every key in locales/en.js)', () => {
+test('the qaa and qab mock bundles are complete (cover every key in locales/en.json)', () => {
   ['qaa.json', 'qab.json'].forEach((file) => {
     if (!fs.existsSync(path.join(LOCALES_DIR, file))) return;
     const { strings } = readBundle(file);

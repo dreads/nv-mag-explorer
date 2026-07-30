@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Heuristic guard against new hardcoded, user-visible strings that bypass
- * the i18n system (locales/en.js + data-i18n + t()/translate()/interpolate()).
+ * the i18n system (locales/en.json + data-i18n + translate()/interpolate()).
  *
  * This is NOT a full HTML/JS parser — it's deliberately conservative and
  * scoped to the exact patterns this project uses, so it catches real
@@ -16,9 +16,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import en from '../locales/en.js';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+// locales/en.json is the single source of truth for English strings — no
+// separate .js copy to keep in sync (see README's i18n/l10n/a11y section).
+const en = JSON.parse(fs.readFileSync(path.join(ROOT, 'locales', 'en.json'), 'utf8'));
 const problems = [];
 
 function getPath(obj, dotPath) {
@@ -42,39 +44,39 @@ while ((m = tagPattern.exec(html))) {
   if (!/[a-zA-Z]{2,}/.test(text)) continue; // no real word content: icons, symbols, empty JS-managed slots
   problems.push(
     `index.html: <${tag}> has untagged text ${JSON.stringify(text.trim())} — ` +
-    `add data-i18n="namespace.key" (and the key to locales/en.js), or data-i18n-exempt if it's ` +
+    `add data-i18n="namespace.key" (and the key to locales/en.json), or data-i18n-exempt if it's ` +
     `genuinely not translatable content.`
   );
 }
 
 // ---------------------------------------------------------------------
 // 2. <title>/<meta name="description"> aren't data-i18n-tagged (app.js's
-//    applyStaticText() sets them specially since they don't use
-//    textContent), so they can silently drift from the real source of
-//    truth if only one copy gets edited. Keep them byte-identical.
+//    applyLocale() sets them specially since they don't use textContent),
+//    so they can silently drift from the real source of truth if only one
+//    copy gets edited. Keep them byte-identical.
 // ---------------------------------------------------------------------
 const titleMatch = html.match(/<title>([^<]*)<\/title>/);
 if (titleMatch && titleMatch[1] !== en.strings.ui.docTitle) {
   problems.push(
-    `index.html <title> ("${titleMatch[1]}") no longer matches locales/en.js ui.docTitle ` +
+    `index.html <title> ("${titleMatch[1]}") no longer matches locales/en.json ui.docTitle ` +
     `("${en.strings.ui.docTitle}") — update both together.`
   );
 }
 const metaMatch = html.match(/<meta name="description" content="([^"]*)"/);
 if (metaMatch && metaMatch[1] !== en.strings.ui.metaDescription) {
-  problems.push('index.html <meta name="description"> no longer matches locales/en.js ui.metaDescription — update both together.');
+  problems.push('index.html <meta name="description"> no longer matches locales/en.json ui.metaDescription — update both together.');
 }
 
 // ---------------------------------------------------------------------
 // 3. Every data-i18n="key" in index.html must resolve to a real key in
-//    locales/en.js — a typo here silently renders the raw key at runtime
+//    locales/en.json — a typo here silently renders the raw key at runtime
 //    (see src/i18n.js translate()'s last-resort fallback).
 // ---------------------------------------------------------------------
 const i18nAttrPattern = /data-i18n="([^"]+)"/g;
 while ((m = i18nAttrPattern.exec(html))) {
   const key = m[1];
   if (getPath(en.strings, key) === undefined) {
-    problems.push(`index.html: data-i18n="${key}" does not resolve to any key in locales/en.js`);
+    problems.push(`index.html: data-i18n="${key}" does not resolve to any key in locales/en.json`);
   }
 }
 
@@ -94,7 +96,7 @@ fs.readdirSync(SRC_DIR)
       if (!found) return;
       const text = found[2] ?? found[3] ?? '';
       if (!/[a-zA-Z]{2,}/.test(text)) return; // symbols/identifiers only
-      problems.push(`src/${file}:${i + 1}: hardcoded .textContent literal ${JSON.stringify(text)} — use t()/translate()/interpolate() instead.`);
+      problems.push(`src/${file}:${i + 1}: hardcoded .textContent literal ${JSON.stringify(text)} — use translate()/interpolate() instead.`);
     });
   });
 
