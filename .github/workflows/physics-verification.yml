@@ -1,0 +1,33 @@
+name: Physics verification (QuTiP)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index_rabi.html'
+      - 'index_ramsey.html'
+      - 'verify/**'
+      - '.github/workflows/physics-verification.yml'
+  pull_request:
+    paths:
+      - 'index_rabi.html'
+      - 'index_ramsey.html'
+      - 'verify/**'
+      - '.github/workflows/physics-verification.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r verify/requirements.txt
+      - run: pytest verify/ -q
+      - run: python verify/make_report.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: physics-verification-report
+          path: verify/report.json
