@@ -58,7 +58,9 @@
             "navRabiLabel": { "type": "string" },
             "navRabiNote": { "type": "string" },
             "navDesignLabel": { "type": "string" },
-            "navDesignNote": { "type": "string" }
+            "navDesignNote": { "type": "string" },
+            "navGolfLabel": { "type": "string" },
+            "navGolfNote": { "type": "string" }
           }
         },
         "hero": {
@@ -93,6 +95,14 @@
           }
         },
         "coherenceBudget": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "heading": { "type": "string" },
+            "body": { "type": "string" }
+          }
+        },
+        "golfIntro": {
           "type": "object",
           "additionalProperties": false,
           "properties": {

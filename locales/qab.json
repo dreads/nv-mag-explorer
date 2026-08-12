@@ -18,7 +18,9 @@
       "navRabiLabel": "Bantu Rabi du Zeeman",
       "navRabiNote": "Kuresh velmori achkedo tal senvara.",
       "navDesignLabel": "Bantu Ramsey",
-      "navDesignNote": "Zora oru — bantu roqavel, tresqui elgorai, du senvara Bloch kuresh."
+      "navDesignNote": "Zora oru — bantu roqavel, tresqui elgorai, du senvara Bloch kuresh.",
+      "navGolfLabel": "Golf Bloch bantu",
+      "navGolfNote": "Zora velmori achkedo senvara Bloch roqa."
     },
     "hero": {
       "blochCaption": "Bloch senvara tresqui achkedo magnet bantu velmori — kuresh zora Rabi elgorai, du roqa mockup."
@@ -38,6 +40,10 @@
     "coherenceBudget": {
       "heading": "Kuresh bantu elgorai",
       "body": "Zantul tresqui du roqa zora. Bell-state-explorer vintal kuresh elgorai tresqui senvara bantu classiqa: roqa (1 − p) du senvara maldeen, du roqa elgorai kuresh bantu tresqui. Ramsey achkedo velmori roqa zantul: elgorai fringe e^(−τ/T₂*) tresqui, du roqa τ bantu velmori kuresh tresqui roqa. Bantu τ optimalu, T₂* elgorai, du achkedo tresqui roqa bantu noise, du roqa field."
+    },
+    "golfIntro": {
+      "heading": "Zora, du roqa elgorai",
+      "body": "Kuresh X, Y, du Z roqa senvara bantu achkedo tresqui zora, velmori maldeen par elgorai. Achkedo tal roqavel, roqa zantul velmori du roqa tresqui noise bantu — kuresh senvara elgorai zora."
     },
     "diagram": {
       "heading": "Roqavel tresqui, bantu senda",

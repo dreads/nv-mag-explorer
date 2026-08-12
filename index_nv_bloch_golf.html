@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NV Magnetometry — Bloch Golf</title>
+<meta name="description" content="A gate-navigation puzzle on the NV center's ground-state Bloch sphere: pulse X, Y, and Z rotations to walk the spin to a target in as few strokes as par allows.">
+<style>
+  /* Same dark instrument-panel palette as index_rabi.html / index_ramsey.html,
+     remapped onto the token names this page's markup already uses
+     (--surface-*, --text-*, --border*, --radius) rather than rewriting every
+     inline style below — see CLAUDE.md's "Known duplication" note. Values
+     were previously referenced but never defined (an inherited artifact-export
+     gap), so nothing here actually rendered its intended colors before this fix. */
+  :root{
+    --bg: #0a0e1a;
+    --surface-1: #111827;
+    --surface-2: #0c1424;
+    --border: #1f2b45;
+    --border-accent: #4fd6ff;
+    --text-primary: #e6ebf5;
+    --text-secondary: #8b98b5;
+    --text-muted: #5a6784;
+    --text-accent: #4fd6ff;
+    --cyan: #4fd6ff;
+    --radius: 8px;
+    --mono: 'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+    radial-gradient(1200px 700px at 78% -8%, #14203c 0%, transparent 60%),
+    radial-gradient(900px 600px at 8% 108%, #101a30 0%, transparent 55%),
+    var(--bg);
+    color:var(--text-primary);
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:22px 20px 60px}
+  h1{font-size:23px;font-weight:700;margin:0 0 4px;letter-spacing:.2px}
+  h1 .q{color:var(--cyan)}
+  .sub{color:var(--text-secondary);font-size:13.5px;max-width:780px;line-height:1.6;margin:0}
+  button{background:#182642;color:var(--text-primary);border:1px solid var(--border);
+    border-radius:8px;padding:8px 10px;font-size:13px;font-weight:600;cursor:pointer;
+    font-family:inherit;transition:.15s}
+  button:hover{background:#213255;border-color:#2f4670}
+  input[type=range]{accent-color:var(--cyan)}
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:4px}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  main{margin-top:18px}
+  footer{margin-top:22px;font-size:11.5px;color:var(--text-muted);line-height:1.6;
+    border-top:1px solid var(--border);padding-top:14px}
+  footer code{font-family:var(--mono);color:var(--text-secondary)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>NV Magnetometry — <span class="q">Bloch Golf</span></h1>
+  <p class="sub">Bloch golf turns the ground-state Bloch sphere into a gate-navigation game — X, Y,
+    and Z pulses rotate the spin toward a randomly placed target in as few strokes as par allows.
+    Drag the sphere to look around; only the pulse buttons below move the spin.</p>
+  <p class="sr-only">Bloch golf on the diamond NV center, with the surrounding carbon lattice restored
+    around the Bloch sphere and a show/hide diamond lattice toggle. The golf ball spin and its Bloch
+    sphere sit at the physical vacancy site, with the sphere's Z pole aligned to the nitrogen-vacancy
+    bond. A global microwave phase dial rotates the whole X/Y drive frame; rotations animate along the
+    true surface arc. The target is a hole with a flag planted along the sphere's outward normal. Reach
+    the hole in as few pulses as possible.</p>
+</header>
+
+<main>
+<div style="display:flex; flex-direction:column; gap:14px; padding:1rem 0;">
+
+  <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start;">
+
+    <div style="flex:1 1 360px; min-width:320px; background:var(--surface-1); border-radius:12px; border:0.5px solid var(--border); position:relative; overflow:hidden;">
+      <canvas id="stage" aria-hidden="true" style="width:100%; height:440px; display:block; cursor:grab; touch-action:none;"></canvas>
+      <div style="position:absolute; top:10px; left:12px; font-size:12px; color:var(--text-muted); pointer-events:none;">drag to rotate</div>
+      <div style="position:absolute; top:8px; right:10px;">
+        <label style="display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--text-secondary); cursor:pointer; background:var(--surface-2); border:0.5px solid var(--border); border-radius:var(--radius); padding:4px 8px;">
+          <input type="checkbox" id="lattice-toggle" checked style="vertical-align:-1px; margin:0;"> diamond lattice
+        </label>
+      </div>
+      <div id="win-banner" role="status" aria-live="polite" style="position:absolute; inset:0; display:none; align-items:center; justify-content:center; pointer-events:none;">
+        <div id="win-inner" style="background:var(--surface-2); border:0.5px solid var(--border-accent); border-radius:12px; padding:16px 22px; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.12);">
+          <div id="win-title" style="font-size:18px; font-weight:500; color:var(--text-primary);">Holed out</div>
+          <div id="win-sub" style="font-size:13px; color:var(--text-secondary); margin-top:4px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:0 1 240px; min-width:210px; display:flex; flex-direction:column; gap:12px;">
+
+      <div style="background:var(--surface-2); border-radius:12px; border:0.5px solid var(--border); padding:12px 14px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+          <span style="font-size:13px; font-weight:500;">Hole <span id="hole-n">1</span></span>
+          <span style="font-size:12px; color:var(--text-secondary);">par <span id="par-v">–</span></span>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:8px;">
+          <span style="font-size:28px; font-weight:500;" id="moves-v">0</span>
+          <span style="font-size:12px; color:var(--text-muted);">strokes</span>
+          <span id="fid-v" style="font-size:12px; color:var(--text-secondary); margin-left:auto;">match 0%</span>
+        </div>
+        <p id="golf-status" class="sr-only" aria-live="polite"></p>
+      </div>
+
+      <div style="background:var(--surface-2); border-radius:12px; border:0.5px solid var(--border); padding:12px 14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <label for="phase" style="font-size:13px; font-weight:500;">Drive phase</label>
+          <span id="phase-out" style="font-size:12px; color:var(--text-accent); font-weight:500;">0°</span>
+        </div>
+        <input id="phase" type="range" min="0" max="360" value="0" step="15" style="width:100%;" oninput="setPhase(this.value)" />
+        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Rotates the whole X/Y drive frame around the equator.</div>
+      </div>
+
+      <div style="background:var(--surface-2); border-radius:12px; border:0.5px solid var(--border); padding:12px 14px;">
+        <div style="font-size:13px; font-weight:500; margin-bottom:8px;">Microwave pulses</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <button id="bXpi"  onclick="pulse('X',180)">X · π</button>
+          <button id="bXhpi" onclick="pulse('X',90)">X · π/2</button>
+          <button id="bYpi"  onclick="pulse('Y',180)">Y · π</button>
+          <button id="bYhpi" onclick="pulse('Y',90)">Y · π/2</button>
+        </div>
+        <div style="margin-top:8px;">
+          <button onclick="pulse('Z',90)" title="Quarter turn (90°) around the Z axis — the spin precesses about the N–V bond. Unaffected by drive phase." style="width:100%;">Z · π/2</button>
+        </div>
+      </div>
+
+      <div style="background:var(--surface-2); border-radius:12px; border:0.5px solid var(--border); padding:12px 14px; display:flex; flex-direction:column; gap:8px;">
+        <button onclick="undo()"><span aria-hidden="true">↺</span> Undo</button>
+        <button onclick="newHole()"><span aria-hidden="true">↻</span> Next hole</button>
+        <button onclick="giveUp()" style="font-size:12px;">Show a solution</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--text-secondary); align-items:center;">
+    <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:11px;height:11px;border-radius:50%;background:#B4B2A9;display:inline-block;"></span>Carbon</span>
+    <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:11px;height:11px;border-radius:50%;background:#378ADD;display:inline-block;"></span>Nitrogen</span>
+    <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px;height:3px;border-radius:2px;background:#D4537E;display:inline-block;"></span>Drive axis</span>
+    <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#F5F5F0;border:1px solid #B4B2A9;display:inline-block;"></span>Golf ball (spin)</span>
+    <span style="display:inline-flex; align-items:center; gap:6px;"><span style="position:relative;width:14px;height:12px;display:inline-block;"><span style="position:absolute;left:2px;top:0;width:1.5px;height:12px;background:#5F5E5A;"></span><span style="position:absolute;left:3.5px;top:0;width:8px;height:5px;background:#E24B4A;"></span></span>Hole (target)</span>
+    <span id="scorecard" style="margin-left:auto; color:var(--text-muted);"></span>
+  </div>
+
+</div>
+</main>
+
+<footer>
+  <b style="color:var(--text-secondary)">Physics.</b> Same NV ground-state Bloch sphere as the Rabi and
+  Ramsey pages, but nothing here is driven continuously or measured with noise — every move is an
+  exact rotation: X/Y pulses turn about the microwave drive frame (set by the phase dial), Z turns
+  about the true N–V bond axis. Par is a breadth-first search over those same five gates, not a
+  measured quantity. No T₂*/dephasing is modeled on this page.
+  <br><span style="color:var(--text-muted)">Interim page: linked from index.html's visualizer list for
+  now, ahead of the planned catalog refactor described in the repo's README/CLAUDE.md.</span>
+</footer>
+</div>
+
+<script>
+(function(){
+  const canvas=document.getElementById('stage');
+  const ctx=canvas.getContext('2d');
+  let W,H,DPR;
+  function resize(){DPR=window.devicePixelRatio||1;W=canvas.clientWidth;H=canvas.clientHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+  resize(); window.addEventListener('resize',resize);
+  const css=getComputedStyle(document.documentElement); const col=n=>css.getPropertyValue(n).trim();
+
+  const CX='#378ADD', CY='#BA7517', CZ='#1D9E75', CDRIVE='#D4537E';
+
+  let rotX=-0.45, rotY=0.6, zoom=1;
+  let dragging=false,lx=0,ly=0;
+  canvas.addEventListener('pointerdown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;canvas.style.cursor='grabbing';canvas.setPointerCapture(e.pointerId);});
+  canvas.addEventListener('pointermove',e=>{if(!dragging)return;rotY+=(e.clientX-lx)*0.01;rotX+=(e.clientY-ly)*0.01;rotX=Math.max(-1.4,Math.min(1.4,rotX));lx=e.clientX;ly=e.clientY;});
+  canvas.addEventListener('pointerup',()=>{dragging=false;canvas.style.cursor='grab';});
+  canvas.addEventListener('wheel',e=>{e.preventDefault();zoom*=e.deltaY<0?1.06:0.94;zoom=Math.max(0.6,Math.min(1.8,zoom));},{passive:false});
+
+  const d=0.25;
+  const nPos=[d,d,d], vPos=[-d,-d,-d];
+  const nvAxis=(()=>{const v=[vPos[0]-nPos[0],vPos[1]-nPos[1],vPos[2]-nPos[2]];const m=Math.hypot(...v);return[v[0]/m,v[1]/m,v[2]/m];})();
+  function orthoFrame(z){let a=[1,0,0];if(Math.abs(z[0])>0.9)a=[0,1,0];let e1=[z[1]*a[2]-z[2]*a[1],z[2]*a[0]-z[0]*a[2],z[0]*a[1]-z[1]*a[0]];let m=Math.hypot(...e1);e1=e1.map(v=>v/m);let e2=[z[1]*e1[2]-z[2]*e1[1],z[2]*e1[0]-z[0]*e1[2],z[0]*e1[1]-z[1]*e1[0]];return[e1,e2,z];}
+  const [E1,E2,EZ]=orthoFrame(nvAxis);
+  function frameToWorld(v){return[E1[0]*v[0]+E2[0]*v[1]+EZ[0]*v[2],E1[1]*v[0]+E2[1]*v[1]+EZ[1]*v[2],E1[2]*v[0]+E2[2]*v[1]+EZ[2]*v[2]];}
+
+  function project(p){let[x,y,z]=p;let cy=Math.cos(rotY),sy=Math.sin(rotY);let x1=x*cy-z*sy,z1=x*sy+z*cy,y1=y;let cx=Math.cos(rotX),sx=Math.sin(rotX);let y2=y1*cx-z1*sx,z2=y1*sx+z1*cx,x2=x1;const s=150*zoom;return{x:W/2+x2*s,y:H/2-y2*s,z:z2};}
+
+  // ---- diamond lattice cluster (crystal space), centered on the vacancy ----
+  const basis=[[0,0,0],[0.25,0.25,0.25]];
+  const fcc=[[0,0,0],[0.5,0.5,0],[0.5,0,0.5],[0,0.5,0.5]];
+  let atoms=[];
+  for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++)for(let k=-1;k<=1;k++){for(const f of fcc){for(const b of basis){atoms.push([(i+f[0]+b[0]),(j+f[1]+b[1]),(k+f[2]+b[2])]);}}}
+  const kkey=p=>p.map(v=>v.toFixed(3)).join(',');
+  const seenA=new Set();const uniq=[];for(const p of atoms){const kk=kkey(p);if(!seenA.has(kk)){seenA.add(kk);uniq.push(p);}}
+  atoms=uniq;
+  const cc=[0.625,0.625,0.625];
+  atoms=atoms.map(p=>[p[0]-cc[0],p[1]-cc[1],p[2]-cc[2]]).filter(p=>Math.hypot(p[0],p[1],p[2])<1.3);
+  function near(p,q){return Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2])<0.05;}
+  let carbons=[];let nitrogen=null;
+  for(const p of atoms){if(near(p,vPos))continue;if(near(p,nPos)){nitrogen=p;continue;}carbons.push(p);}
+  if(!nitrogen)nitrogen=nPos.slice();
+  const NN=Math.hypot(d,d,d)*1.05;
+  const sites=carbons.concat([nitrogen]);
+  let bonds=[];
+  for(let i=0;i<sites.length;i++)for(let j=i+1;j<sites.length;j++){const A=sites[i],B=sites[j];if(Math.hypot(A[0]-B[0],A[1]-B[1],A[2]-B[2])<NN)bonds.push([A,B]);}
+  let dangling=[];
+  for(const p of sites){if(Math.hypot(p[0]-vPos[0],p[1]-vPos[1],p[2]-vPos[2])<NN)dangling.push([p,vPos]);}
+
+  function rotAxisV(v,ax,deg){const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);const dot=v[0]*ax[0]+v[1]*ax[1]+v[2]*ax[2];const cr=[ax[1]*v[2]-ax[2]*v[1],ax[2]*v[0]-ax[0]*v[2],ax[0]*v[1]-ax[1]*v[0]];return[v[0]*c+cr[0]*s+ax[0]*dot*(1-c),v[1]*c+cr[1]*s+ax[1]*dot*(1-c),v[2]*c+cr[2]*s+ax[2]*dot*(1-c)];}
+
+  let phase=0;
+  function driveAxis(which){const ang=(phase+(which==='Y'?90:0))*Math.PI/180;return[Math.cos(ang),Math.sin(ang),0];}
+  function gateAxisAngle(g){if(g[0]==='Z')return{ax:[0,0,1],deg:g[1]};return{ax:driveAxis(g[0]),deg:g[1]};}
+  const GATES=[['X',180],['X',90],['Y',180],['Y',90],['Z',90]];
+
+  let state=[0,0,1];
+  let target=[0,0,1];
+  let anim=null;
+  let history=[];
+  let moves=0, par=0, hole=1, solved=false;
+  let scores=[];
+
+  function rotP0(v,axis,deg){const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);let[x,y,z]=v;if(axis==='X')return[x,y*c-z*s,y*s+z*c];if(axis==='Y')return[x*c+z*s,y,-x*s+z*c];return[x*c-y*s,x*s+y*c,z];}
+  function keyOf(v){return v.map(x=>Math.round(x*1000)).join(',');}
+  function solve(from,to){const start=keyOf(from),goal=keyOf(to);if(start===goal)return[];const q=[[from,[]]];const seen=new Set([start]);let steps=0;while(q.length&&steps<200000){const[v,path]=q.shift();steps++;for(const g of GATES){const nv=rotP0(v,g[0],g[1]);const k=keyOf(nv);if(k===goal)return path.concat([g]);if(!seen.has(k)){seen.add(k);q.push([nv,path.concat([g])]);}}if(path.length>7)return null;}return null;}
+
+  function newHoleImpl(){
+    let v=[0,0,1]; const n=2+Math.floor(Math.random()*4);
+    for(let i=0;i<n;i++){const g=GATES[Math.floor(Math.random()*GATES.length)];v=rotP0(v,g[0],g[1]);}
+    v=v.map(x=>Math.round(x*1000)/1000);
+    if(keyOf(v)===keyOf([0,0,1])){return newHoleImpl();}
+    target=v; state=[0,0,1]; history=[]; moves=0; solved=false; anim=null;
+    const sol=solve([0,0,1],target); par=sol?sol.length:n;
+    document.getElementById('hole-n').textContent=hole;
+    document.getElementById('par-v').textContent=par;
+    hideWin(); updateHUD();
+  }
+  window.newHole=function(){ hole++; newHoleImpl(); };
+
+  window.setPhase=function(v){phase=parseFloat(v);document.getElementById('phase-out').textContent=Math.round(phase)+'°';refreshButtonTips();};
+  function refreshButtonTips(){
+    function dirName(which){const ang=((phase+(which==='Y'?90:0))%360+360)%360;const names=[[0,'+X'],[90,'+Y'],[180,'−X'],[270,'−Y'],[360,'+X']];let best=names[0],bd=999;for(const nm of names){let dd=Math.abs(ang-nm[0]);if(dd<bd){bd=dd;best=nm;}}return best[1];}
+    const dx=dirName('X'),dy=dirName('Y');
+    document.getElementById('bXpi').title='Half turn (180°) about the drive axis at phase '+Math.round(phase)+'° (≈ '+dx+'). Direction is irrelevant for a 180° turn.';
+    document.getElementById('bXhpi').title='Quarter turn (90°) about the drive axis at phase '+Math.round(phase)+'° (≈ '+dx+'). Flip phase by 180° to reverse this turn.';
+    document.getElementById('bYpi').title='Half turn (180°) about the drive axis at phase '+Math.round(phase+90)+'° (≈ '+dy+'). Direction is irrelevant for a 180° turn.';
+    document.getElementById('bYhpi').title='Quarter turn (90°) about the drive axis at phase '+Math.round(phase+90)+'° (≈ '+dy+'). Flip phase by 180° to reverse this turn.';
+  }
+
+  function applyGate(axis,deg){if(solved||anim)return;const{ax,deg:dg}=gateAxisAngle([axis,deg]);history.push(state.slice());const to=rotAxisV(state,ax,dg);anim={from:state.slice(),ax:ax.slice(),deg:dg,t:0,dur:Math.max(0.35,Math.abs(dg)/180*0.6)};state=to;moves++;updateHUD();}
+  window.pulse=function(a,d){applyGate(a,d);};
+  window.undo=function(){if(solved||anim||!history.length)return;state=history.pop();moves=Math.max(0,moves-1);hideWin();updateHUD();};
+
+  function fidelity(){const dot=state[0]*target[0]+state[1]*target[1]+state[2]*target[2];return(dot+1)/2;}
+  function checkWin(){const dot=state[0]*target[0]+state[1]*target[1]+state[2]*target[2];if(dot>0.998&&!solved){solved=true;const verdict=moves<=par?(moves<par?'Under par!':'Par'):('+'+(moves-par)+' over');scores.push({hole,moves,par});showWin(verdict);renderScorecard();}}
+  window.giveUp=function(){document.getElementById('phase').value=0;setPhase(0);const canFromHere=solve(state,target);const sol=canFromHere||solve([0,0,1],target)||[];if(canFromHere===null&&sol.length){state=[0,0,1];history=[];moves=0;}playSolution(sol);};
+  function playSolution(seq){let i=0;function next(){if(i>=seq.length)return;const g=seq[i++];applyGate(g[0],g[1]);setTimeout(next,420+g[1]/180*300);}next();}
+
+  function showWin(v){document.getElementById('win-sub').textContent=moves+' strokes · par '+par+' · '+v;document.getElementById('win-title').textContent=(v==='Par'||v==='Under par!')?'Nice.':'Holed out';document.getElementById('win-banner').style.display='flex';}
+  function hideWin(){document.getElementById('win-banner').style.display='none';}
+  function updateHUD(){document.getElementById('moves-v').textContent=moves;document.getElementById('fid-v').textContent='match '+Math.round(fidelity()*100)+'%';document.getElementById('golf-status').textContent='Hole '+hole+', par '+par+'. '+moves+' stroke'+(moves===1?'':'s')+'. Match '+Math.round(fidelity()*100)+'%.';}
+  function renderScorecard(){const total=scores.reduce((a,s)=>a+s.moves,0);const totalPar=scores.reduce((a,s)=>a+s.par,0);const rel=total-totalPar;document.getElementById('scorecard').textContent=scores.length+' holes · '+total+' vs par '+totalPar+' ('+(rel>0?'+':'')+rel+')';}
+
+  let lastT=performance.now();
+  let drawVec=[0,0,1];
+  function step(now){
+    const dt=(now-lastT)/1000; lastT=now;
+    if(anim){anim.t+=dt;const u=Math.min(1,anim.t/anim.dur);const e=u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2;drawVec=rotAxisV(anim.from,anim.ax,anim.deg*e);if(u>=1){drawVec=state;anim=null;checkWin();}}
+    else drawVec=state;
+    render();
+    requestAnimationFrame(step);
+  }
+
+  function drawGolfBall(cx,cy,r){
+    ctx.beginPath();ctx.arc(cx,cy,r,0,7);ctx.fillStyle='#F5F5F0';ctx.fill();
+    ctx.lineWidth=1;ctx.strokeStyle='#B4B2A9';ctx.stroke();
+    ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,7);ctx.clip();
+    ctx.beginPath();ctx.arc(cx+r*0.5,cy+r*0.5,r*0.95,0,7);ctx.fillStyle='rgba(150,148,140,0.28)';ctx.fill();
+    ctx.fillStyle='rgba(120,118,110,0.35)';
+    const dp=[[0,0],[0.42,0.05],[-0.4,0.1],[0.1,0.44],[0.05,-0.42],[-0.3,-0.3],[0.32,-0.28],[-0.28,0.36],[0.3,0.32]];
+    for(const dpt of dp){ctx.beginPath();ctx.arc(cx+dpt[0]*r,cy+dpt[1]*r,r*0.11,0,7);ctx.fill();}
+    ctx.restore();
+    ctx.beginPath();ctx.arc(cx-r*0.35,cy-r*0.35,r*0.22,0,7);ctx.fillStyle='rgba(255,255,255,0.85)';ctx.fill();
+  }
+
+  function drawFlag(baseX,baseY,outDx,outDy){
+    const poleLen=30*zoom;
+    const tipX=baseX+outDx*poleLen, tipY=baseY+outDy*poleLen;
+    ctx.beginPath();ctx.ellipse(baseX,baseY,6*zoom,3.2*zoom,Math.atan2(outDy,outDx)+Math.PI/2,0,7);
+    ctx.fillStyle='#2C2C2A';ctx.globalAlpha=0.85;ctx.fill();ctx.globalAlpha=1;
+    ctx.beginPath();ctx.moveTo(baseX,baseY);ctx.lineTo(tipX,tipY);
+    ctx.lineWidth=2*zoom;ctx.strokeStyle='#5F5E5A';ctx.stroke();
+    const perpX=-outDy, perpY=outDx;
+    const fx=tipX, fy=tipY, fw=15*zoom, fh=9*zoom;
+    ctx.beginPath();ctx.moveTo(fx,fy);ctx.lineTo(fx+perpX*fw+outDx*fh*0.2,fy+perpY*fw+outDy*fh*0.2);ctx.lineTo(fx+outDx*fh,fy+outDy*fh);ctx.closePath();
+    ctx.fillStyle='#E24B4A';ctx.fill();
+  }
+
+  function render(){
+    ctx.clearRect(0,0,W,H);
+    const o=project(vPos);
+    const Rb=0.9;
+    const showLattice=document.getElementById('lattice-toggle').checked;
+
+    // ---- LATTICE (behind everything) ----
+    if(showLattice){
+      const bondCol=col('--border')||'#ccc';
+      for(const [A,B] of bonds){const pa=project(A),pb=project(B);const depth=(pa.z+pb.z)/2;const alpha=0.10+0.12*((depth+1)/2);ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.lineWidth=1.2*zoom;ctx.strokeStyle=bondCol;ctx.globalAlpha=alpha;ctx.stroke();ctx.globalAlpha=1;}
+      for(const [A,B] of dangling){const pa=project(A),pb=project(B);ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.lineWidth=2*zoom;ctx.strokeStyle='#D85A30';ctx.setLineDash([4,3]);ctx.globalAlpha=0.7;ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;}
+      const items=[];
+      for(const p of carbons){const pr=project(p);const depth=(pr.z+1)/2;items.push({pr,r:(3.2+2.3*depth)*zoom,fill:'#B4B2A9',alpha:0.22+0.32*depth});}
+      { const pr=project(nitrogen); items.push({pr,r:9*zoom,fill:'#378ADD',rim:'#185FA5',alpha:1,N:true}); }
+      items.sort((a,b)=>a.pr.z-b.pr.z);
+      for(const it of items){ctx.globalAlpha=it.alpha;ctx.beginPath();ctx.arc(it.pr.x,it.pr.y,it.r,0,7);ctx.fillStyle=it.fill;ctx.fill();if(it.rim){ctx.lineWidth=1;ctx.strokeStyle=it.rim;ctx.stroke();}ctx.globalAlpha=1;}
+    }
+
+    // ---- Bloch sphere rings ----
+    function ring(spanA,spanB,color,alpha){ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();for(let i=0;i<=72;i++){const a=i/72*2*Math.PI;const fv=[0,0,0];fv[spanA]=Math.cos(a);fv[spanB]=Math.sin(a);const w=frameToWorld([fv[0]*Rb,fv[1]*Rb,fv[2]*Rb]);const p=project([vPos[0]+w[0],vPos[1]+w[1],vPos[2]+w[2]]);if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);}ctx.stroke();ctx.globalAlpha=1;}
+    ring(1,2,CX,0.5); ring(0,2,CY,0.5); ring(0,1,CZ,0.5);
+
+    const oc=project(vPos);
+    function axisLabel(axisIdx,color,txt){const dir=[0,0,0];dir[axisIdx]=1;const wP=frameToWorld([dir[0]*Rb,dir[1]*Rb,dir[2]*Rb]);const wN=frameToWorld([-dir[0]*Rb,-dir[1]*Rb,-dir[2]*Rb]);const pP=project([vPos[0]+wP[0],vPos[1]+wP[1],vPos[2]+wP[2]]);const pN=project([vPos[0]+wN[0],vPos[1]+wN[1],vPos[2]+wN[2]]);const p=pP.z>=pN.z?pP:pN;let dx=p.x-oc.x,dy=p.y-oc.y;const m=Math.hypot(dx,dy)||1;dx/=m;dy/=m;ctx.beginPath();ctx.arc(p.x,p.y,3,0,7);ctx.fillStyle=color;ctx.fill();ctx.fillStyle=color;ctx.font='700 14px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,p.x+dx*21,p.y+dy*21);ctx.textBaseline='alphabetic';}
+    axisLabel(0,CX,'X'); axisLabel(1,CY,'Y'); axisLabel(2,CZ,'Z');
+
+    // drive axis
+    const dv=driveAxis('X');
+    const wPos=frameToWorld([dv[0]*Rb,dv[1]*Rb,dv[2]*Rb]);
+    const wNeg=frameToWorld([-dv[0]*Rb,-dv[1]*Rb,-dv[2]*Rb]);
+    const dpP=project([vPos[0]+wPos[0],vPos[1]+wPos[1],vPos[2]+wPos[2]]);
+    const dpN=project([vPos[0]+wNeg[0],vPos[1]+wNeg[1],vPos[2]+wNeg[2]]);
+    ctx.beginPath();ctx.moveTo(dpN.x,dpN.y);ctx.lineTo(dpP.x,dpP.y);ctx.lineWidth=2.5;ctx.strokeStyle=CDRIVE;ctx.globalAlpha=0.9;ctx.stroke();ctx.globalAlpha=1;
+    ctx.beginPath();ctx.arc(dpP.x,dpP.y,4,0,7);ctx.fillStyle=CDRIVE;ctx.fill();
+
+    // |0>/|1>
+    const zt=frameToWorld([0,0,Rb]),zb=frameToWorld([0,0,-Rb]);
+    const pt=project([vPos[0]+zt[0],vPos[1]+zt[1],vPos[2]+zt[2]]);
+    const pb=project([vPos[0]+zb[0],vPos[1]+zb[1],vPos[2]+zb[2]]);
+    ctx.fillStyle=col('--text-secondary');ctx.font='12px sans-serif';ctx.textAlign='center';
+    ctx.fillText('|0⟩',pt.x-20,pt.y-2);ctx.fillText('|1⟩',pb.x+20,pb.y+10);
+
+    // hole + flag at target
+    const tw=frameToWorld([target[0]*Rb,target[1]*Rb,target[2]*Rb]);
+    const tp=project([vPos[0]+tw[0],vPos[1]+tw[1],vPos[2]+tw[2]]);
+    const tOut=project([vPos[0]+tw[0]*1.12,vPos[1]+tw[1]*1.12,vPos[2]+tw[2]*1.12]);
+    let ndx=tOut.x-tp.x, ndy=tOut.y-tp.y; const nm2=Math.hypot(ndx,ndy)||1; ndx/=nm2; ndy/=nm2;
+    drawFlag(tp.x,tp.y,ndx,ndy);
+
+    // ball (spin tip)
+    const sw=frameToWorld([drawVec[0]*Rb,drawVec[1]*Rb,drawVec[2]*Rb]);
+    const sp=project([vPos[0]+sw[0],vPos[1]+sw[1],vPos[2]+sw[2]]);
+    ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(sp.x,sp.y);
+    ctx.lineWidth=2.5*zoom;ctx.strokeStyle='#7F77DD';ctx.globalAlpha=0.55;ctx.stroke();ctx.globalAlpha=1;
+    drawGolfBall(sp.x,sp.y,8.5*zoom);
+
+    ctx.beginPath();ctx.arc(o.x,o.y,2.5,0,7);ctx.fillStyle=col('--text-muted');ctx.fill();
+  }
+
+  document.getElementById('lattice-toggle').addEventListener('change',()=>{});
+  refreshButtonTips();
+  newHoleImpl();
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>
