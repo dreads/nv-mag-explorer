@@ -15,20 +15,16 @@ Companion piece to the MagNav system diagram, and to [bell-state-explorer](https
 
 ## Where this is headed
 
-`index.html` is meant to grow into a catalog of educational NV-center visualizers, not stay
-a "Why Ramsey?" essay with a hand-maintained nav list. The plan: each visualizer (Rabi,
-Ramsey, Bloch golf, and whatever's added after) becomes a declarative entry — title, note,
-detail copy, link, i18n keys — in one data structure, rendered by `src/app.js`, instead of
-a `<div class="card">` block copy-pasted into `index.html` plus matching hand-edits to
-`locales/en.json` and `schema/locale-bundle.schema.json` every time. Bloch golf was added
-the old, manual way on purpose — see the HTML comment above its nav card in `index.html` —
-so the catalog refactor has a second real example to generalize from, not just Rabi-vs-Ramsey.
-
-Alongside that: `index_rabi.html` and `index_ramsey.html` still have no accessibility
-treatment at all (no `aria-hidden`, no screen-reader-equivalent text for any of their
-canvases). `index_nv_bloch_golf.html` got a baseline pass when it was added (see its own
-entry in the i18n/l10n/a11y section below) — bringing the other two up to that same
-baseline is separate, standing work that doesn't need to wait on the catalog refactor.
+Tracked as GitHub issues on this repo, not as a list here — see
+[issue #18](https://github.com/dreads/nv-mag-explorer/issues/18) (turn `index.html`'s
+hand-copied nav cards into a data-driven catalog) and
+[issue #19](https://github.com/dreads/nv-mag-explorer/issues/19) (bring
+`index_rabi.html`/`index_ramsey.html` accessibility up to `index_nv_bloch_golf.html`'s
+baseline) for current status. The context worth keeping here since an issue title won't
+carry it: Bloch golf was added as a third nav card the old, manual way — hand-editing
+`index.html`, `locales/en.json`, and `schema/locale-bundle.schema.json` in lockstep — on
+purpose, so the catalog refactor in #18 has a second real example to generalize from, not
+just Rabi-vs-Ramsey.
 
 ## Deploy to GitHub Pages
 
@@ -141,7 +137,8 @@ Values in the sensible NV range: 2.87 GHz zero-field resonance, ~1–20 MHz Rabi
 ## Known-simple / next steps
 
 - `index_rabi.html`: two-level model only (no hyperfine triplet, no explicit laser-pumping rate equations); the dipole falloff shape is real, but `B_COEFF` is an arbitrarily tuned demo constant, not a characterized real magnet. `verify/` (see "Physics verification" above) additionally shows the Rabi panel's T₂* damping is a stylized approximation, not the true master-equation solution, and that a real ODMR dip needs a population-relaxation channel this model never defines.
-- **Next: the visualizer catalog refactor** — turn `index.html`'s hand-copied nav cards into a data-driven list so adding a fourth visualizer doesn't mean hand-editing `index.html`, `locales/en.json`, and `schema/locale-bundle.schema.json` the way Bloch golf's card was. See "Where this is headed" above.
-- **Next: accessibility parity** — bring `index_rabi.html` and `index_ramsey.html` up to the aria-hidden/sr-only baseline `index_nv_bloch_golf.html` now has (canvas `aria-hidden`, sr-only scene description, a live status region for the readouts that currently only exist as pixels).
-- A further follow-on will let the Ramsey visualizer's T₂* become an explicit, dial-in-able noise channel — closer to bell-state-explorer's dephasing model than today's fixed slider.
-- `index_nv_bloch_golf.html`'s `solve()` breadth-first search and rotation math have no independent test coverage yet (unlike Rabi/Ramsey, which now have `verify/`'s QuTiP cross-check) — worth a look if the puzzle's par values ever seem off.
+- A further follow-on will let the Ramsey visualizer's T₂* become an explicit, dial-in-able noise channel — closer to bell-state-explorer's dephasing model than today's fixed slider. Not filed as an issue yet.
+- `index_nv_bloch_golf.html`'s `solve()` breadth-first search and rotation math have no independent test coverage yet (unlike Rabi/Ramsey, which now have `verify/`'s QuTiP cross-check) — worth a look if the puzzle's par values ever seem off. Not filed as an issue yet.
+
+The catalog refactor and Rabi/Ramsey accessibility parity — the two biggest open items —
+are tracked as GitHub issues, see "Where this is headed" above rather than restated here.

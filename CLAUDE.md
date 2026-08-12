@@ -14,14 +14,23 @@ convention closely — ES modules, i18n, tested pure functions. `index_rabi.html
 single-file, English-only, untested, canvas-rendered instrument panels. Don't assume a
 pattern from one half applies to the other — check which file you're in first.
 
-**Where this is headed**: `index.html` is planned to become a data-driven catalog of
-educational NV-center visualizers, not a hand-maintained "Why Ramsey?" page with a
-hardcoded two- (now three-) card nav. `index_nv_bloch_golf.html` (Bloch golf, a
-gate-navigation puzzle on the same Bloch sphere) was added as the third peer visualizer
-ahead of that refactor — its nav card in `index.html` is marked with an HTML comment as an
-interim, hand-added entry to be replaced once the catalog scheme exists. See "Planned:
-visualizer catalog" below before adding a fourth visualizer by hand-copying that pattern
-again.
+**The backlog lives in GitHub issues** (`dreads/nv-mag-explorer`), not in this file. Run
+`gh issue list` before assuming what's tracked vs. only described here — this file
+explains *why* things are the way they are; issues track *what's next*. Two examples
+directly relevant to the state described below: issue #18 (turn `index.html`'s
+hand-copied nav cards into a data-driven catalog) and #19 (bring `index_rabi.html`/
+`index_ramsey.html`'s accessibility up to `index_nv_bloch_golf.html`'s baseline).
+`index_nv_bloch_golf.html` (Bloch golf, a gate-navigation puzzle on the same Bloch sphere)
+was added as the third peer visualizer by hand — its nav card in `index.html` is marked
+with an HTML comment as the interim pattern issue #18 replaces.
+
+**Unresolved naming inconsistency, observed 2026-08-12, not normalized either
+direction**: the repo/README call this project "NV Magnetometry," but
+`index_nv_bloch_golf.html`'s `<title>`/`<h1>` say "NV Single Qubit Explorer" — a same-day
+hand-edit, not something from an earlier session. Could be the start of a deliberate
+rebrand (golf isn't about magnetometry at all, so a broader name would make sense as the
+catalog grows) or just a one-page wording choice. Don't silently pick one and propagate it
+— ask, or check for a GitHub issue about it first.
 
 ## Running locally
 
@@ -34,10 +43,17 @@ npm run lint:i18n
 The physics-verification suite (`verify/`) is Python, not part of `npm test`:
 
 ```bash
+python3 --version   # needs 3.10+ for QuTiP 5.x — check before the next line
 pip install -r verify/requirements.txt
 pytest verify/ -q
 python verify/make_report.py   # writes verify/report.json (gitignored, regenerated)
 ```
+
+The system default `python3` on the machine this was built on is 3.7 (too old — `pip
+install` will fail or, worse, half-succeed with a broken environment). A working
+interpreter was found via Homebrew at `/usr/local/opt/python@3.11/bin/python3.11`; if
+`python3 --version` on whatever machine you're on is also too old, look for a similarly
+Homebrew/pyenv-installed newer interpreter rather than assuming the environment is broken.
 
 ## File structure
 
@@ -128,8 +144,8 @@ single-file pages by design (see README's i18n/l10n/a11y section).
   descriptions) aren't exposed to assistive tech beyond their base visible label.
 - **index_rabi.html / index_ramsey.html**: **still no `aria-hidden`/`sr-only`/`role`
   attribute anywhere** — this was true before the golf work and remains true; bringing
-  these two up to the same baseline as golf is explicitly still open, see "Planned:
-  visualizer catalog" below. Don't assume golf's pass means the other two got one too.
+  these two up to the same baseline as golf is tracked as GitHub issue #19, not done here.
+  Don't assume golf's pass means the other two got one too.
 
 ### index.html + src/app.js / i18n.js / locale-loader.js
 
@@ -142,6 +158,21 @@ the same way every contributed locale is, rather than shipped as a duplicate JS 
 much thinner than bell's equivalent: no model, no slider-driven readouts, so
 `applyLocale(bundle)` (walk `[data-i18n]`, set `document.title`/meta description
 specially) plus the picker wiring is the entire render path.
+
+**Static HTML in `index.html` is authoritative over `locales/en.json` — not the other way
+around.** When a `[data-i18n]` element's visible text in `index.html` and its matching
+`locales/en.json` string disagree, sync the JSON to the HTML. This isn't a hypothetical:
+it happened live during this repo's Bloch-golf work (`ui.navGolfNote` was hand-edited in
+`index.html` but the matching `en.json` key wasn't updated to match) and has happened
+before. **`npm run lint:i18n` will not catch this** — it only checks that a `data-i18n`
+key *resolves* to something in `en.json`, never that the two strings *match*
+(`scripts/check-i18n-coverage.js` says so in its own comments). Concretely: any time you
+hand-edit visible text on an element carrying `data-i18n="key"`, immediately update
+`locales/en.json`'s matching key too, in the same change — there's no CI step that will
+remind you later, and a default-English visitor sees only the HTML (`en.json` is fetched
+lazily, see above), so drift here is invisible in normal browsing and only surfaces when
+someone switches locales, falls back per-key, or reads `en.json` as the source of truth
+for translation.
 
 ### verify/ — physics cross-check (QuTiP, Python)
 
@@ -172,28 +203,22 @@ Runs via `.github/workflows/physics-verification.yml`, triggered only on changes
 `index_rabi.html`, `index_ramsey.html`, or `verify/**` — independent of and does not gate
 `deploy.yml`.
 
-## Planned: visualizer catalog
+## Visualizer catalog (why this is a real gap, not just a style preference)
 
-Goal, not yet built: refactor `index.html` so each visualizer (Rabi, Ramsey, Bloch golf,
-and whatever comes after) is a declarative entry — title, note, detail paragraph, href,
-i18n keys — in one list, rendered into the `.explore-col` nav by `src/app.js`, instead of
-a hand-copied `<div class="card">` block per page. Concretely, that means:
-- A data structure (plain array of objects, in `src/app.js` or a new `src/catalog.js`) is
-  the single place a new visualizer gets registered, instead of touching `index.html`'s
-  markup, `locales/en.json`, and `schema/locale-bundle.schema.json` by hand each time (all
-  three needed manual edits to add the Bloch golf card — see the "golfIntro"/"navGolf*"
-  keys throughout this repo for what that manual process looked like, and the HTML comment
-  above the golf `<div class="card">` in index.html marking it as the interim pattern).
-- Card rendering (label/note/detail paragraph markup) moves from static HTML into a small
-  render function, still going through `t(key, params)` per the i18n rule below — no
-  regression on translatability.
-- Worth deciding at that point, not before: whether the timeline-diagram SVG (Rabi vs.
-  Ramsey drive-timeline comparison) stays a fixed two-way comparison or becomes part of
-  the catalog data too; Bloch golf doesn't fit that comparison's shape (a discrete
-  puzzle, not a drive-timeline shape) and wasn't force-fit into it.
-- Bringing `index_rabi.html`/`index_ramsey.html` up to the same accessibility baseline
-  `index_nv_bloch_golf.html` now has (see "Accessibility" above) is independent of the
-  catalog refactor and doesn't need to wait for it.
+Tracked in GitHub issue #18, not here — this section is the context an issue title won't
+carry. Adding Bloch golf as the third nav entry meant touching three files by hand in
+lockstep: the `<div class="card">` markup in `index.html`, `locales/en.json` (new
+`navGolfLabel`/`navGolfNote`/`golfIntro.*` keys), and `schema/locale-bundle.schema.json`.
+That's the concrete cost a data-driven catalog (one entry per visualizer, rendered by
+`src/app.js`) would remove — worth knowing before touching any of those three files again
+for a fourth visualizer, rather than repeating the same three-file-by-hand pattern.
+Whether the Rabi-vs-Ramsey drive-timeline SVG comparison joins that same data structure or
+stays a fixed two-way diagram is an open sub-question noted on the issue, not decided here
+— Bloch golf's shape (a discrete puzzle) doesn't fit that comparison, which is why it
+wasn't force-fit into it.
+
+Rabi/Ramsey accessibility parity (issue #19) is independent of this refactor and doesn't
+need to wait for it — see "Accessibility" above for the exact baseline to match.
 
 ## Physics conventions
 

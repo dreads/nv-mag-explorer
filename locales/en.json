@@ -20,7 +20,7 @@
       "navDesignLabel": "Ramsey visualizer",
       "navDesignNote": "In design — pulse-sequence timeline, fringe plot, and a phase-accumulating Bloch sphere.",
       "navGolfLabel": "Bloch golf",
-      "navGolfNote": "A gate-navigation puzzle on the same Bloch sphere."
+      "navGolfNote": "An NV Single Qubit gate-navigation puzzle."
     },
     "hero": {
       "blochCaption": "The Bloch vector precessing as the magnet auto-sweeps its full range — captured live from the Rabi visualizer, not a rendered mockup."
