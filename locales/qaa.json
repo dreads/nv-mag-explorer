@@ -18,7 +18,9 @@
       "navRabiLabel": "Vïsüälïséür Räbï ét Zééman",
       "navRabiNote": "L’öscïllâtïöñ cöñtïñüélléméñt éñtrâîñéé.",
       "navDesignLabel": "Vïsüälïséür Rämséy",
-      "navDesignNote": "Éñ cöñcéptïöñ — chrönölögïé dé séquéñcé d’ïmpülsïöñs, träcé dé fräñgés, ét üñé sphère dé Blöch àccümülâñt lä phâsé."
+      "navDesignNote": "Éñ cöñcéptïöñ — chrönölögïé dé séquéñcé d’ïmpülsïöñs, träcé dé fräñgés, ét üñé sphère dé Blöch àccümülâñt lä phâsé.",
+      "navGolfLabel": "Gölf dé Blöch",
+      "navGolfNote": "Ün cässé-têté dé nävïgâtïön pär pörtés sür lä mêmé sphère dé Blöch."
     },
     "hero": {
       "blochCaption": "Lé véctéür dé Blöch précéssâñt tâñdïs qüé l’äïmâñt bäläyé tôüté sä pläge — câptüré éñ dïréct dépüïs lé vïsüälïséür Räbï, päs ün mockup réñdü."
@@ -38,6 +40,10 @@
     "coherenceBudget": {
       "heading": "Lé büdgét dé cöhérèñcé",
       "body": "Céttè léctüré prôpré ñ’ést pâs grâtüïté. Lé cürséür dé déphâsâgé dé bell-state-explorer réñd vïsïblé lé mêmé écháñgé sür üné mâtrïcé dé déñsïté à déüx qübïts: âttéñüér lés cöhérèñcés höns-dïâgönâlé pâr ün fâctéür dé (1 − p) läïssé lés pöpülâtïöñs ïñtâctés, mâïs éfâcé éxâctéméñt l’ïñförmâtïöñ qüï réñdâït lés cörrélâtïöñs dé l’étât lïsïblés. Üné féñêtré d’évölütïöñ lïbré dé Rämséy dépéñsé lâ mêmé möññâïé — lâ vïsïbïlïté dés fräñgés ïcï décrôît cömmé e^(−τ/T₂*), döñc âttéñdré plüs löñgtémps pöür âccümülér plüs dé phâsé sâïgné âüssï lâ cöhérèñcé nécéssâïré pöür rélïré céttè phâsé. Il ÿ â üñ τ öptïmâl, fïxé pâr T₂*, ét âü-délà vöüs mésüréz dü brüït, päs ün chämp."
+    },
+    "golfIntro": {
+      "heading": "Ün cässé-têté, päs üné mésüré",
+      "body": "Dés ïmpülsïöñs X, Y, ét Z fönt töürnér lé spïñ vérs üné cïblé pläcéé äü häsârd, éñ äüssï péü dé cöups qüé lé pär lé pérmét. Cöñträïréméñt äüx déüx äütrés pägés, rïéñ ïcï n’ést éñtrâîñé éñ cöñtïnü nï mésüré ävéc dü brüït — châqüé möüvéméñt ést üné rötâtïöñ éxâcté."
     },
     "diagram": {
       "heading": "Chrönölögïés d’éñtrâîñémeñt, côté à côté",

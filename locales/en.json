@@ -18,7 +18,9 @@
       "navRabiLabel": "Rabi & Zeeman visualizer",
       "navRabiNote": "The continuously-driven oscillation.",
       "navDesignLabel": "Ramsey visualizer",
-      "navDesignNote": "In design — pulse-sequence timeline, fringe plot, and a phase-accumulating Bloch sphere."
+      "navDesignNote": "In design — pulse-sequence timeline, fringe plot, and a phase-accumulating Bloch sphere.",
+      "navGolfLabel": "Bloch golf",
+      "navGolfNote": "A gate-navigation puzzle on the same Bloch sphere."
     },
     "hero": {
       "blochCaption": "The Bloch vector precessing as the magnet auto-sweeps its full range — captured live from the Rabi visualizer, not a rendered mockup."
@@ -38,6 +40,10 @@
     "coherenceBudget": {
       "heading": "The coherence budget",
       "body": "That clean readout isn't free. bell-state-explorer's dephasing slider makes the same trade visible on a two-qubit density matrix: damping the off-diagonal coherences by a factor of (1 − p) leaves the populations untouched, but it erases exactly the information that made the state's correlations legible."
+    },
+    "golfIntro": {
+      "heading": "A puzzle, not a measurement",
+      "body": "X, Y, and Z pulses rotate the spin toward a randomly placed target in as few strokes as par allows. Unlike the other two pages, nothing here is driven continuously or measured with noise — every move is an exact rotation."
     },
     "diagram": {
       "heading": "Drive timelines, side by side",

@@ -8,9 +8,27 @@ Companion piece to the MagNav system diagram, and to [bell-state-explorer](https
 
 | File | What it is |
 |---|---|
-| `index.html` | **"Why Ramsey?"** — an explainer page on why a real magnetometer measures with Ramsey interferometry instead of reading Rabi oscillations directly, and the coherence budget that limits it. The current front door of the repo. |
+| `index.html` | **"Why Ramsey?"** — an explainer page on why a real magnetometer measures with Ramsey interferometry instead of reading Rabi oscillations directly, and the coherence budget that limits it. Also the repo's visualizer nav — the current front door of the repo. |
 | `index_rabi.html` | The interactive Rabi/Zeeman visualizer (formerly `index.html`) — slide a magnet toward or away from a fixed sensor, watch the Rabi oscillation and ODMR spectrum respond. |
-| `index_ramsey.html` | Design mockup for the interactive Ramsey visualizer — pulse-sequence timeline, fringe plot, phase-accumulating Bloch sphere. Not yet wired up; will replace `index.html` once built. |
+| `index_ramsey.html` | The interactive Ramsey interferometry visualizer — pulse-sequence timeline, fringe plot, phase-accumulating Bloch sphere, play/stage-jump controls. Fully wired up (this table previously called it an unbuilt "design mockup"; that was stale — it's functional, see the commit history). Note: `index.html`'s own nav copy still labels it "In design" — left as-is here since it's unclear whether that's stale wording or a deliberate "not fully polished yet" signal; worth a decision, not a silent fix. |
+| `index_nv_bloch_golf.html` | Bloch golf — a gate-navigation puzzle on the same ground-state Bloch sphere: pulse X/Y/Z rotations to walk the spin to a randomly placed target in as few strokes as par allows. The third peer visualizer, added as an interim `index.html` nav entry ahead of the catalog refactor described below. |
+
+## Where this is headed
+
+`index.html` is meant to grow into a catalog of educational NV-center visualizers, not stay
+a "Why Ramsey?" essay with a hand-maintained nav list. The plan: each visualizer (Rabi,
+Ramsey, Bloch golf, and whatever's added after) becomes a declarative entry — title, note,
+detail copy, link, i18n keys — in one data structure, rendered by `src/app.js`, instead of
+a `<div class="card">` block copy-pasted into `index.html` plus matching hand-edits to
+`locales/en.json` and `schema/locale-bundle.schema.json` every time. Bloch golf was added
+the old, manual way on purpose — see the HTML comment above its nav card in `index.html` —
+so the catalog refactor has a second real example to generalize from, not just Rabi-vs-Ramsey.
+
+Alongside that: `index_rabi.html` and `index_ramsey.html` still have no accessibility
+treatment at all (no `aria-hidden`, no screen-reader-equivalent text for any of their
+canvases). `index_nv_bloch_golf.html` got a baseline pass when it was added (see its own
+entry in the i18n/l10n/a11y section below) — bringing the other two up to that same
+baseline is separate, standing work that doesn't need to wait on the catalog refactor.
 
 ## Deploy to GitHub Pages
 
@@ -31,6 +49,40 @@ npm run lint:i18n
 ## Why no Python
 
 Rabi oscillations, the Zeeman effect, and Ramsey fringes are all **closed-form** — there's an exact formula, no differential-equation solver needed. Everything is computed in the browser in JavaScript. A quantum library like QuTiP would be overkill *and* can't run on GitHub Pages (it needs a Python runtime). If a future feature needs full density-matrix simulation (e.g. Lindblad decoherence, multi-level dynamics beyond the two-level model), that's the point where you'd pre-compute data or add a backend — not before.
+
+This is still true for the deployed app. It's *not* the whole story anymore: `verify/` (next
+section) runs QuTiP in CI, offline, to check the closed-form formulas above are actually
+correct — a Python dependency that never ships to the browser and never gates deploy.
+
+## Physics verification (QuTiP)
+
+`verify/` cross-checks the Rabi/Ramsey/ODMR formulas above against a full QuTiP Lindblad
+master-equation simulation of the same two-level model — independent proof the closed-form
+shortcuts are physically correct, not just plausible-looking. Runs via
+`.github/workflows/physics-verification.yml` on any change to `index_rabi.html`,
+`index_ramsey.html`, or `verify/**`; separate from and doesn't gate `deploy.yml` (installing
+QuTiP is slower than this repo's usual `npm test`).
+
+```bash
+pip install -r verify/requirements.txt
+pytest verify/ -q
+python verify/make_report.py   # writes verify/report.json (gitignored) with overlay curves + error grids
+```
+
+Findings, in brief (full writeup in `verify/README.md`):
+- **Rabi, coherent** (no T₂*): exact match to QuTiP (~1e-8) — the generalized-Rabi formula
+  really is the textbook-exact solution it claims to be.
+- **Rabi, with T₂\* dephasing**: the `×e^(−t/T₂*)` envelope is a real approximation. On
+  resonance the true decay rate is `1/(2T₂*)`, not `1/T₂*`, and the true dynamics settle
+  toward a mixed steady state rather than decaying to zero — a sizeable gap even at this
+  page's own default slider settings, not an edge case.
+- **Ramsey, coherent and with T₂\***: both exact (~1e-7) — dephasing confined to the
+  free-evolution window turns out to be analytically solvable, so the closed form isn't
+  approximating anything there.
+- **ODMR**: with only this model's stated T₂* channel (no T1), a CW ODMR dip is provably
+  impossible — the Lindblad steady state is exactly the maximally-mixed population for any
+  drive/detuning. Real ODMR needs the laser's optical repumping, which this two-level model
+  never includes (see "Known-simple / next steps" below).
 
 ## index_rabi.html — what each panel shows
 
@@ -63,7 +115,7 @@ Rabi oscillations, the Zeeman effect, and Ramsey fringes are all **closed-form**
 - Detuning: **δ = f_drive − f_nearest-resonance**
 - Dipole field vs. distance: **B(d) = B₀/d³** (axial field of a small bar magnet), `B₀` chosen for a clear demo range
 
-These were checked numerically: the amplitude term halves at δ=Ω₀ and the Zeeman split is linear at 2γB. The 1/d³ shape is real dipole physics; `B₀`'s magnitude is an arbitrarily tuned demo constant, not a characterized real magnet. The spin physics itself is faithful to the two-level NV model.
+These were checked numerically: the amplitude term halves at δ=Ω₀ and the Zeeman split is linear at 2γB. The 1/d³ shape is real dipole physics; `B₀`'s magnitude is an arbitrarily tuned demo constant, not a characterized real magnet. The spin physics itself is faithful to the two-level NV model — and, more rigorously than the self-consistency checks in this paragraph, cross-checked against a full QuTiP master-equation simulation in `verify/` (see "Physics verification" above), which is also where the T₂*/ODMR caveats below the model actually get quantified rather than just asserted.
 
 Values in the sensible NV range: 2.87 GHz zero-field resonance, ~1–20 MHz Rabi, µs-scale T₂\*. The two-level model ignores hyperfine structure (the real 14N triplet) and optical-pumping dynamics — fine for building intuition, and the natural things to add if you want more realism later.
 
@@ -71,21 +123,25 @@ Values in the sensible NV range: 2.87 GHz zero-field resonance, ~1–20 MHz Rabi
 
 `index.html` (the "Why Ramsey?" page) follows the same internationalization and accessibility architecture as [bell-state-explorer](https://github.com/dreads/bell-state-explorer), ported over as directly as the content allows:
 
-- **Every user-visible string is externalized, with a single JSON source of truth.** `locales/en.json` holds every English string, split into `ui` (chrome: heading, subtitle, nav links, language picker), `purpose`/`rabiProblem`/`ramseyPayoff`/`coherenceBudget` (the narrative sections), `diagram` (the Rabi-vs-Ramsey timeline SVG's labels and its accessible description), and `footer`. `locales/manifest.json` lists picker options only, independent of auto-detection.
+- **Every user-visible string is externalized, with a single JSON source of truth.** `locales/en.json` holds every English string, split into `ui` (chrome: heading, subtitle, nav links, language picker), `purpose`/`rabiProblem`/`ramseyPayoff`/`coherenceBudget`/`golfIntro` (the narrative sections — `golfIntro` backs the Bloch golf nav card's detail paragraph, added when that card was), `diagram` (the Rabi-vs-Ramsey timeline SVG's labels and its accessible description), and `footer`. `locales/manifest.json` lists picker options only, independent of auto-detection.
   - **Deliberate deviation from bell-state-explorer**: bell keeps a static-imported `locales/en.js` alongside its JSON so the default language never costs a network round-trip. This page doesn't need that duplication — every `[data-i18n]` element's static HTML text already *is* the correct default English render (no model/`render()` to drive it), so `en.json` is fetched lazily, the same way every contributed locale is, only once it's actually needed as `translate()`'s fallback bundle (a non-English locale gets applied, or the picker is used at all). The default English visitor triggers zero fetches and sees zero JS-driven text changes.
 - **`src/i18n.js`** (`translate`/`getPath`/`interpolate`) and **`src/locale-loader.js`** (`expandCandidates`/`loadManifest`/`loadLocaleBundle`/`detectLocale`) are copied verbatim from bell-state-explorer — both are pure, project-agnostic string-lookup/locale-discovery code with no dependency on what the page actually says. Same silent per-key fallback to English, same `locales/<code>.json`-dropped-in-locally auto-detection, same `qaa`–`qtz` mock-locale convention for manual QA.
 - **`src/app.js`** is simpler than bell's: this page has no model or slider-driven readouts, so `applyLocale(bundle)` (walk every `[data-i18n]`, set `document.title`/meta description specially, using `ensureEnglish()`'s lazily-fetched bundle as the fallback) plus the locale picker wiring is the entire render path — there's no separate `render()`, and the default-English case calls none of it.
 - **Static HTML text**: `data-i18n="namespace.key"` on every text-bearing element; `data-i18n-exempt` on the one deliberately untranslated element (the language picker's own-language `<option>`), same convention as bell's index.html.
 - **Accessibility (aria-hidden + sr-only)**: the one SVG visual on this page — the Rabi-vs-Ramsey drive-timeline comparison — gets `aria-hidden="true"` (it's a bar-length/label comparison with no faithful ARIA mapping) plus a `.sr-only` `<p>` (`data-i18n="diagram.srDescription"`) stating the same comparison in prose, directly following bell-state-explorer's SVG convention. A skip-link and visible `:focus-visible` rings are also in `src/styles.css`.
+- **`index_nv_bloch_golf.html` got the same aria-hidden/sr-only *pattern* applied independently of this i18n system** (it's still English-only, see below): its `<canvas>` is `aria-hidden="true"`, a `.sr-only` paragraph carries the scene description, a live `#golf-status` region announces hole/par/strokes/match as they change, and the win banner is `role="status"`/`aria-live="polite"`. It also arrived with an unloaded Tabler Icons font dependency (icon glyphs that silently rendered as nothing) and several undefined CSS custom properties — both fixed as part of the same pass, not left as a follow-up, since a page that looks broken is its own accessibility problem. Full detail in CLAUDE.md's Accessibility section.
 - **Single dark theme, by design** — unlike bell-state-explorer's light/dark toggle via `prefers-color-scheme`, this page reuses `index_rabi.html`/`index_ramsey.html`'s fixed dark instrument-panel palette (`--bg`, `--ink`, `--cyan`, etc. as CSS custom properties) for visual consistency across the repo's three pages. All text colors are light-on-near-black with generous contrast margin; no light theme is offered.
 - **`scripts/check-i18n-coverage.js`** (`npm run lint:i18n`, zero dependencies, wired into `.github/workflows/deploy.yml` after `npm test`) is bell's heuristic scanner adapted to this repo: untagged text-bearing tags, `<title>`/meta-description drift from `locales/en.json`, unresolvable `data-i18n` keys, hardcoded `.textContent` literals in `src/*.js`. It does *not* currently check that other `data-i18n` static HTML text (the body paragraphs) matches `en.json` word-for-word — see the note below.
 - **`test/i18n.test.js`** / **`test/locale-loader.test.js`** are the same generic engine tests as bell-state-explorer (they test pure lookup/discovery logic, not this page's content). **`test/locale-bundles.test.js`** shape-validates every `locales/*.json` against `locales/en.json` (unknown sections/keys, valid `direction`, all-string values), same as bell's `npm test` contribution gate.
-- **`schema/locale-bundle.schema.json`** documents the contributed-bundle shape (JSON Schema draft 2020-12), scoped to this page's actual `ui`/`purpose`/`rabiProblem`/`ramseyPayoff`/`coherenceBudget`/`diagram`/`footer` sections.
+- **`schema/locale-bundle.schema.json`** documents the contributed-bundle shape (JSON Schema draft 2020-12), scoped to this page's actual `ui`/`purpose`/`rabiProblem`/`ramseyPayoff`/`coherenceBudget`/`golfIntro`/`diagram`/`footer` sections.
 - Only English ships as a maintained locale — same contribution model as bell-state-explorer: open a PR adding `locales/<code>.json` + one `locales/manifest.json` entry, pass `npm test` + `npm run lint:i18n`, verify locally before requesting review.
 
-**Not yet built**, same caveat bell-state-explorer's own README carries: `dir="rtl"`-driven CSS logical-property fixes beyond the cheap ones already in `src/styles.css` (`margin-inline`/`inset-inline-start`), and `Intl.NumberFormat` at any display boundary (this page has no live numeric readouts to format). `index_rabi.html` and `index_ramsey.html` have not been ported to this i18n/a11y architecture — they predate it and remain single-file, English-only, canvas-rendered pages for now.
+**Not yet built**, same caveat bell-state-explorer's own README carries: `dir="rtl"`-driven CSS logical-property fixes beyond the cheap ones already in `src/styles.css` (`margin-inline`/`inset-inline-start`), and `Intl.NumberFormat` at any display boundary (this page has no live numeric readouts to format). None of the three visualizer pages (`index_rabi.html`, `index_ramsey.html`, `index_nv_bloch_golf.html`) have been ported to the **i18n** half of this architecture — they predate it and remain single-file, English-only pages for now, and `npm run lint:i18n` doesn't scan any of them. The **accessibility** half is now split across the three: `index_nv_bloch_golf.html` has the aria-hidden/sr-only baseline (see above); `index_rabi.html`/`index_ramsey.html` still have neither — see "Where this is headed" above.
 
 ## Known-simple / next steps
 
-- `index_rabi.html`: two-level model only (no hyperfine triplet, no explicit laser-pumping rate equations); the dipole falloff shape is real, but `B_COEFF` is an arbitrarily tuned demo constant, not a characterized real magnet.
-- **Next:** build out `index_ramsey.html` into the real interactive Ramsey visualizer and promote it to `index.html`, retiring today's static explainer (or keeping it as a "why" primer linked from the new page). A further follow-on will let the Ramsey visualizer's T₂* become an explicit, dial-in-able noise channel — closer to bell-state-explorer's dephasing model than today's fixed slider.
+- `index_rabi.html`: two-level model only (no hyperfine triplet, no explicit laser-pumping rate equations); the dipole falloff shape is real, but `B_COEFF` is an arbitrarily tuned demo constant, not a characterized real magnet. `verify/` (see "Physics verification" above) additionally shows the Rabi panel's T₂* damping is a stylized approximation, not the true master-equation solution, and that a real ODMR dip needs a population-relaxation channel this model never defines.
+- **Next: the visualizer catalog refactor** — turn `index.html`'s hand-copied nav cards into a data-driven list so adding a fourth visualizer doesn't mean hand-editing `index.html`, `locales/en.json`, and `schema/locale-bundle.schema.json` the way Bloch golf's card was. See "Where this is headed" above.
+- **Next: accessibility parity** — bring `index_rabi.html` and `index_ramsey.html` up to the aria-hidden/sr-only baseline `index_nv_bloch_golf.html` now has (canvas `aria-hidden`, sr-only scene description, a live status region for the readouts that currently only exist as pixels).
+- A further follow-on will let the Ramsey visualizer's T₂* become an explicit, dial-in-able noise channel — closer to bell-state-explorer's dephasing model than today's fixed slider.
+- `index_nv_bloch_golf.html`'s `solve()` breadth-first search and rotation math have no independent test coverage yet (unlike Rabi/Ramsey, which now have `verify/`'s QuTiP cross-check) — worth a look if the puzzle's par values ever seem off.
