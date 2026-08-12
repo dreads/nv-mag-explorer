@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | { read -r f; case \"$f\" in */index.html|*/locales/*|*/src/*) root=$(git -C \"$(dirname \"$f\")\" rev-parse --show-toplevel 2>/dev/null); if [ -n \"$root\" ]; then out=$(cd \"$root\" && npm test 2>&1 && npm run lint:i18n 2>&1); code=$?; if [ $code -ne 0 ]; then echo \"$out\" 1>&2; echo \"POST-EDIT CHECK FAILED for $f -- npm test / npm run lint:i18n did not pass. Fix before continuing (see output above).\" 1>&2; exit 2; fi; fi ;; esac; }",
+            "timeout": 60,
+            "statusMessage": "Verifying npm test + lint:i18n..."
+          }
+        ]
+      }
+    ]
+  }
+}

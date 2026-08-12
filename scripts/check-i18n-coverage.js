@@ -101,6 +101,49 @@ fs.readdirSync(SRC_DIR)
   });
 
 // ---------------------------------------------------------------------
+// 5. Every data-i18n="key" element's text must MATCH locales/en.json's
+//    value for that key, not just resolve to *some* value. Catches silent
+//    drift when someone hand-edits index.html's visible text without
+//    updating en.json to match -- this has happened twice on this project.
+//    Static HTML is authoritative (see CLAUDE.md); en.json should be
+//    updated to match it, never the other way around. Whitespace and a
+//    handful of common entities are normalized since index.html wraps
+//    lines for readability -- a real wording change still fails.
+// ---------------------------------------------------------------------
+function decodeEntities(str) {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, '\'');
+}
+function normalizeText(str) {
+  return decodeEntities(str.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+}
+
+// Non-greedy + backreference: doesn't handle a data-i18n tag containing a
+// same-named nested tag (e.g. a <div data-i18n> wrapping another <div>) --
+// not a pattern this project currently uses; same "conservative, not a
+// full parser" tradeoff as the rest of this script.
+const elementPattern = /<(\w+)\b[^>]*\bdata-i18n="([^"]+)"[^>]*>([\s\S]*?)<\/\1>/g;
+while ((m = elementPattern.exec(html))) {
+  const [, , key, rawInner] = m;
+  const htmlText = normalizeText(rawInner);
+  if (!htmlText) continue; // nothing text-bearing to compare (e.g. wraps only decorative markup)
+  const jsonValue = getPath(en.strings, key);
+  if (typeof jsonValue !== 'string') continue; // unresolvable key already reported above
+  const jsonText = normalizeText(jsonValue);
+  if (jsonText !== htmlText) {
+    problems.push(
+      `index.html: data-i18n="${key}" text does not match locales/en.json -- ` +
+      `HTML: ${JSON.stringify(htmlText)}  JSON: ${JSON.stringify(jsonText)}. ` +
+      `Static HTML is authoritative here -- update locales/en.json to match the HTML, not the other way around.`
+    );
+  }
+}
+
+// ---------------------------------------------------------------------
 if (problems.length) {
   console.error(`i18n coverage check found ${problems.length} issue(s):\n`);
   problems.forEach((p) => console.error(`  - ${p}`));

@@ -15,20 +15,16 @@ Companion piece to the MagNav system diagram, and to [bell-state-explorer](https
 
 ## Where this is headed
 
-`index.html` is meant to grow into a catalog of educational NV-center visualizers, not stay
-a "Why Ramsey?" essay with a hand-maintained nav list. The plan: each visualizer (Rabi,
-Ramsey, Bloch golf, and whatever's added after) becomes a declarative entry — title, note,
-detail copy, link, i18n keys — in one data structure, rendered by `src/app.js`, instead of
-a `<div class="card">` block copy-pasted into `index.html` plus matching hand-edits to
-`locales/en.json` and `schema/locale-bundle.schema.json` every time. Bloch golf was added
-the old, manual way on purpose — see the HTML comment above its nav card in `index.html` —
-so the catalog refactor has a second real example to generalize from, not just Rabi-vs-Ramsey.
-
-Alongside that: `index_rabi.html` and `index_ramsey.html` still have no accessibility
-treatment at all (no `aria-hidden`, no screen-reader-equivalent text for any of their
-canvases). `index_nv_bloch_golf.html` got a baseline pass when it was added (see its own
-entry in the i18n/l10n/a11y section below) — bringing the other two up to that same
-baseline is separate, standing work that doesn't need to wait on the catalog refactor.
+Tracked as GitHub issues on this repo, not as a list here — see
+[issue #18](https://github.com/dreads/nv-mag-explorer/issues/18) (turn `index.html`'s
+hand-copied nav cards into a data-driven catalog) and
+[issue #19](https://github.com/dreads/nv-mag-explorer/issues/19) (bring
+`index_rabi.html`/`index_ramsey.html` accessibility up to `index_nv_bloch_golf.html`'s
+baseline) for current status. The context worth keeping here since an issue title won't
+carry it: Bloch golf was added as a third nav card the old, manual way — hand-editing
+`index.html`, `locales/en.json`, and `schema/locale-bundle.schema.json` in lockstep — on
+purpose, so the catalog refactor in #18 has a second real example to generalize from, not
+just Rabi-vs-Ramsey.
 
 ## Deploy to GitHub Pages
 
@@ -131,7 +127,7 @@ Values in the sensible NV range: 2.87 GHz zero-field resonance, ~1–20 MHz Rabi
 - **Accessibility (aria-hidden + sr-only)**: the one SVG visual on this page — the Rabi-vs-Ramsey drive-timeline comparison — gets `aria-hidden="true"` (it's a bar-length/label comparison with no faithful ARIA mapping) plus a `.sr-only` `<p>` (`data-i18n="diagram.srDescription"`) stating the same comparison in prose, directly following bell-state-explorer's SVG convention. A skip-link and visible `:focus-visible` rings are also in `src/styles.css`.
 - **`index_nv_bloch_golf.html` got the same aria-hidden/sr-only *pattern* applied independently of this i18n system** (it's still English-only, see below): its `<canvas>` is `aria-hidden="true"`, a `.sr-only` paragraph carries the scene description, a live `#golf-status` region announces hole/par/strokes/match as they change, and the win banner is `role="status"`/`aria-live="polite"`. It also arrived with an unloaded Tabler Icons font dependency (icon glyphs that silently rendered as nothing) and several undefined CSS custom properties — both fixed as part of the same pass, not left as a follow-up, since a page that looks broken is its own accessibility problem. Full detail in CLAUDE.md's Accessibility section.
 - **Single dark theme, by design** — unlike bell-state-explorer's light/dark toggle via `prefers-color-scheme`, this page reuses `index_rabi.html`/`index_ramsey.html`'s fixed dark instrument-panel palette (`--bg`, `--ink`, `--cyan`, etc. as CSS custom properties) for visual consistency across the repo's three pages. All text colors are light-on-near-black with generous contrast margin; no light theme is offered.
-- **`scripts/check-i18n-coverage.js`** (`npm run lint:i18n`, zero dependencies, wired into `.github/workflows/deploy.yml` after `npm test`) is bell's heuristic scanner adapted to this repo: untagged text-bearing tags, `<title>`/meta-description drift from `locales/en.json`, unresolvable `data-i18n` keys, hardcoded `.textContent` literals in `src/*.js`. It does *not* currently check that other `data-i18n` static HTML text (the body paragraphs) matches `en.json` word-for-word — see the note below.
+- **`scripts/check-i18n-coverage.js`** (`npm run lint:i18n`, zero dependencies, wired into `.github/workflows/deploy.yml` after `npm test`) is bell's heuristic scanner adapted to this repo: untagged text-bearing tags, `<title>`/meta-description drift from `locales/en.json`, unresolvable `data-i18n` keys, hardcoded `.textContent` literals in `src/*.js`, **and (added 2026-08-12, after this exact bug happened twice) content drift** — every `data-i18n` element's text is normalized (whitespace/entities) and compared against `locales/en.json`'s value for that key, failing if a hand-edit to one wasn't mirrored in the other. Static HTML stays authoritative (see CLAUDE.md); this check just makes that enforced instead of a manual discipline.
 - **`test/i18n.test.js`** / **`test/locale-loader.test.js`** are the same generic engine tests as bell-state-explorer (they test pure lookup/discovery logic, not this page's content). **`test/locale-bundles.test.js`** shape-validates every `locales/*.json` against `locales/en.json` (unknown sections/keys, valid `direction`, all-string values), same as bell's `npm test` contribution gate.
 - **`schema/locale-bundle.schema.json`** documents the contributed-bundle shape (JSON Schema draft 2020-12), scoped to this page's actual `ui`/`purpose`/`rabiProblem`/`ramseyPayoff`/`coherenceBudget`/`golfIntro`/`diagram`/`footer` sections.
 - Only English ships as a maintained locale — same contribution model as bell-state-explorer: open a PR adding `locales/<code>.json` + one `locales/manifest.json` entry, pass `npm test` + `npm run lint:i18n`, verify locally before requesting review.
@@ -141,7 +137,8 @@ Values in the sensible NV range: 2.87 GHz zero-field resonance, ~1–20 MHz Rabi
 ## Known-simple / next steps
 
 - `index_rabi.html`: two-level model only (no hyperfine triplet, no explicit laser-pumping rate equations); the dipole falloff shape is real, but `B_COEFF` is an arbitrarily tuned demo constant, not a characterized real magnet. `verify/` (see "Physics verification" above) additionally shows the Rabi panel's T₂* damping is a stylized approximation, not the true master-equation solution, and that a real ODMR dip needs a population-relaxation channel this model never defines.
-- **Next: the visualizer catalog refactor** — turn `index.html`'s hand-copied nav cards into a data-driven list so adding a fourth visualizer doesn't mean hand-editing `index.html`, `locales/en.json`, and `schema/locale-bundle.schema.json` the way Bloch golf's card was. See "Where this is headed" above.
-- **Next: accessibility parity** — bring `index_rabi.html` and `index_ramsey.html` up to the aria-hidden/sr-only baseline `index_nv_bloch_golf.html` now has (canvas `aria-hidden`, sr-only scene description, a live status region for the readouts that currently only exist as pixels).
-- A further follow-on will let the Ramsey visualizer's T₂* become an explicit, dial-in-able noise channel — closer to bell-state-explorer's dephasing model than today's fixed slider.
-- `index_nv_bloch_golf.html`'s `solve()` breadth-first search and rotation math have no independent test coverage yet (unlike Rabi/Ramsey, which now have `verify/`'s QuTiP cross-check) — worth a look if the puzzle's par values ever seem off.
+- A further follow-on will let the Ramsey visualizer's T₂* become an explicit, dial-in-able noise channel — closer to bell-state-explorer's dephasing model than today's fixed slider. Not filed as an issue yet.
+- `index_nv_bloch_golf.html`'s `solve()` breadth-first search and rotation math have no independent test coverage yet (unlike Rabi/Ramsey, which now have `verify/`'s QuTiP cross-check) — worth a look if the puzzle's par values ever seem off. Not filed as an issue yet.
+
+The catalog refactor and Rabi/Ramsey accessibility parity — the two biggest open items —
+are tracked as GitHub issues, see "Where this is headed" above rather than restated here.
