@@ -8,7 +8,8 @@
     "test": "node --test test/*.test.js",
     "test:coverage": "node --test --experimental-test-coverage test/*.test.js",
     "lint:i18n": "node scripts/check-i18n-coverage.js",
-    "serve": "python3 -m http.server 8000"
+    "serve": "python3 -m http.server 8000",
+    "screenshot": "node scripts/screenshot.mjs"
   },
   "keywords": [
     "quantum",
@@ -18,5 +19,8 @@
     "rabi",
     "visualization"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "puppeteer-core": "^25.6.0"
+  }
 }

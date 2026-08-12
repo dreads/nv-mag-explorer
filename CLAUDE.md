@@ -38,7 +38,21 @@ catalog grows) or just a one-page wording choice. Don't silently pick one and pr
 npm run serve   # serves on http://localhost:8000
 npm test        # i18n engine + locale-bundle shape tests (index.html only, see below)
 npm run lint:i18n
+npm run screenshot -- <url> <out.png>   # real headless-Chrome screenshot, see .claude/skills/run/
 ```
+
+**A `PostToolUse` hook in `.claude/settings.json` runs `npm test && npm run lint:i18n`
+automatically whenever `index.html`/`locales/*`/`src/*` are edited via this tool** (blocks
+on failure, exit 2, output fed back) — added 2026-08-12 after the content-drift bug (see
+below) recurred once too often. Manual `npm test`/`lint:i18n` runs are still fine/harmless,
+just redundant with the hook for those paths.
+
+**`npm run screenshot`** (`scripts/screenshot.mjs`, driven by the `puppeteer-core`
+devDependency + system Chrome) takes a real browser screenshot — use it, and read the
+result with the `Read` tool, instead of trusting structural/`curl`-only checks for any
+visual change. `.claude/skills/run/SKILL.md` has the full usage/gotchas; this exact
+capability had been built ad hoc and lost across at least two earlier sessions before
+being captured as a committed script + skill.
 
 The physics-verification suite (`verify/`) is Python, not part of `npm test`:
 
@@ -161,18 +175,18 @@ specially) plus the picker wiring is the entire render path.
 
 **Static HTML in `index.html` is authoritative over `locales/en.json` — not the other way
 around.** When a `[data-i18n]` element's visible text in `index.html` and its matching
-`locales/en.json` string disagree, sync the JSON to the HTML. This isn't a hypothetical:
+`locales/en.json` string disagree, sync the JSON to the HTML. This isn't a hypothetical —
 it happened live during this repo's Bloch-golf work (`ui.navGolfNote` was hand-edited in
-`index.html` but the matching `en.json` key wasn't updated to match) and has happened
-before. **`npm run lint:i18n` will not catch this** — it only checks that a `data-i18n`
-key *resolves* to something in `en.json`, never that the two strings *match*
-(`scripts/check-i18n-coverage.js` says so in its own comments). Concretely: any time you
-hand-edit visible text on an element carrying `data-i18n="key"`, immediately update
-`locales/en.json`'s matching key too, in the same change — there's no CI step that will
-remind you later, and a default-English visitor sees only the HTML (`en.json` is fetched
-lazily, see above), so drift here is invisible in normal browsing and only surfaces when
-someone switches locales, falls back per-key, or reads `en.json` as the source of truth
-for translation.
+`index.html` but the matching `en.json` key wasn't updated to match) and had happened
+before that too. **As of 2026-08-12, `npm run lint:i18n` DOES catch this** — after the
+second occurrence, `scripts/check-i18n-coverage.js` gained a content-diff check
+(normalizes whitespace/entities, compares every `data-i18n` element's text against
+`locales/en.json`'s value for that key, fails the build on any mismatch) specifically so
+this stops being a manual discipline. If you're reading this and the check has since been
+removed or weakened, that's worth noticing — it exists because the alternative (relying on
+memory/vigilance) already failed twice. A default-English visitor still sees only the HTML
+at runtime (`en.json` is fetched lazily, see above) — the check is what makes drift
+visible at commit time instead of only when someone switches locales or falls back per-key.
 
 ### verify/ — physics cross-check (QuTiP, Python)
 
