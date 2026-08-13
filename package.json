@@ -9,7 +9,8 @@
     "test:coverage": "node --test --experimental-test-coverage test/*.test.js",
     "lint:i18n": "node scripts/check-i18n-coverage.js",
     "serve": "python3 -m http.server 8000",
-    "screenshot": "node scripts/screenshot.mjs"
+    "screenshot": "node scripts/screenshot.mjs",
+    "translate:locale": "node scripts/translate-locale.mjs"
   },
   "keywords": [
     "quantum",
@@ -21,6 +22,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "google-translate-api-x": "10.7.2",
     "puppeteer-core": "^25.6.0"
   }
 }
