@@ -102,6 +102,9 @@
   footer{margin-top:26px;font-size:11.5px;color:var(--ink-faint);line-height:1.6;
     border-top:1px solid var(--panel-line);padding-top:16px}
   footer code{font-family:var(--mono);color:var(--ink-dim)}
+
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0}
 </style>
 </head>
 <body>
@@ -110,6 +113,13 @@
     <h1>NV Magnetometry — <span class="q">Ramsey Interferometry</span></h1>
     <div class="sub">The sequence a real NV magnetometer runs to <b>measure</b> a field. A π/2 pulse tips the spin onto the equator; during a protected <b>free-evolution window τ</b> it precesses at the detuning rate, banking phase φ=δτ; a second π/2 pulse converts that phase into population you can read. Sweep τ and the readout oscillates as <b>cos(δτ)</b> — the fringe frequency <i>is</i> the field.</div>
     <div class="nav">Companion to the Rabi visualizer. Rabi shows the wobble; Ramsey shows the measurement.</div>
+    <p class="sr-only">Four linked panels. A pulse-sequence timeline shows two microwave pulses
+      bracketing a free-evolution window, with a playhead marking progress. A vehicle-on-terrain
+      view shows a route whose height stands in for local field strength; drag the vehicle to
+      change the field. A Bloch sphere shows the spin vector moving through the sequence: onto
+      the equator, sweeping during free evolution, then folding back toward a pole. A fringe plot
+      shows the readout population oscillating as free-evolution time increases. The live status
+      below mirrors the on-screen numeric readouts and the current sequence stage.</p>
   </header>
 
   <div class="layout">
@@ -118,8 +128,8 @@
       <!-- SEQUENCE TIMELINE -->
       <div class="panel">
         <h2><span class="dot" style="background:var(--violet)"></span>Pulse sequence
-          <span class="stagelbl s0" id="stage-lbl">stage</span></h2>
-        <canvas id="seq" height="100"></canvas>
+          <span class="stagelbl s0" id="stage-lbl" role="status" aria-live="polite">stage</span></h2>
+        <canvas id="seq" height="100" aria-hidden="true"></canvas>
         <div class="circwrap">
           <span class="gate">|0⟩</span><span class="wire"></span>
           <span class="gate p">RY(π/2)</span><span class="wire"></span>
@@ -163,33 +173,34 @@
       <div class="panel">
         <h2><span class="dot" style="background:var(--cyan)"></span>Terrain &amp; local field
           <span class="tag">drag the vehicle ▸</span></h2>
-        <canvas id="terrain" height="90"></canvas>
+        <canvas id="terrain" height="90" aria-hidden="true"></canvas>
         <div class="readout-row">
           <div class="chip"><div class="k">Local field B∥</div><div class="v cyan" id="r-b">—<span class="u">mT</span></div></div>
           <div class="chip"><div class="k">Detuning δ</div><div class="v red" id="r-det">—<span class="u">MHz</span></div></div>
           <div class="chip"><div class="k">Phase at τ</div><div class="v amber" id="r-phase">—<span class="u">rad</span></div></div>
           <div class="chip"><div class="k">Readout P(0)</div><div class="v violet" id="r-pop">—</div></div>
         </div>
+        <p id="ramsey-status" class="sr-only" aria-live="polite"></p>
 
         <h2 style="margin-top:16px"><span class="dot" style="background:var(--amber)"></span>Controls</h2>
         <div class="controls">
           <div class="ctrl">
-            <div class="lab"><span class="name">Free-evolution time τ <small>the sensing window</small></span>
+            <div class="lab"><label for="s-tau" class="name">Free-evolution time τ <small>the sensing window</small></label>
               <span class="val" id="v-tau">0.50 µs</span></div>
             <input type="range" id="s-tau" min="0" max="3" step="0.01" value="0.5">
           </div>
           <div class="ctrl">
-            <div class="lab"><span class="name">Microwave frequency <small>fixed drive; offset from f₊ sets δ</small></span>
+            <div class="lab"><label for="s-mw" class="name">Microwave frequency <small>fixed drive; offset from f₊ sets δ</small></label>
               <span class="val" id="v-mw">2.8700 GHz</span></div>
             <input type="range" id="s-mw" class="amber" min="2.82" max="2.92" step="0.0002" value="2.87">
           </div>
           <div class="ctrl">
-            <div class="lab"><span class="name">Coherence time T₂* <small>caps the useful τ</small></span>
+            <div class="lab"><label for="s-t2" class="name">Coherence time T₂* <small>caps the useful τ</small></label>
               <span class="val" id="v-t2">2.0 µs</span></div>
             <input type="range" id="s-t2" class="violet" min="0.3" max="6" step="0.1" value="2">
           </div>
           <div class="ctrl">
-            <div class="lab"><span class="name">Field sensitivity <small>terrain height → B scaling</small></span>
+            <div class="lab"><label for="s-sens" class="name">Field sensitivity <small>terrain height → B scaling</small></label>
               <span class="val" id="v-sens">1.0×</span></div>
             <input type="range" id="s-sens" min="0.2" max="2.5" step="0.05" value="1">
           </div>
@@ -204,7 +215,7 @@
       <!-- BLOCH -->
       <div class="panel">
         <h2><span class="dot" style="background:var(--violet)"></span>Bloch sphere — driven by the sequence</h2>
-        <canvas id="bloch" height="150"></canvas>
+        <canvas id="bloch" height="150" aria-hidden="true"></canvas>
         <div class="explain" style="padding-top:8px">
           <b>Watch the three beats:</b> the first π/2 lays the vector onto the equator (green). During free evolution
           it sweeps the equator (cyan) — that sweep angle is the banked phase. The second π/2 folds the equator back
@@ -215,7 +226,7 @@
            <!-- RAMSEY FRINGES -->
       <div class="panel">
         <h2><span class="dot" style="background:var(--cyan)"></span>Ramsey fringes — P(|0⟩) vs free-evolution time τ</h2>
-        <canvas id="fringe" height="150"></canvas>
+        <canvas id="fringe" height="150" aria-hidden="true"></canvas>
         <div class="legend">
           <span><i style="background:var(--cyan)"></i> P(τ) = ½(1+cos δτ)·e^(−τ/T₂*)</span>
           <span><i style="background:var(--red);opacity:.55"></i> T₂* envelope</span>
@@ -257,26 +268,46 @@ const S={
    [0,0.14] first π/2 | [0.14,0.86] free evolution τ | [0.86,1.0] second π/2 + measure */
 const P1_END=0.14, FREE_END=0.86;
 
+// fixed sum-of-sines "terrain" standing in for crustal field strength along a route —
+// illustrative only, not tied to any real survey data
 function fieldAt(x){
   return 0.9*Math.sin(6.3*x+0.4)+0.5*Math.sin(13.1*x+1.7)
        +0.35*Math.sin(21.7*x+3.1)+0.22*Math.sin(33.0*x+0.9);
 }
-function heightAt(x){return 0.5+0.24*fieldAt(x);}
+function heightAt(x){
+  return 0.5+0.24*fieldAt(x);
+}
 
 const C={};
-function setup(cv){const dpr=window.devicePixelRatio||1;const w=cv.clientWidth,h=cv.clientHeight;
-  cv.width=w*dpr;cv.height=h*dpr;const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return {ctx,w,h};}
-function setupAll(){['seq','fringe','terrain','bloch'].forEach(id=>C[id]=setup(document.getElementById(id)));}
+function setup(cv){
+  const dpr=window.devicePixelRatio||1;
+  const w=cv.clientWidth,h=cv.clientHeight;
+  cv.width=w*dpr;
+  cv.height=h*dpr;
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,w,h};
+}
+function setupAll(){
+  ['seq','fringe','terrain','bloch'].forEach(id=>C[id]=setup(document.getElementById(id)));
+}
 
 const COL={};
-function cacheCol(){['--ink','--ink-dim','--ink-faint','--green','--red','--amber','--violet','--cyan','--grid','--panel-line']
-  .forEach(k=>COL[k]=getComputedStyle(document.documentElement).getPropertyValue(k).trim());}
+function cacheCol(){
+  ['--ink','--ink-dim','--ink-faint','--green','--red','--amber','--violet','--cyan','--grid','--panel-line']
+    .forEach(k=>COL[k]=getComputedStyle(document.documentElement).getPropertyValue(k).trim());
+}
 
-function detuning(){ // rad/µs
+// detuning in rad/µs, for the phase math (δτ)
+function detuning(){
   const fRes=F0+GAMMA*S.B/1000;
   return TWO_PI*(S.mw-fRes)*1000; // (GHz diff)*1000 = MHz, *2π = rad/µs
 }
-function detMHz(){const fRes=F0+GAMMA*S.B/1000;return (S.mw-fRes)*1000;}
+// detuning in MHz, for the readout chip
+function detMHz(){
+  const fRes=F0+GAMMA*S.B/1000;
+  return (S.mw-fRes)*1000;
+}
 
 /* ---- current sequence phase u (0..1) from play state or stage jump ---- */
 function currentU(){
@@ -291,21 +322,25 @@ function currentU(){
 /* ---- Bloch vector for a given sequence position ---- */
 function blochVec(u){
   const d=detuning(), tau=S.tau;
-  // stage boundaries
-  if(u<=P1_END){ // first π/2: rotate about X from |0> (z=1) toward -y... use RY(π/2): z-> x
-    const frac=u/P1_END; const ang=frac*Math.PI/2;
+  if(u<=P1_END){
+    // first π/2: rotate about X from |0⟩ (z=1) toward the equator.
     // RY(theta): (x,y,z) start (0,0,1) -> (sin,0,cos)
+    const frac=u/P1_END;
+    const ang=frac*Math.PI/2;
     return [Math.sin(ang),0,Math.cos(ang)];
-  } else if(u<=FREE_END){ // free precession about Z by phase = d*tau*(elapsed frac)
+  } else if(u<=FREE_END){
+    // free precession about Z: phase accrues linearly with elapsed fraction of τ,
+    // starting on the equator at +x
     const frac=(u-P1_END)/(FREE_END-P1_END);
     const phi=d*tau*frac;
-    // start on equator at +x, rotate about Z
     return [Math.cos(phi),Math.sin(phi),0];
-  } else { // second π/2 RY(π/2): rotate current equator vec about Y
-    const frac=(u-FREE_END)/(1-FREE_END); const ang=frac*Math.PI/2;
+  } else {
+    // second π/2: rotate the vector banked at the end of free evolution about Y.
+    // RY(ang): x' = x cos + z sin ; z' = -x sin + z cos ; y unchanged
+    const frac=(u-FREE_END)/(1-FREE_END);
+    const ang=frac*Math.PI/2;
     const phi=d*tau;
     const v=[Math.cos(phi),Math.sin(phi),0];
-    // RY(ang): x' = x cos + z sin ; z' = -x sin + z cos ; y unchanged
     const ca=Math.cos(ang), sa=Math.sin(ang);
     return [v[0]*ca+v[2]*sa, v[1], -v[0]*sa+v[2]*ca];
   }
@@ -320,157 +355,320 @@ function stageOf(u){
 
 /* ================= SEQUENCE TIMELINE ================= */
 function drawSeq(u){
-  const {ctx,w,h}=C.seq; ctx.clearRect(0,0,w,h);
+  const {ctx,w,h}=C.seq;
+  ctx.clearRect(0,0,w,h);
   const padL=14,padR=14,y=h*0.5, x0=padL,x1=w-padR;
   const xP1a=x0, xP1b=x0+(x1-x0)*P1_END;
   const xFb=x0+(x1-x0)*FREE_END;
-  // baseline wire
-  ctx.strokeStyle=COL['--panel-line'];ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();
-  // free-evolution band
+
+  // baseline wire the pulse/measure blocks sit on
+  ctx.strokeStyle=COL['--panel-line'];
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(x0,y);
+  ctx.lineTo(x1,y);
+  ctx.stroke();
+
+  // shaded band spanning the free-evolution window between the two pulses
   ctx.fillStyle='rgba(79,214,255,.08)';
   ctx.fillRect(xP1b,y-40,xFb-xP1b,80);
-  ctx.strokeStyle='rgba(79,214,255,.3)';ctx.setLineDash([4,3]);ctx.lineWidth=1;
-  ctx.strokeRect(xP1b,y-40,xFb-xP1b,80);ctx.setLineDash([]);
-  ctx.fillStyle=COL['--cyan'];ctx.font='11px '+MONO;
+  ctx.strokeStyle='rgba(79,214,255,.3)';
+  ctx.setLineDash([4,3]);
+  ctx.lineWidth=1;
+  ctx.strokeRect(xP1b,y-40,xFb-xP1b,80);
+  ctx.setLineDash([]);
+  ctx.fillStyle=COL['--cyan'];
+  ctx.font='11px '+MONO;
   ctx.fillText('free evolution τ — microwave OFF, phase φ=δτ accrues',xP1b+8,y-46);
 
-  // pulse blocks
+  // a single π/2 pulse block, drawn as a rotated label inside a rounded rect
   function pulse(cx,label){
     ctx.fillStyle='rgba(61,220,132,.9)';
-    roundRect(ctx,cx-9,y-30,18,60,3);ctx.fill();
-    ctx.fillStyle='#07120b';ctx.font='bold 11px '+MONO;
-    ctx.save();ctx.translate(cx,y);ctx.rotate(-Math.PI/2);ctx.textAlign='center';
-    ctx.fillText('π/2',0,4);ctx.restore();
-    ctx.fillStyle=COL['--ink-dim'];ctx.font='10px '+MONO;ctx.textAlign='center';
-    ctx.fillText(label,cx,y+44);ctx.textAlign='left';
+    roundRect(ctx,cx-9,y-30,18,60,3);
+    ctx.fill();
+    ctx.fillStyle='#07120b';
+    ctx.font='bold 11px '+MONO;
+    ctx.save();
+    ctx.translate(cx,y);
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign='center';
+    ctx.fillText('π/2',0,4);
+    ctx.restore();
+    ctx.fillStyle=COL['--ink-dim'];
+    ctx.font='10px '+MONO;
+    ctx.textAlign='center';
+    ctx.fillText(label,cx,y+44);
+    ctx.textAlign='left';
   }
   pulse(xP1b,'pulse 1');
   pulse(xFb,'pulse 2');
-  // measure block
+
+  // measurement block at the end of the wire
   ctx.fillStyle='rgba(157,123,255,.9)';
-  roundRect(ctx,x1-16,y-24,20,48,4);ctx.fill();
-  ctx.fillStyle='#0e0a1a';ctx.font='bold 13px '+MONO;ctx.textAlign='center';
-  ctx.fillText('M',x1-6,y+5);ctx.textAlign='left';
-  // laser init marker
-  ctx.fillStyle=COL['--green'];ctx.font='10px '+MONO;
+  roundRect(ctx,x1-16,y-24,20,48,4);
+  ctx.fill();
+  ctx.fillStyle='#0e0a1a';
+  ctx.font='bold 13px '+MONO;
+  ctx.textAlign='center';
+  ctx.fillText('M',x1-6,y+5);
+  ctx.textAlign='left';
+
+  // laser initialization marker at the start of the wire
+  ctx.fillStyle=COL['--green'];
+  ctx.font='10px '+MONO;
   ctx.fillText('|0⟩ init',x0-2,y+44);
 
-  // playhead
+  // playhead: a vertical line + downward-pointing triangle at sequence position u
   const px=x0+(x1-x0)*u;
-  ctx.strokeStyle=COL['--amber'];ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(px,y-48);ctx.lineTo(px,y+30);ctx.stroke();
-  ctx.fillStyle=COL['--amber'];ctx.beginPath();
-  ctx.moveTo(px,y-48);ctx.lineTo(px-4,y-54);ctx.lineTo(px+4,y-54);ctx.closePath();ctx.fill();
+  ctx.strokeStyle=COL['--amber'];
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(px,y-48);
+  ctx.lineTo(px,y+30);
+  ctx.stroke();
+  ctx.fillStyle=COL['--amber'];
+  ctx.beginPath();
+  ctx.moveTo(px,y-48);
+  ctx.lineTo(px-4,y-54);
+  ctx.lineTo(px+4,y-54);
+  ctx.closePath();
+  ctx.fill();
 }
 
 /* ================= RAMSEY FRINGES ================= */
 function drawFringe(){
-  const {ctx,w,h}=C.fringe; ctx.clearRect(0,0,w,h);
+  const {ctx,w,h}=C.fringe;
+  ctx.clearRect(0,0,w,h);
   const padL=32,padR=10,padT=12,padB=22, x0=padL,x1=w-padR,y0=padT,y1=h-padB;
-  ctx.strokeStyle=COL['--grid'];ctx.lineWidth=1;
-  for(let p=0;p<=4;p++){const y=y0+(y1-y0)*p/4;ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();}
-  ctx.fillStyle=COL['--ink-faint'];ctx.font='10px '+MONO;
-  ctx.fillText('1.0',6,y0+4);ctx.fillText('0.5',6,(y0+y1)/2+3);ctx.fillText('0',14,y1+3);
+
+  // horizontal gridlines + axis labels
+  ctx.strokeStyle=COL['--grid'];
+  ctx.lineWidth=1;
+  for(let p=0;p<=4;p++){
+    const y=y0+(y1-y0)*p/4;
+    ctx.beginPath();
+    ctx.moveTo(x0,y);
+    ctx.lineTo(x1,y);
+    ctx.stroke();
+  }
+  ctx.fillStyle=COL['--ink-faint'];
+  ctx.font='10px '+MONO;
+  ctx.fillText('1.0',6,y0+4);
+  ctx.fillText('0.5',6,(y0+y1)/2+3);
+  ctx.fillText('0',14,y1+3);
   ctx.fillText('τ (µs) →',x1-56,y1+16);
 
   const d=detuning(), TAUMAX=3.0;
-  // envelope (red)
-  ctx.strokeStyle='rgba(255,90,110,.5)';ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
+
+  // dephasing envelope (red dashed lines above/below the 0.5 baseline the fringes decay toward)
+  ctx.strokeStyle='rgba(255,90,110,.5)';
+  ctx.lineWidth=1.2;
+  ctx.setLineDash([4,3]);
   ctx.beginPath();
-  for(let px=x0;px<=x1;px++){const tt=(px-x0)/(x1-x0)*TAUMAX;
-    const env=0.5+0.5*Math.exp(-tt/S.t2);const py=y1-env*(y1-y0);px===x0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+  for(let px=x0;px<=x1;px++){
+    const tt=(px-x0)/(x1-x0)*TAUMAX;
+    const env=0.5+0.5*Math.exp(-tt/S.t2);
+    const py=y1-env*(y1-y0);
+    px===x0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
   ctx.stroke();
   ctx.beginPath();
-  for(let px=x0;px<=x1;px++){const tt=(px-x0)/(x1-x0)*TAUMAX;
-    const env=0.5-0.5*Math.exp(-tt/S.t2);const py=y1-env*(y1-y0);px===x0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
-  ctx.stroke();ctx.setLineDash([]);
+  for(let px=x0;px<=x1;px++){
+    const tt=(px-x0)/(x1-x0)*TAUMAX;
+    const env=0.5-0.5*Math.exp(-tt/S.t2);
+    const py=y1-env*(y1-y0);
+    px===x0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
 
-  // fringes (cyan)
-  ctx.strokeStyle=COL['--cyan'];ctx.lineWidth=2.2;ctx.beginPath();
-  for(let px=x0;px<=x1;px++){const tt=(px-x0)/(x1-x0)*TAUMAX;
+  // the Ramsey fringes themselves: P(τ) = ½(1+cos δτ)·e^(−τ/T₂*), blended toward the
+  // 0.5 steady state as coherence is lost (cyan)
+  ctx.strokeStyle=COL['--cyan'];
+  ctx.lineWidth=2.2;
+  ctx.beginPath();
+  for(let px=x0;px<=x1;px++){
+    const tt=(px-x0)/(x1-x0)*TAUMAX;
     const P=0.5*(1+Math.cos(d*tt))*Math.exp(-tt/S.t2)+0.5*(1-Math.exp(-tt/S.t2));
-    const py=y1-P*(y1-y0);px===x0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+    const py=y1-P*(y1-y0);
+    px===x0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
   ctx.stroke();
 
-  // current tau cursor
+  // marker + dot at the currently selected τ
   const cx=x0+(S.tau/TAUMAX)*(x1-x0);
-  ctx.strokeStyle=COL['--violet'];ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(cx,y0);ctx.lineTo(cx,y1);ctx.stroke();
+  ctx.strokeStyle=COL['--violet'];
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx,y0);
+  ctx.lineTo(cx,y1);
+  ctx.stroke();
   const Pnow=0.5*(1+Math.cos(d*S.tau))*Math.exp(-S.tau/S.t2)+0.5*(1-Math.exp(-S.tau/S.t2));
   const cyN=y1-Pnow*(y1-y0);
-  ctx.fillStyle=COL['--violet'];ctx.beginPath();ctx.arc(cx,cyN,4.5,0,TWO_PI);ctx.fill();
+  ctx.fillStyle=COL['--violet'];
+  ctx.beginPath();
+  ctx.arc(cx,cyN,4.5,0,TWO_PI);
+  ctx.fill();
   return Pnow;
 }
 
 /* ================= TERRAIN ================= */
 function drawTerrain(){
-  const {ctx,w,h}=C.terrain; ctx.clearRect(0,0,w,h);
+  const {ctx,w,h}=C.terrain;
+  ctx.clearRect(0,0,w,h);
   const N=200,padB=22;
-  ctx.beginPath();ctx.moveTo(0,h-padB);
-  for(let i=0;i<=N;i++){const x=i/N;ctx.lineTo(x*w,(h-padB)-heightAt(x)*(h-padB-14));}
-  ctx.lineTo(w,h-padB);ctx.closePath();
+
+  // filled terrain silhouette, sampled at N points across the route
+  ctx.beginPath();
+  ctx.moveTo(0,h-padB);
+  for(let i=0;i<=N;i++){
+    const x=i/N;
+    ctx.lineTo(x*w,(h-padB)-heightAt(x)*(h-padB-14));
+  }
+  ctx.lineTo(w,h-padB);
+  ctx.closePath();
   const g=ctx.createLinearGradient(0,0,0,h);
-  g.addColorStop(0,'rgba(79,214,255,.30)');g.addColorStop(1,'rgba(27,42,74,.12)');
-  ctx.fillStyle=g;ctx.fill();
-  for(let i=0;i<N;i++){const x0=i/N,x1=(i+1)/N;
+  g.addColorStop(0,'rgba(79,214,255,.30)');
+  g.addColorStop(1,'rgba(27,42,74,.12)');
+  ctx.fillStyle=g;
+  ctx.fill();
+
+  // ridge line, colored per-segment by local field magnitude (brighter cyan = stronger field)
+  for(let i=0;i<N;i++){
+    const x0=i/N,x1=(i+1)/N;
     const y0=(h-padB)-heightAt(x0)*(h-padB-14),y1=(h-padB)-heightAt(x1)*(h-padB-14);
     const mag=Math.min(1,Math.abs(fieldAt((x0+x1)/2))/1.6);
     ctx.strokeStyle=`rgba(${(90+(79-90)*mag)|0},${(120+(214-120)*mag)|0},${(180+(255-180)*mag)|0},.95)`;
-    ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x0*w,y0);ctx.lineTo(x1*w,y1);ctx.stroke();}
-  ctx.strokeStyle=COL['--panel-line'];ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,h-padB);ctx.lineTo(w,h-padB);ctx.stroke();
-  ctx.fillStyle=COL['--ink-faint'];ctx.font='10px '+MONO;
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(x0*w,y0);
+    ctx.lineTo(x1*w,y1);
+    ctx.stroke();
+  }
+  ctx.strokeStyle=COL['--panel-line'];
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(0,h-padB);
+  ctx.lineTo(w,h-padB);
+  ctx.stroke();
+  ctx.fillStyle=COL['--ink-faint'];
+  ctx.font='10px '+MONO;
   ctx.fillText('position along route',w/2-52,h-7);
 
+  // field vector at the vehicle's position, length ∝ |B|, direction by sign
   const vx=S.vx*w, vy=(h-padB)-heightAt(S.vx)*(h-padB-14);
-  ctx.strokeStyle='rgba(61,220,132,.5)';ctx.lineWidth=2;ctx.setLineDash([3,3]);
-  ctx.beginPath();ctx.moveTo(vx,vy-2);ctx.lineTo(vx,h-padB);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle='rgba(61,220,132,.5)';
+  ctx.lineWidth=2;
+  ctx.setLineDash([3,3]);
+  ctx.beginPath();
+  ctx.moveTo(vx,vy-2);
+  ctx.lineTo(vx,h-padB);
+  ctx.stroke();
+  ctx.setLineDash([]);
   const bLen=Math.max(-34,Math.min(34,S.B*20));
-  ctx.strokeStyle=COL['--cyan'];ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(vx,vy);ctx.lineTo(vx,vy-bLen);ctx.stroke();
-  const ah=bLen>=0?-1:1;ctx.beginPath();ctx.moveTo(vx,vy-bLen);ctx.lineTo(vx-4,vy-bLen+ah*6);ctx.lineTo(vx+4,vy-bLen+ah*6);ctx.closePath();ctx.fillStyle=COL['--cyan'];ctx.fill();
-  ctx.save();ctx.translate(vx,vy-11);ctx.fillStyle='#e6ebf5';roundRect(ctx,-13,-6,26,12,3);ctx.fill();
-  ctx.fillStyle=COL['--amber'];roundRect(ctx,-6,-10,12,6,2);ctx.fill();
-  ctx.fillStyle='#0a0e1a';ctx.beginPath();ctx.arc(-7,7,3.2,0,TWO_PI);ctx.arc(7,7,3.2,0,TWO_PI);ctx.fill();ctx.restore();
-  if(S.dragging){ctx.strokeStyle='rgba(79,214,255,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(vx,vy-11,20,0,TWO_PI);ctx.stroke();}
+  ctx.strokeStyle=COL['--cyan'];
+  ctx.lineWidth=2.5;
+  ctx.beginPath();
+  ctx.moveTo(vx,vy);
+  ctx.lineTo(vx,vy-bLen);
+  ctx.stroke();
+  const ah=bLen>=0?-1:1;
+  ctx.beginPath();
+  ctx.moveTo(vx,vy-bLen);
+  ctx.lineTo(vx-4,vy-bLen+ah*6);
+  ctx.lineTo(vx+4,vy-bLen+ah*6);
+  ctx.closePath();
+  ctx.fillStyle=COL['--cyan'];
+  ctx.fill();
+
+  // vehicle glyph: a small car body sitting on the terrain
+  ctx.save();
+  ctx.translate(vx,vy-11);
+  ctx.fillStyle='#e6ebf5';
+  roundRect(ctx,-13,-6,26,12,3);
+  ctx.fill();
+  ctx.fillStyle=COL['--amber'];
+  roundRect(ctx,-6,-10,12,6,2);
+  ctx.fill();
+  ctx.fillStyle='#0a0e1a';
+  ctx.beginPath();
+  ctx.arc(-7,7,3.2,0,TWO_PI);
+  ctx.arc(7,7,3.2,0,TWO_PI);
+  ctx.fill();
+  ctx.restore();
+
+  // ring glow around the vehicle while it's being dragged
+  if(S.dragging){
+    ctx.strokeStyle='rgba(79,214,255,.6)';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(vx,vy-11,20,0,TWO_PI);
+    ctx.stroke();
+  }
 }
 
 /* ================= BLOCH ================= */
 let blochRot=0;
 function drawBloch(u){
-  const {ctx,w,h}=C.bloch; ctx.clearRect(0,0,w,h);
+  const {ctx,w,h}=C.bloch;
+  ctx.clearRect(0,0,w,h);
   const cx=w/2, cy=h/2+4, R=Math.min(w,h)*0.34;
   blochRot+=0.005;
   const ca=Math.cos(blochRot), sa=Math.sin(blochRot);
-  function proj(v){ // rotate about vertical, iso project
+  // rotate a unit-sphere point about the vertical axis, then isometric-project it to screen space
+  function proj(v){
     const rx=v[0]*ca - v[1]*sa, ry=v[0]*sa + v[1]*ca;
     return [cx+rx*R, cy - v[2]*R + ry*R*0.32];
   }
-  // sphere
-  ctx.strokeStyle=COL['--panel-line'];ctx.lineWidth=1;
-  ctx.beginPath();ctx.arc(cx,cy,R,0,TWO_PI);ctx.stroke();
+
+  // sphere outline + equator/meridian ellipses
+  ctx.strokeStyle=COL['--panel-line'];
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.arc(cx,cy,R,0,TWO_PI);
+  ctx.stroke();
   ctx.strokeStyle='rgba(90,103,132,.4)';
-  ctx.beginPath();ctx.ellipse(cx,cy,R,R*0.32,0,0,TWO_PI);ctx.stroke();
-  ctx.beginPath();ctx.ellipse(cx,cy,R*0.32,R,0,0,TWO_PI);ctx.stroke();
-  // poles
-  ctx.fillStyle=COL['--green'];ctx.beginPath();ctx.arc(cx,cy-R,3,0,TWO_PI);ctx.fill();
-  ctx.fillStyle=COL['--red'];ctx.beginPath();ctx.arc(cx,cy+R,3,0,TWO_PI);ctx.fill();
-  ctx.fillStyle=COL['--ink-dim'];ctx.font='11px '+MONO;
-  ctx.fillText('|0⟩',cx+6,cy-R+2);ctx.fillText('|1⟩',cx+6,cy+R+4);
+  ctx.beginPath();
+  ctx.ellipse(cx,cy,R,R*0.32,0,0,TWO_PI);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(cx,cy,R*0.32,R,0,0,TWO_PI);
+  ctx.stroke();
+  // pole markers + labels: |0⟩ north, |1⟩ south
+  ctx.fillStyle=COL['--green'];
+  ctx.beginPath();
+  ctx.arc(cx,cy-R,3,0,TWO_PI);
+  ctx.fill();
+  ctx.fillStyle=COL['--red'];
+  ctx.beginPath();
+  ctx.arc(cx,cy+R,3,0,TWO_PI);
+  ctx.fill();
+  ctx.fillStyle=COL['--ink-dim'];
+  ctx.font='11px '+MONO;
+  ctx.fillText('|0⟩',cx+6,cy-R+2);
+  ctx.fillText('|1⟩',cx+6,cy+R+4);
 
   const d=detuning(), phi=d*S.tau;
   const stg=stageOf(u);
 
-  // during/after free evolution: draw the equatorial phase arc traced so far
+  // during/after free evolution: draw the equatorial phase arc traced so far,
+  // sampling enough steps to look smooth even for a large total sweep angle
   if(u>P1_END){
     const fracFree = u<=FREE_END ? (u-P1_END)/(FREE_END-P1_END) : 1;
     const sweep=phi*fracFree;
-    ctx.strokeStyle='rgba(79,214,255,.5)';ctx.lineWidth=1.6;ctx.beginPath();
+    ctx.strokeStyle='rgba(79,214,255,.5)';
+    ctx.lineWidth=1.6;
+    ctx.beginPath();
     const steps=Math.max(2,Math.min(140,Math.abs(sweep)/0.05));
-    for(let k=0;k<=steps;k++){const a=sweep*k/steps;const pp=proj([Math.cos(a),Math.sin(a),0]);k===0?ctx.moveTo(pp[0],pp[1]):ctx.lineTo(pp[0],pp[1]);}
+    for(let k=0;k<=steps;k++){
+      const a=sweep*k/steps;
+      const pp=proj([Math.cos(a),Math.sin(a),0]);
+      k===0?ctx.moveTo(pp[0],pp[1]):ctx.lineTo(pp[0],pp[1]);
+    }
     ctx.stroke();
   }
 
-  // vector + color by stage
+  // current spin vector, colored by which stage of the sequence it's in
   const v=blochVec(u);
   const p=proj(v);
   let vcol=COL['--violet'];
@@ -478,26 +676,46 @@ function drawBloch(u){
   else if(u<=FREE_END) vcol=COL['--cyan'];
   else vcol=COL['--violet'];
 
-  // faint trail
-  ctx.strokeStyle='rgba(157,123,255,.18)';ctx.lineWidth=1.3;ctx.beginPath();
-  for(let k=0;k<40;k++){const uu=Math.max(0,u-k*0.006);const vv=blochVec(uu);const pp=proj(vv);k===0?ctx.moveTo(pp[0],pp[1]):ctx.lineTo(pp[0],pp[1]);}
+  // faint trail: re-evaluate blochVec at a handful of past sequence positions
+  ctx.strokeStyle='rgba(157,123,255,.18)';
+  ctx.lineWidth=1.3;
+  ctx.beginPath();
+  for(let k=0;k<40;k++){
+    const uu=Math.max(0,u-k*0.006);
+    const vv=blochVec(uu);
+    const pp=proj(vv);
+    k===0?ctx.moveTo(pp[0],pp[1]):ctx.lineTo(pp[0],pp[1]);
+  }
   ctx.stroke();
 
-  ctx.strokeStyle=vcol;ctx.lineWidth=2.8;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(p[0],p[1]);ctx.stroke();
-  ctx.fillStyle=vcol;ctx.beginPath();ctx.arc(p[0],p[1],5,0,TWO_PI);ctx.fill();
+  ctx.strokeStyle=vcol;
+  ctx.lineWidth=2.8;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy);
+  ctx.lineTo(p[0],p[1]);
+  ctx.stroke();
+  ctx.fillStyle=vcol;
+  ctx.beginPath();
+  ctx.arc(p[0],p[1],5,0,TWO_PI);
+  ctx.fill();
 
-  // phase annotation during free evolution
+  // running phase readout, shown only while free evolution is in progress
   if(u>P1_END && u<=FREE_END){
-    ctx.fillStyle=COL['--cyan'];ctx.font='11px '+MONO;
+    ctx.fillStyle=COL['--cyan'];
+    ctx.font='11px '+MONO;
     ctx.fillText('φ = '+(phi*((u-P1_END)/(FREE_END-P1_END))).toFixed(2)+' rad',cx-R,cy+R+22);
   }
-  // stage caption
+
+  // stage caption above the sphere
   const caps={0:'① |0⟩ — initialized at north pole',1:'② after π/2 — on the equator',
     2:'③ end of τ — phase φ=δτ banked',3:'④ after 2nd π/2 — phase → population'};
   let capKey = u<=P1_END?0 : (u<FREE_END?1 : (u<=FREE_END+1e-6?2 : 3));
   if(Math.abs(u-FREE_END)<1e-6) capKey=2;
-  ctx.fillStyle=COL['--ink-faint'];ctx.font='11px '+MONO;ctx.textAlign='center';
-  ctx.fillText(caps[capKey],cx,cy-R-14);ctx.textAlign='left';
+  ctx.fillStyle=COL['--ink-faint'];
+  ctx.font='11px '+MONO;
+  ctx.textAlign='center';
+  ctx.fillText(caps[capKey],cx,cy-R-14);
+  ctx.textAlign='left';
 }
 
 /* ================= readouts + stage label ================= */
@@ -514,18 +732,38 @@ function updateReadouts(u,Pnow){
   const stg = u<=P1_END?0 : (u<FREE_END?1 : (Math.abs(u-FREE_END)<1e-6?2 : 3));
   const info=[['s0','initialize |0⟩'],['s1','free evolution'],['s2','phase banked'],['s3','measure']][stg];
   lbl.className='stagelbl '+info[0];lbl.textContent=info[1];
+
+  // sr-only live summary, mirrors the visible chips + stage label for screen-reader users
+  document.getElementById('ramsey-status').textContent=
+    'Stage: '+info[1]+'. Field '+(S.B>=0?'+':'')+S.B.toFixed(3)+' mT, detuning '+(dm>=0?'+':'')+dm.toFixed(1)+' MHz. '+
+    'Phase at tau '+phi.toFixed(2)+' rad. Readout population '+Pnow.toFixed(3)+'.';
 }
 
 /* ================= utils ================= */
-function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+// a filled rounded rectangle, built from four arced corners
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
 
 /* ================= main loop ================= */
 let last=performance.now();
 function frame(now){
-  const dt=Math.min(0.05,(now-last)/1000);last=now;
-  if(S.play){S.playT+=dt;if(S.playT>=S.playDur){S.play=false;S.playT=0;
-    const b=document.getElementById('btn-play');b.textContent='▶ Play sequence';}}
+  const dt=Math.min(0.05,(now-last)/1000);
+  last=now;
+  if(S.play){
+    S.playT+=dt;
+    if(S.playT>=S.playDur){
+      S.play=false;
+      S.playT=0;
+      document.getElementById('btn-play').textContent='▶ Play sequence';
+    }
+  }
   S.B=fieldAt(S.vx)*S.sens;
   const u=currentU();
   drawSeq(u);
@@ -539,48 +777,79 @@ function frame(now){
 /* ================= interaction ================= */
 function bindDrag(){
   const cv=document.getElementById('terrain');
-  const toX=e=>{const r=cv.getBoundingClientRect();const cxp=(e.touches?e.touches[0].clientX:e.clientX);
-    return Math.max(0.01,Math.min(0.99,(cxp-r.left)/r.width));};
+  const toX=e=>{
+    const r=cv.getBoundingClientRect();
+    const cxp=(e.touches?e.touches[0].clientX:e.clientX);
+    return Math.max(0.01,Math.min(0.99,(cxp-r.left)/r.width));
+  };
   const down=e=>{S.dragging=true;S.vx=toX(e);e.preventDefault();};
   const move=e=>{if(S.dragging){S.vx=toX(e);e.preventDefault();}};
   const up=()=>{S.dragging=false;};
-  cv.addEventListener('mousedown',down);window.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
-  cv.addEventListener('touchstart',down,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
+  cv.addEventListener('mousedown',down);
+  window.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',up);
+  cv.addEventListener('touchstart',down,{passive:false});
+  window.addEventListener('touchmove',move,{passive:false});
+  window.addEventListener('touchend',up);
   cv.style.cursor='grab';
 }
+
 function bindControls(){
-  const bind=(id,fn,fmt)=>{const el=document.getElementById(id);
-    el.addEventListener('input',()=>{fn(parseFloat(el.value));fmt(el.value);});};
+  const bind=(id,fn,fmt)=>{
+    const el=document.getElementById(id);
+    el.addEventListener('input',()=>{fn(parseFloat(el.value));fmt(el.value);});
+  };
   bind('s-tau',v=>{S.tau=v;S.stageJump=null;},v=>document.getElementById('v-tau').textContent=parseFloat(v).toFixed(2)+' µs');
   bind('s-mw',v=>S.mw=v,v=>document.getElementById('v-mw').textContent=parseFloat(v).toFixed(4)+' GHz');
   bind('s-t2',v=>S.t2=v,v=>document.getElementById('v-t2').textContent=parseFloat(v).toFixed(1)+' µs');
   bind('s-sens',v=>S.sens=v,v=>document.getElementById('v-sens').textContent=parseFloat(v).toFixed(2)+'×');
 
+  // "jump to stage" buttons: freeze the sequence at a fixed u instead of playing through it
   document.querySelectorAll('.snap').forEach(btn=>{
     btn.addEventListener('click',()=>{
-      S.play=false;S.playT=0;S.stageJump=parseInt(btn.dataset.stage);
+      S.play=false;
+      S.playT=0;
+      S.stageJump=parseInt(btn.dataset.stage);
       document.getElementById('btn-play').textContent='▶ Play sequence';
       document.querySelectorAll('.snap').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
     });
   });
   document.getElementById('btn-play').addEventListener('click',e=>{
-    S.stageJump=null;document.querySelectorAll('.snap').forEach(b=>b.classList.remove('active'));
-    if(S.play){S.play=false;e.target.textContent='▶ Play sequence';}
-    else{S.play=true;S.playT=0;e.target.textContent='⏸ Playing…';}
+    S.stageJump=null;
+    document.querySelectorAll('.snap').forEach(b=>b.classList.remove('active'));
+    if(S.play){
+      S.play=false;
+      e.target.textContent='▶ Play sequence';
+    } else {
+      S.play=true;
+      S.playT=0;
+      e.target.textContent='⏸ Playing…';
+    }
   });
   document.getElementById('btn-reset').addEventListener('click',()=>{
-    S.vx=0.42;S.mw=2.87;S.t2=2;S.sens=1;S.tau=0.5;S.play=false;S.playT=0;S.stageJump=null;
-    document.getElementById('s-tau').value=0.5;document.getElementById('v-tau').textContent='0.50 µs';
-    document.getElementById('s-mw').value=2.87;document.getElementById('v-mw').textContent='2.8700 GHz';
-    document.getElementById('s-t2').value=2;document.getElementById('v-t2').textContent='2.0 µs';
-    document.getElementById('s-sens').value=1;document.getElementById('v-sens').textContent='1.0×';
+    S.vx=0.42; S.mw=2.87; S.t2=2; S.sens=1; S.tau=0.5; S.play=false; S.playT=0; S.stageJump=null;
+    document.getElementById('s-tau').value=0.5;
+    document.getElementById('v-tau').textContent='0.50 µs';
+    document.getElementById('s-mw').value=2.87;
+    document.getElementById('v-mw').textContent='2.8700 GHz';
+    document.getElementById('s-t2').value=2;
+    document.getElementById('v-t2').textContent='2.0 µs';
+    document.getElementById('s-sens').value=1;
+    document.getElementById('v-sens').textContent='1.0×';
     document.getElementById('btn-play').textContent='▶ Play sequence';
     document.querySelectorAll('.snap').forEach(b=>b.classList.remove('active'));
   });
 }
-function init(){cacheCol();setupAll();bindDrag();bindControls();
-  window.addEventListener('resize',setupAll);requestAnimationFrame(frame);}
+
+function init(){
+  cacheCol();
+  setupAll();
+  bindDrag();
+  bindControls();
+  window.addEventListener('resize',setupAll);
+  requestAnimationFrame(frame);
+}
 init();
 </script>
 </body>
