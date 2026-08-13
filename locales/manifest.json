@@ -1,5 +1,6 @@
 [
   { "code": "en", "endonym": "English", "englishName": "English" }
+  , { "code": "es", "endonym": "Español", "englishName": "Spanish" }
 
   // Mock/test-only locales for manual QA. "qaa"-"qtz" is the range ISO
   // 639-2 reserves for private/local use, so these codes can never collide
