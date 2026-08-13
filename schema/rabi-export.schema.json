@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/dreads/nv-mag-explorer/main/schema/rabi-export.schema.json",
+  "title": "NV Rabi/Zeeman visualizer export",
+  "description": "Snapshot of index_rabi.html's current settings and every derived measurement shown on screen, for external validation against the closed-form physics documented in this repository's README, CLAUDE.md, and verify/. Field/naming conventions follow bell-state-explorer's export schema (dreads/bell-state-explorer schema/bell-state-export.schema.json) where the underlying data lines up, to ease later integration of these visualizers into one tool.",
+  "type": "object",
+  "required": ["$schema", "schemaVersion", "exportedAt", "settings", "measurements"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI of this schema, so validators can dereference it without out-of-band configuration."
+    },
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of this export format, independent of the app's own version."
+    },
+    "exportedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp the export was generated, RFC 3339 / ISO 8601."
+    },
+    "settings": { "$ref": "#/$defs/settings" },
+    "measurements": { "$ref": "#/$defs/measurements" }
+  },
+  "$defs": {
+    "settings": {
+      "type": "object",
+      "required": [
+        "distanceCm", "polarity", "rabiFreqMHz", "driveFreqGHz", "t2StarUs",
+        "magnetStrength", "simTimeUs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "distanceCm": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 9,
+          "description": "Magnet distance from the fixed NV sensor, in cm (S.dist)."
+        },
+        "polarity": {
+          "type": "integer",
+          "enum": [1, -1],
+          "description": "Which magnet pole faces the sensor; flips the sign of the local field (S.polarity)."
+        },
+        "rabiFreqMHz": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 20,
+          "description": "On-resonance Rabi frequency Omega0/2pi, in MHz -- the microwave drive amplitude setting (S.rabi0)."
+        },
+        "driveFreqGHz": {
+          "type": "number",
+          "minimum": 2.82,
+          "maximum": 2.92,
+          "description": "Fixed microwave drive frequency, in GHz (S.mw)."
+        },
+        "t2StarUs": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 6,
+          "description": "Dephasing time T2*, in microseconds, used by the exp(-t/T2*) damping envelope (S.t2)."
+        },
+        "magnetStrength": {
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 2.5,
+          "description": "Dipole-moment multiplier for the demo magnet, 1.0 = default (S.sens)."
+        },
+        "simTimeUs": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The simulation clock at export time, in microseconds (S.t). Pause the page (the Pause time button) before exporting for a reproducible snapshot."
+        }
+      }
+    },
+    "blochVector": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number", "minimum": -1, "maximum": 1 },
+        { "type": "number", "minimum": -1, "maximum": 1 },
+        { "type": "number", "minimum": -1, "maximum": 1 }
+      ],
+      "items": false,
+      "description": "[x, y, z] Bloch vector at simTimeUs, exact solution of H = (delta/2)sigma_z + (Omega0/2)sigma_x -- verified against QuTiP to ~1e-8 per verify/."
+    },
+    "odmr": {
+      "type": "object",
+      "required": ["widthGHz", "contrastFraction"],
+      "additionalProperties": false,
+      "properties": {
+        "widthGHz": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Lorentzian half-width used by the ODMR dip plot, in GHz."
+        },
+        "contrastFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Per-dip contrast used by the ODMR plot."
+        }
+      },
+      "description": "The app's ODMR width/contrast are a hand-tuned demo heuristic (see README.md and verify/README.md), not derived from a rate equation -- included here as exactly what the page drew, not as a claim of physical accuracy."
+    },
+    "measurements": {
+      "type": "object",
+      "required": [
+        "fieldMt", "resonancePlusGHz", "resonanceMinusGHz", "detuningMHz", "onResonance",
+        "rabiFreqEffectiveMHz", "amplitudeFraction", "populationNow", "blochVector", "odmr"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fieldMt": {
+          "type": "number",
+          "description": "Local magnetic field B at the sensor, in mT, from the real inverse-cube dipole law B(d) = B0/d^3."
+        },
+        "resonancePlusGHz": {
+          "type": "number",
+          "description": "Zeeman-shifted resonance f+ = 2.87 GHz + gamma*B, in GHz."
+        },
+        "resonanceMinusGHz": {
+          "type": "number",
+          "description": "Zeeman-shifted resonance f- = 2.87 GHz - gamma*B, in GHz."
+        },
+        "detuningMHz": {
+          "type": "number",
+          "description": "Signed detuning of the drive from the nearest resonance, in MHz."
+        },
+        "onResonance": {
+          "type": "boolean",
+          "description": "true when |detuningMHz| < 1.5, matching the on-resonance/detuned status badge shown in the UI."
+        },
+        "rabiFreqEffectiveMHz": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Generalized Rabi frequency Omega/2pi = sqrt(Omega0^2 + delta^2)/2pi, in MHz."
+        },
+        "amplitudeFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Omega0^2/Omega^2 -- the population ceiling this detuning allows."
+        },
+        "populationNow": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "P(t) at simTimeUs: (Omega0^2/Omega^2)*0.5*(1-cos(Omega*t))*exp(-t/T2*)."
+        },
+        "blochVector": { "$ref": "#/$defs/blochVector" },
+        "odmr": { "$ref": "#/$defs/odmr" }
+      }
+    }
+  }
+}

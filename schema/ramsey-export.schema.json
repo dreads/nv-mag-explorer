@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/dreads/nv-mag-explorer/main/schema/ramsey-export.schema.json",
+  "title": "NV Ramsey interferometry visualizer export",
+  "description": "Snapshot of index_ramsey.html's current settings and every derived measurement shown on screen, for external validation against the closed-form physics documented in this repository's README, CLAUDE.md, and verify/. Field/naming conventions follow bell-state-explorer's export schema (dreads/bell-state-explorer schema/bell-state-export.schema.json) where the underlying data lines up, to ease later integration of these visualizers into one tool.",
+  "type": "object",
+  "required": ["$schema", "schemaVersion", "exportedAt", "settings", "measurements"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI of this schema, so validators can dereference it without out-of-band configuration."
+    },
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of this export format, independent of the app's own version."
+    },
+    "exportedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp the export was generated, RFC 3339 / ISO 8601."
+    },
+    "settings": { "$ref": "#/$defs/settings" },
+    "measurements": { "$ref": "#/$defs/measurements" }
+  },
+  "$defs": {
+    "settings": {
+      "type": "object",
+      "required": [
+        "tauUs", "driveFreqGHz", "t2StarUs", "fieldSensitivity", "vehiclePosition",
+        "sequencePosition"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tauUs": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Free-evolution time tau between the two pi/2 pulses, in microseconds (S.tau)."
+        },
+        "driveFreqGHz": {
+          "type": "number",
+          "minimum": 2.82,
+          "maximum": 2.92,
+          "description": "Fixed microwave drive frequency, in GHz (S.mw)."
+        },
+        "t2StarUs": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 6,
+          "description": "Dephasing time T2*, in microseconds, capping the useful tau (S.t2)."
+        },
+        "fieldSensitivity": {
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 2.5,
+          "description": "Terrain-height-to-field scaling multiplier, 1.0 = default (S.sens)."
+        },
+        "vehiclePosition": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Normalized position of the vehicle along the illustrative terrain route (S.vx); sets the local field via fieldAt(vx)."
+        },
+        "sequencePosition": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Normalized position u within the pulse sequence (0=start |0>, ~0.14=after 1st pi/2, ~0.86=end of tau, 1=after 2nd pi/2). Reflects the play/stage-jump state at export time."
+        }
+      }
+    },
+    "blochVector": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number", "minimum": -1, "maximum": 1 },
+        { "type": "number", "minimum": -1, "maximum": 1 },
+        { "type": "number", "minimum": -1, "maximum": 1 }
+      ],
+      "items": false,
+      "description": "[x, y, z] Bloch vector at sequencePosition u, from the exact RY(pi/2) - free-Z-precession - RY(pi/2) circuit (blochVec(u))."
+    },
+    "measurements": {
+      "type": "object",
+      "required": [
+        "fieldMt", "detuningMHz", "detuningRadPerUs", "phaseAtTauRad", "populationAtTau",
+        "stage", "blochVector"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fieldMt": {
+          "type": "number",
+          "description": "Local magnetic field B at the vehicle's route position, in mT."
+        },
+        "detuningMHz": {
+          "type": "number",
+          "description": "Signed detuning of the drive from the Zeeman-shifted resonance f+, in MHz."
+        },
+        "detuningRadPerUs": {
+          "type": "number",
+          "description": "Same detuning, in rad/microsecond (delta), as used directly in the phase formula phi = delta*tau."
+        },
+        "phaseAtTauRad": {
+          "type": "number",
+          "description": "Total phase banked over the full free-evolution window, phi = delta*tau, in radians -- independent of where the playhead currently sits."
+        },
+        "populationAtTau": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "P(tau) = 0.5*(1+cos(delta*tau))*exp(-tau/T2*) + 0.5*(1-exp(-tau/T2*)) -- the readout population at the full tau, matching the fringe plot and P(0) chip."
+        },
+        "stage": {
+          "type": "string",
+          "enum": ["initialize |0⟩", "free evolution", "phase banked", "measure"],
+          "description": "Which stage of the pulse sequence sequencePosition falls in, matching the visible stage badge's text."
+        },
+        "blochVector": { "$ref": "#/$defs/blochVector" }
+      }
+    }
+  }
+}
