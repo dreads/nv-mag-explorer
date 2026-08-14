@@ -129,14 +129,55 @@ per file.
 continuously-driven signal: `newHoleImpl()` picks a random reachable target Bloch vector by
 composing 2–5 random gates from `GATES` (`X`/`Y` at 90°/180° about the drive frame, `Z` at
 90° about the true N–V bond axis); `solve(from, to)` is a breadth-first search over the
-same five gates that both sets `par` and powers "Show a solution"; `pulse(axis, deg)` /
-`applyGate` animate the chosen rotation with an eased tween, not an instant jump. No T2*,
-no detuning, no measurement noise — every move is an exact rotation, deliberately unlike
-the other two pages (see its footer and `golfIntro` strings). It arrived as a pasted
-Claude-Artifact export (fragment only, no `<!DOCTYPE>`/`<head>`, an unloaded Tabler Icons
-font dependency, and CSS custom properties referenced but never defined) and was wrapped
-into a proper standalone page plus given a baseline accessibility pass — see
-"Accessibility" below for exactly what changed and what's still worth revisiting.
+same five gates, at their exact canonical (world-frame) angles, that both sets `par` and
+powers "Show a solution"; `pulse(axis, deg)` / `applyGate` animate the chosen rotation with
+an eased tween, not an instant jump. It arrived as a pasted Claude-Artifact export
+(fragment only, no `<!DOCTYPE>`/`<head>`, an unloaded Tabler Icons font dependency, and CSS
+custom properties referenced but never defined) and was wrapped into a proper standalone
+page plus given a baseline accessibility pass — see "Accessibility" below for exactly what
+changed and what's still worth revisiting.
+
+Three deepenings of the golf analogy landed later (GitHub issues #14/#15/#16), all without
+adding a 6th gate or touching `GATES`/`solve()`/par — see each issue for the fuller
+reasoning, this is the shape:
+- **Clubs (#14)**: `CLUBS` groups the same 5 gates into driver (`X`/`Y·π`), iron
+  (`X`/`Y·π/2`), and putter (`Z·π/2`) — a relabeling, not new physics. Verified numerically
+  (composing the actual rotation matrices) before landing this: the current 5-gate set
+  keeps the ball confined to exactly 6 points on the sphere (the octahedral rotation
+  group) no matter how many moves are made, which is *why* `solve()`'s BFS/par/exact win
+  check all work — adding literally any other angle (tried `Y·60°`, `Y·45°`, `Y·120°`)
+  blows the reachable set past 5,000 distinct points almost immediately. That's the actual
+  reason club identity comes from regrouping the existing 5 gates rather than adding new
+  angles for a "putter."
+- **Terrain + wind (#16)**: `terrainOffset` (fixed per hole, disclosed exactly) and
+  `windMagnitude` (fixed per-hole intensity, disclosed as a Calm/Breezy/Gusty label — the
+  exact per-swing jitter it bounds is not) both feed into `driveAxis()`, so they only ever
+  affect driver/iron (`Z`/putter bypasses `driveAxis()` entirely, same as it already
+  bypassed the phase dial). Terrain reuses the same Zeeman/detuning physics as the Rabi and
+  Ramsey pages — a fixed resonance offset the player can read and dial in exactly. Wind is
+  real shot-to-shot phase/amplitude jitter, modeled as a small random addition to the
+  driven axis angle on every driver/iron `applyGate()` call (see `gateAxisAngle()`), scaled
+  by each club's `windFactor` (driver 1.5, iron 1, putter 0). **The game stays exactly
+  solvable despite this**: `solve()`/`rotP0`/`newHoleImpl()` are completely untouched
+  (still pure canonical world axes, terrain/wind-blind), and `applyGate()`'s `ignoreNoise`
+  flag — set only by `playSolution()`, i.e. "Show a solution" — routes through
+  `canonicalAxis()` instead of `driveAxis()`, so the game's one guaranteed-recovery escape
+  hatch replays an exact solution regardless of live terrain/wind. Stress-tested: 25 fresh
+  holes with random terrain/wind rolls, immediately followed by "Show a solution" with no
+  manual moves first, all completed. This was a deliberate design constraint, not
+  incidental — an earlier version of this design considered literally tilting the
+  drive-axis reference frame per hole, which is *not* automatically safe (composing
+  canonical-frame gates from an off-lattice point can reproduce the same
+  reachable-set-blowup problem noted above for non-90° angles) were it not for this
+  existing `giveUp()`/`playSolution()` reset-and-resolve fallback already being the
+  safety net.
+- **Player figure (#15)**: a vague, semi-transparent grey silhouette (`drawPlayer()`,
+  called from `render()`) standing at `vPos` (the same point the sphere-center marker
+  uses), upright and fixed in screen space regardless of the drag-to-rotate camera —  a 2D
+  "billboard," not a real 3D-posed body, since this hand-rolled canvas renderer has no
+  proper limb/mesh system. Only its arm+club line rotates, toward the same projected
+  `driveAxis('X')` point the pink drive-axis line is drawn from, so it visibly re-aims
+  exactly when that line does.
 
 All three pages predate the i18n work and are **not** wired into
 `scripts/check-i18n-coverage.js` or any locale bundle — they remain English-only
