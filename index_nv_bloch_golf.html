@@ -843,51 +843,58 @@
     ctx.globalAlpha=1;
     drawGolfBall(sp.x,sp.y,8.5*zoom);
 
-    // travel-direction indicator: a short curved arrow at the ball, tangent to the
-    // great-circle path an X/Y pulse would carry it along right now -- i.e. lying in the
-    // plane perpendicular to the drive axis (dv), which *is* the rotation plane for those
-    // gates. Points in the positive-angle direction, since every X/Y button in this game
-    // rotates that way (aim is chosen via the phase dial, not a separate sign toggle) --
-    // so this always shows the true direction of travel for the next driver/putter
-    // X-or-Y swing. See doc/design/vector_indicator.png for the reference sketch this
-    // follows.
-    {
+    // travel-direction indicators: one short curved arrow at the ball per rotation axis
+    // the player can actually press right now (X, Y, and Z -- driver/putter share the same
+    // X/Y axes, differing only in angle, so one arrow per axis covers both clubs), each
+    // tangent to the great-circle path that axis's gate would carry the ball along --
+    // i.e. lying in the plane perpendicular to that axis, which *is* the rotation plane
+    // for it. Points in the positive-angle direction, since every button in this game
+    // rotates that way (aim is chosen via the phase dial, not a separate sign toggle).
+    // Same color for all three (CDRIVE) so they read as one indicator type. See
+    // doc/design/vector_indicator.png for the reference sketch this follows.
+    function drawTravelArc(axis){
       const cross=[
-        dv[1]*drawVec[2]-dv[2]*drawVec[1],
-        dv[2]*drawVec[0]-dv[0]*drawVec[2],
-        dv[0]*drawVec[1]-dv[1]*drawVec[0],
+        axis[1]*drawVec[2]-axis[2]*drawVec[1],
+        axis[2]*drawVec[0]-axis[0]*drawVec[2],
+        axis[0]*drawVec[1]-axis[1]*drawVec[0],
       ];
       const crossLen=Math.hypot(cross[0],cross[1],cross[2]);
-      if(crossLen>0.02){ // ball sits on the drive axis itself -- no tangent to show
-        const arcSpan=26, steps=10, pts=[];
-        for(let i=0;i<=steps;i++){
-          const v=rotAxisV(drawVec,dv,arcSpan*i/steps);
-          const w=frameToWorld([v[0]*Rb,v[1]*Rb,v[2]*Rb]);
-          pts.push(project([vPos[0]+w[0],vPos[1]+w[1],vPos[2]+w[2]]));
-        }
-        ctx.beginPath();
-        ctx.moveTo(pts[0].x,pts[0].y);
-        for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
-        ctx.lineWidth=2.5*zoom;
-        ctx.strokeStyle=CDRIVE;
-        ctx.globalAlpha=0.8;
-        ctx.stroke();
-        ctx.globalAlpha=1;
-        // arrowhead at the far end, oriented along the local tangent there
-        const tip=pts[pts.length-1], prev=pts[pts.length-2];
-        let hx=tip.x-prev.x, hy=tip.y-prev.y;
-        const hl=Math.hypot(hx,hy)||1;
-        hx/=hl; hy/=hl;
-        const ah=6*zoom, lx=-hy, ly=hx;
-        ctx.beginPath();
-        ctx.moveTo(tip.x+hx*ah,tip.y+hy*ah);
-        ctx.lineTo(tip.x-lx*ah*0.6,tip.y-ly*ah*0.6);
-        ctx.lineTo(tip.x+lx*ah*0.6,tip.y+ly*ah*0.6);
-        ctx.closePath();
-        ctx.fillStyle=CDRIVE;
-        ctx.fill();
+      // ball sits on (or antipodal to) this axis -- that gate would be a no-op from here,
+      // so there's no real tangent to show; this is the "only when valid" check, and it
+      // applies equally to X, Y, and Z (not just Z, even though Z's case -- the ball at a
+      // pole -- is the one that comes up most often, since holes start at the north pole)
+      if(crossLen<=0.02) return;
+      const arcSpan=26, steps=10, pts=[];
+      for(let i=0;i<=steps;i++){
+        const v=rotAxisV(drawVec,axis,arcSpan*i/steps);
+        const w=frameToWorld([v[0]*Rb,v[1]*Rb,v[2]*Rb]);
+        pts.push(project([vPos[0]+w[0],vPos[1]+w[1],vPos[2]+w[2]]));
       }
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+      ctx.lineWidth=2.5*zoom;
+      ctx.strokeStyle=CDRIVE;
+      ctx.globalAlpha=0.8;
+      ctx.stroke();
+      ctx.globalAlpha=1;
+      // arrowhead at the far end, oriented along the local tangent there
+      const tip=pts[pts.length-1], prev=pts[pts.length-2];
+      let hx=tip.x-prev.x, hy=tip.y-prev.y;
+      const hl=Math.hypot(hx,hy)||1;
+      hx/=hl; hy/=hl;
+      const ah=6*zoom, lx=-hy, ly=hx;
+      ctx.beginPath();
+      ctx.moveTo(tip.x+hx*ah,tip.y+hy*ah);
+      ctx.lineTo(tip.x-lx*ah*0.6,tip.y-ly*ah*0.6);
+      ctx.lineTo(tip.x+lx*ah*0.6,tip.y+ly*ah*0.6);
+      ctx.closePath();
+      ctx.fillStyle=CDRIVE;
+      ctx.fill();
     }
+    drawTravelArc(dv);
+    drawTravelArc(driveAxis('Y'));
+    drawTravelArc([0,0,1]);
 
     // sphere-center marker
     ctx.beginPath();
