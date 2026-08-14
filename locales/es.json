@@ -32,10 +32,6 @@
         "note": "Un rompecabezas de navegación de puerta NV Single Qubit.",
         "detail": "Los pulsos X, Y y Z giran el giro hacia un objetivo colocado aleatoriamente en tan pocos golpes como lo permita el par. A diferencia de las otras dos páginas, aquí nada se conduce continuamente ni se mide con ruido: cada movimiento es una rotación exacta."
       }
-    },
-    "footer": {
-      "physicsNote": "Física: frecuencia Rabi generalizada Ω = √(Ω₀² + δ²); lectura de Ramsey P(τ) = ½(1 + cos δτ)·e^(−τ/T₂*); fase acumulada φ = δτ. División Zeeman del triplete NV del estado fundamental: f± = 2,87 GHz ± γB, γ ≈ 28 MHz/mT. Todo de forma cerrada, del lado del cliente computarizado, listo para GitHub Pages.",
-      "companionNote": "Los propios números del visualizador Rabi se basan en el pie de página de esa página; El marco de desfase/coherencia anterior sigue al explorador de matriz de densidad de Bell-State-Explorer."
     }
   }
 }

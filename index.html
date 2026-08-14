@@ -33,32 +33,21 @@
     </nav>
 
     <!-- Spotlight panel: reacts to hover/focus on the cards above (see
-         setSpotlight() in src/app.js). Starts on the default (Rabi) entry
-         so it degrades to a correct, fully static view with no JS at all. -->
+         setSpotlight() in src/app.js). Starts on DEFAULT_SPOTLIGHT (a Bloch
+         golf still, not tied to any one visualizer) so it degrades to a
+         correct, fully static view with no JS at all. -->
     <section class="panel hero-video">
-      <video id="spotlight-video" class="bloch-hero" autoplay loop muted playsinline aria-hidden="true">
+      <video id="spotlight-video" class="bloch-hero" autoplay loop muted playsinline aria-hidden="true" hidden>
         <source src="doc/media/bloch-sweep.mp4" type="video/mp4">
       </video>
-      <img id="spotlight-image" class="bloch-hero" aria-hidden="true" alt="" hidden>
-      <p id="spotlight-caption" class="hero-caption" aria-live="polite" data-i18n="catalog.rabi.spotlightCaption">
-        The Bloch vector precessing as the magnet auto-sweeps its full range — captured live from the Rabi
-        visualizer, not a rendered mockup.
+      <img id="spotlight-image" class="bloch-hero" src="doc/bloch_golf.jpg" aria-hidden="true" alt="">
+      <p id="spotlight-caption" class="hero-caption" aria-live="polite" data-i18n="ui.toolboxCaption">
+        This is a toolbox for exploring quantum-sensing concepts as intuitively as possible — hover or
+        focus a visualizer to preview it here.
       </p>
     </section>
   </div>
 </main>
-
-<footer>
-  <p data-i18n="footer.physicsNote">
-    Physics: generalized Rabi frequency Ω = √(Ω₀² + δ²); Ramsey readout P(τ) = ½(1 + cos δτ)·e^(−τ/T₂*);
-    accumulated phase φ = δτ. Zeeman splitting of the NV ground-state triplet: f± = 2.87 GHz ± γB,
-    γ ≈ 28 MHz/mT. All closed-form, computed client-side, GitHub Pages-ready.
-  </p>
-  <p data-i18n="footer.companionNote">
-    The Rabi visualizer's own numbers are grounded in that page's footer; the dephasing/coherence framing
-    above follows bell-state-explorer's density-matrix explorer.
-  </p>
-</footer>
 
 </div>
 <script type="module" src="src/app.js"></script>

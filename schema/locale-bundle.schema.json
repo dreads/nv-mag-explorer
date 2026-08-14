@@ -58,7 +58,8 @@
             "skipLink": { "type": "string" },
             "heading": { "type": "string" },
             "subtitle": { "type": "string" },
-            "navHeading": { "type": "string" }
+            "navHeading": { "type": "string" },
+            "toolboxCaption": { "type": "string" }
           }
         },
         "catalog": {
@@ -76,14 +77,6 @@
                 "spotlightCaption": { "type": "string" }
               }
             }
-          }
-        },
-        "footer": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "physicsNote": { "type": "string" },
-            "companionNote": { "type": "string" }
           }
         }
       }

@@ -14,12 +14,13 @@
       "skipLink": "Zora tresqui bantu",
       "heading": "Roqa Ramsey elgorai",
       "subtitle": "Zantul senvara Rabi elgorai bantu oru. Roqavel du roqa zora tresqui — kuresh velmori partielu bantu Ramsey. Achkedo tresqui roqa, du kuresh velmori maldeen visroka fen bantu bell-state-explorer elgorai.",
-      "navHeading": "Tresqui bantu roqavel"
+      "navHeading": "Tresqui bantu roqavel",
+      "toolboxCaption": "Zantul roqavel bantu tresqui kuresh senvara achkedo velmori zora du roqa elgorai — velmori du zora bantu roqavel tresqui achkedo elgorai zora."
     },
     "catalog": {
       "ramsey": {
         "label": "Bantu Ramsey",
-        "note": "Kuresh, zora, kuresh — senvara achkedo velmori zora, du elgorai tresqui.",
+        "note": "Achkedo bantu senvara kuresh zora tresqui velmori, roqa spin achkedo bantu elgorai zora tresqui — Ramsey elgorai bantu roqavel quantum.",
         "detail": "Ramsey bantu tresqui tal senvara: π/2 kuresh roqa elgorai equalu, achkedo velmori zora tresqui bantu τ, du sekundu π/2 kuresh roqa senvara tresqui elgorai. Zantul tresqui du roqa zora: Bell-state-explorer vintal kuresh elgorai tresqui senvara bantu classiqa.",
         "spotlightCaption": "Senvara φ = δτ tresqui bantu velmori tal τ — kuresh zora Ramsey elgorai, du roqa mockup."
       },
@@ -35,10 +36,6 @@
         "detail": "Kuresh X, Y, du Z roqa senvara bantu achkedo tresqui zora, velmori maldeen par elgorai. Achkedo tal roqavel, roqa zantul velmori du roqa tresqui noise bantu — kuresh senvara elgorai zora.",
         "spotlightCaption": "Kuresh senvara elgorai zora — X, Y, du Z roqa senvara bantu achkedo tresqui zora — kuresh zora Golf Bloch elgorai, du roqa mockup."
       }
-    },
-    "footer": {
-      "physicsNote": "Roqavel: Ω = √(Ω₀² + δ²); P(τ) = ½(1 + cos δτ)·e^(−τ/T₂*); φ = δτ. Zeeman f± = 2.87 GHz ± γB, γ ≈ 28 MHz/mT. Zantul bantu, kuresh client-side, GitHub Pages zora.",
-      "companionNote": "Rabi elgorai bantu tresqui achkedo zora; kuresh bell-state-explorer velmori maldeen visroka."
     }
   }
 }

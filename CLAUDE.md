@@ -94,8 +94,9 @@ verify/                                 Python + QuTiP cross-check of the closed
 .github/workflows/deploy.yml            npm test + lint:i18n, then deploy to GitHub Pages
 .github/workflows/physics-verification.yml   pytest verify/ on changes to the visualizer HTML or verify/** — independent of deploy
 doc/bloch_rabi.jpg                      reference screenshot only — not referenced by src/catalog.js (Rabi's spotlight uses the video instead)
-doc/bloch_ramsey.jpg, doc/bloch_golf.jpg     spotlight images for the Ramsey/golf catalog entries (src/catalog.js) — captured via `npm run screenshot -- <url> <out> --selector=#id`, cropped to the visualizer's own canvas element, same framing convention for both
-doc/media/bloch-sweep.mp4               hero video on index.html — captured live from index_rabi.html, not a rendered mockup
+doc/bloch_ramsey.jpg                    spotlight image for the Ramsey catalog entry (src/catalog.js) — captured via `npm run screenshot -- <url> <out> --selector=#id`
+doc/bloch_golf.jpg                      spotlight image for the golf catalog entry AND src/catalog.js's DEFAULT_SPOTLIGHT (the hero panel's no-hover/no-focus default) — same capture method as bloch_ramsey.jpg
+doc/media/bloch-sweep.mp4               Rabi catalog entry's spotlight video — captured live from index_rabi.html, not a rendered mockup; shown only when the Rabi card is hovered/focused, not by default
 doc/design/                             non-code MagNav story/verification research; doesn't affect the app
 ```
 
@@ -151,6 +152,13 @@ single-file pages by design (see README's i18n/l10n/a11y section).
   screen-reader user gets an equivalent announcement to what a sighted/mouse user sees.
   index.html no longer has any SVG visual (the Rabi-vs-Ramsey timeline diagram that used to
   need its own `aria-hidden`+`.sr-only` treatment was removed in the catalog refactor).
+  Ramsey's card also uses a native `<details><summary>` disclosure for its
+  `glossaryNote`-flagged note/detail pair (see "Visualizer catalog" below) — deliberately
+  chosen over a floating tooltip/popover specifically because `<details>` gives correct
+  keyboard operability (Enter/Space on the focused `<summary>`) and screen-reader
+  expanded/collapsed semantics natively, with zero custom ARIA; `src/app.js` only adds
+  `mouseenter`/`mouseleave` to toggle `.open` for mouse users, layered on top of that native
+  behavior rather than replacing it.
 - **index_nv_bloch_golf.html**: brought to a baseline pass — `<canvas id="stage">` is
   `aria-hidden="true"`; a `.sr-only` paragraph carries the original detailed description of
   the scene (vacancy site, lattice, target) and a separate `#golf-status`
@@ -185,12 +193,13 @@ spotlight panel *do* have a render step now — `renderCatalog()`/`setSpotlight(
 `src/app.js`, driven by `src/catalog.js`. This is a deliberate, issue-endorsed tradeoff
 against the "zero JS for the English default" property above, scoped narrowly: a no-JS
 visitor sees an empty nav (the `#catalog-cards` mount div renders nothing without JS), but
-still sees a correct default spotlight panel (its `<video>`/caption keep a static HTML
-seed) and every other part of the page. It is *not* a new network dependency — `src/app.js`
-builds a `catalogFallback` object synchronously from `src/catalog.js`'s own English
-literals at module load, so the catalog still needs no `en.json` round-trip to render
-correctly, only JS execution. See `src/catalog.js`'s top comment and the "Visualizer
-catalog" section below for the full shape.
+still sees a correct default spotlight panel (its `<img>`/caption keep a static HTML seed —
+a Bloch golf still + `ui.toolboxCaption`, see "Visualizer catalog" below) and every other
+part of the page. It is *not* a new network dependency — `src/app.js` builds a
+`catalogFallback` object synchronously from `src/catalog.js`'s own English literals at
+module load, so the catalog still needs no `en.json` round-trip to render correctly, only
+JS execution. See `src/catalog.js`'s top comment and the "Visualizer catalog" section below
+for the full shape.
 
 `applyLocale(bundle)` (walk `[data-i18n]`, set `document.title`/meta description specially)
 plus the picker wiring covers everything else — including the generated catalog cards,
@@ -252,24 +261,47 @@ Before this, adding Bloch golf as the third nav entry meant touching three files
 lockstep: the `<div class="card">` markup in `index.html`, `locales/en.json` (new
 `navGolfLabel`/`navGolfNote`/`golfIntro.*` keys), and `schema/locale-bundle.schema.json`.
 
-**Now**: `src/catalog.js` exports one `CATALOG` array, one object per visualizer —
-`id`/`href`/`label`/`note`/`detail` (each with a literal English string and its
-`locales/en.json` key) plus a `spotlight` (media type/src/caption for the hero panel — see
-"index.html + src/app.js" above). `src/app.js`'s `renderCatalog()` builds the nav cards from
-it and `setSpotlight()` swaps the hero panel's media/caption on hover or focus of a card.
-**To add a fifth visualizer**: append one entry to `src/catalog.js` — that alone is enough
-for a correct English render. `schema/locale-bundle.schema.json`'s `catalog` section uses
-`patternProperties` (any `^[a-z][a-z0-9_-]*$` id), so it never needs a per-visualizer edit.
-A `locales/*.json` translation is optional and can land whenever a translator gets to it —
-same "partial bundles are fine, fall back per-key" philosophy as everything else here.
+**Now**: `src/catalog.js` exports one `CATALOG` array, one object per visualizer, array
+order is display order (currently golf, ramsey, rabi) — `id`/`href`/`label`/`note`/`detail`
+(each with a literal English string and its `locales/en.json` key) plus a `spotlight`
+(media type/src/caption for the hero panel — see "index.html + src/app.js" above).
+`src/app.js`'s `renderCatalog()` builds the nav cards from it and `setSpotlight()` swaps
+the hero panel's media/caption on hover or focus of a card. **To add a fifth visualizer**:
+append one entry to `src/catalog.js` — that alone is enough for a correct English render.
+`schema/locale-bundle.schema.json`'s `catalog` section uses `patternProperties` (any
+`^[a-z][a-z0-9_-]*$` id), so it never needs a per-visualizer edit. A `locales/*.json`
+translation is optional and can land whenever a translator gets to it — same "partial
+bundles are fine, fall back per-key" philosophy as everything else here.
 `scripts/check-i18n-coverage.js` fails the build if `src/catalog.js`'s literals and
 `locales/en.json`'s values for the same keys ever drift apart, the same invariant the
 static-HTML content-diff check already enforced for the rest of the page.
+
+`src/catalog.js` also exports `DEFAULT_SPOTLIGHT` (same shape as an entry's `spotlight`,
+keyed under `ui.toolboxCaption` rather than `catalog.*` since it's page-level chrome, not
+about one visualizer) — shown when nothing is hovered/focused, so the hero panel doesn't
+default to one visualizer over the others. Currently a Bloch golf still (`doc/bloch_golf.jpg`,
+also golf's own catalog spotlight image — two different uses of the same file) with a
+generic "this is a toolbox" caption.
+
+An entry can set `glossaryNote: true` (currently just `ramsey`) to have `renderCatalog()`
+render its note/detail as a `<details><summary>` disclosure instead of an always-visible
+`<span>`+`<p>` — see the Accessibility section above for the a11y mechanics. This exists
+because Ramsey's card needed a short one-line analogy up front with its longer mechanical
+explanation available on demand rather than always taking up card space; any future entry
+needing the same treatment just sets the same flag, no new plumbing required.
 
 The Rabi-vs-Ramsey drive-timeline SVG comparison that used to sit below the nav cards was
 **removed**, not folded into the catalog — Bloch golf's shape (a discrete puzzle) never fit
 that two-way diagram, and generalizing a fixed A-vs-B comparison to an N-entry catalog
 didn't have an obvious right answer, so it was dropped rather than force-fit.
+
+`index.html`'s `<footer>` (a "Physics" note + a companion-piece note, `footer.physicsNote`/
+`footer.companionNote`) was also removed outright, not relocated — the physics summary it
+carried was redundant with `index_rabi.html`/`index_ramsey.html`'s own footers, and the
+companion-piece framing didn't earn its keep as permanent page furniture. If you're looking
+for the Ramsey coherence-budget explanation this used to gesture at, it's the `detail` text
+on Ramsey's card (`catalog.ramsey.detail` — see above) and, in more compact form, appended
+to `index_ramsey.html`'s own `<footer>`.
 
 Rabi/Ramsey accessibility parity (issue #19) is independent of this refactor and remains
 open — see "Accessibility" above for the exact baseline to match.

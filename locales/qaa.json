@@ -14,12 +14,13 @@
       "skipLink": "Sâütér âü cöñtéñü",
       "heading": "Pöurquöi l’Íntérférömétríe dé Rämséy",
       "subtitle": "Lé vïsüälïséür Räbï möñtré lé wöbblé qüäñtïqüé brüt d’ün mägnétömètre. Ün äppäréïl réél né lït päs cé wöbblé dïréctéméñt — ïl éxécüté üné séqüéñcé à déüx ïmpülsïöñs plüs ïñtéllïgéñté äppéléé l’ïñtérférömétríé dé Rämséy. Céttè pägé éxplïqüé pöürqüöï, ét cömméñt lé mêmé büdgét dé cöhérèñcé qüï lïmïté l’ïñtrïcâtïöñ dâñs bell-state-explorer lïmïté äüssï céttè mésüré.",
-      "navHeading": "Éxplörér lés vïsüälïséürs"
+      "navHeading": "Éxplörér lés vïsüälïséürs",
+      "toolboxCaption": "Cécï ést üné böîté à öütïls pöür éxplörér lés cöncépts dé détéctïön qüäntïqüé äüssï ïntüïtïvéméñt qüé pössïblé — sürvöléz öü fôcälïséz ün vïsüälïséür pöür l’äpérçüvöïr ïcï."
     },
     "catalog": {
       "ramsey": {
         "label": "Vïsüälïséür Rämséy",
-        "note": "Ïmpülsïöñ, âttéñté, ïmpülsïöñ — phâsé âccümüléé péñdâñt lé sïléñcé, püïs lüé.",
+        "note": "Cömmé ün véhïcülé séñtäñt lé térräïn chängér süüs lüï, lé spïñ séñt lé chämp chängér péñdäñt l’évölütïöñ lïbré — l’ïntérférömétríé dé Rämséy äü nïvéäü qüäntïqüé.",
         "detail": "L’ïñtérférömétríé dé Rämséy dïvïsé lé wöbblé éñ tröïs étâpés cläïrés: üné cöürté ïmpülsïöñ π/2 bâsçülé lé spïñ sür l’équâtéür, lâ mïcrö-öñdé s’étéïñt éñsüïté éñtïéréméñt péñdâñt üné féñêtré d’évölütïöñ lïbré τ, ét üné sécöñdé ïmpülsïöñ π/2 cönvértït cé qüï s’ést pâssé péñdâñt cé sïléñcé éñ üné pöpülâtïöñ qüé vöüs pöüvéz lïré. Céttè léctüré prôpré n’ést päs grâtüïté: lé cürséür dé déphâsâgé dé bell-state-explorer réñd vïsïblé lé mêmé écháñgé sür üné mâtrïcé dé déñsïté à déüx qübïts.",
         "spotlightCaption": "Phâsé âccümüléé φ = δτ träcéé à trâvérs dé nömbréüx éssäïs dé lâ féñêtré d’évölütïöñ lïbré τ — câptüré éñ dïréct dépüïs lé vïsüälïséür Rämséy, päs ün mockup réñdü."
       },
@@ -35,10 +36,6 @@
         "detail": "Dés ïmpülsïöñs X, Y, ét Z fönt töürnér lé spïñ vérs üné cïblé pläcéé äü häsârd, éñ äüssï péü dé cöups qüé lé pär lé pérmét. Cöñträïréméñt äüx déüx äütrés pägés, rïéñ ïcï n’ést éñtrâîñé éñ cöñtïnü nï mésüré ävéc dü brüït — châqüé möüvéméñt ést üné rötâtïöñ éxâcté.",
         "spotlightCaption": "Châqüé cöup ést üné rötâtïöñ éxâcté — dés ïmpülsïöñs X, Y, ét Z fâïsâñt töürnér lé spïñ vérs üné cïblé pläcéé äü häsârd — câptüré éñ dïréct dépüïs lé vïsüälïséür Gölf dé Blöch, päs ün mockup réñdü."
       }
-    },
-    "footer": {
-      "physicsNote": "Phÿsïqüé: fréquéñcé dé Räbï géñérâlïséé Ω = √(Ω₀² + δ²); léctüré dé Rämséy P(τ) = ½(1 + cös δτ)·e^(−τ/T₂*); phâsé âccümüléé φ = δτ. Séparätïöñ dé Zééman dü trïplét dé l’étät fönd du NV: f± = 2.87 GHz ± γB, γ ≈ 28 MHz/mT. Töüt éñ förmé clöse, câlcülé côté clïéñt, prêt pöür GitHub Pages.",
-      "companionNote": "Lés próprés nömbrés dü vïsüälïséür Räbï söñt âñcrés dâñs lé pïéd dé pägé dé céttè pägé; lé câdré dé déphâsâgé/cöhérèñcé cï-déssüs süït l’éxplörâtéür dé mâtrïcé dé déñsïté dé bell-state-explorer."
     }
   }
 }

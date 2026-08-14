@@ -1,6 +1,6 @@
 import { translate } from './i18n.js';
 import { loadManifest, loadLocaleBundle, detectLocale } from './locale-loader.js';
-import { CATALOG } from './catalog.js';
+import { CATALOG, DEFAULT_SPOTLIGHT } from './catalog.js';
 
 const LOCALE_STORAGE_KEY = 'nv-mag-locale';
 
@@ -40,10 +40,11 @@ function query() {
 }
 
 // Mirrors locales/en.json's shape ({ catalog: { <id>: { label, note, detail,
-// spotlightCaption } } }) but built synchronously from src/catalog.js's own
-// literals -- so catalog text renders correctly the instant renderCatalog()
-// runs, with no dependency on en.json's fetch ever completing.
-const catalogFallback = { catalog: {} };
+// spotlightCaption } }, ui: { toolboxCaption } }) but built synchronously
+// from src/catalog.js's own literals -- so catalog text (and the default
+// spotlight's caption) renders correctly the instant renderCatalog() runs,
+// with no dependency on en.json's fetch ever completing.
+const catalogFallback = { catalog: {}, ui: { toolboxCaption: DEFAULT_SPOTLIGHT.caption } };
 CATALOG.forEach((entry) => {
   catalogFallback.catalog[entry.id] = {
     label: entry.label,
@@ -58,10 +59,20 @@ function catalogText(key) {
   return translate(activeLocale ? activeLocale.strings : {}, catalogFallback, key);
 }
 
-const defaultCatalogEntry = CATALOG.find((entry) => entry.default) || CATALOG[0];
-
 function findCatalogEntry(id) {
   return CATALOG.find((entry) => entry.id === id);
+}
+
+/**
+ * Builds one detail <p> (always a plain paragraph; the caller decides
+ * whether it's always-visible or lives inside a <details>).
+ */
+function buildDetailParagraph(entry) {
+  const detail = document.createElement('p');
+  detail.className = 'note-detail';
+  detail.dataset.i18n = entry.detailKey;
+  detail.textContent = catalogText(entry.detailKey);
+  return detail;
 }
 
 /**
@@ -69,6 +80,13 @@ function findCatalogEntry(id) {
  * element gets a data-i18n attribute too, so the existing applyLocale()
  * sweep (which walks every [data-i18n] element in the document) picks these
  * up on every locale switch with no changes needed there.
+ *
+ * Entries with `glossaryNote: true` render their note/detail as a
+ * <details><summary> disclosure instead of an always-visible <span>+<p> --
+ * native keyboard/AT semantics for free (Enter/Space on the focused summary
+ * toggles it, screen readers announce expanded/collapsed), with hover-to-open
+ * layered on top in wireSpotlight() below for mouse users. See
+ * src/catalog.js's top comment for the field.
  */
 function renderCatalog() {
   const mount = dom['catalog-cards'];
@@ -85,27 +103,38 @@ function renderCatalog() {
     label.className = 'label';
     label.dataset.i18n = entry.labelKey;
     label.textContent = catalogText(entry.labelKey);
+    link.append(label);
 
-    const note = document.createElement('span');
-    note.className = 'note';
-    note.dataset.i18n = entry.noteKey;
-    note.textContent = catalogText(entry.noteKey);
+    if (entry.glossaryNote) {
+      const summary = document.createElement('summary');
+      summary.className = 'note';
+      summary.dataset.i18n = entry.noteKey;
+      summary.textContent = catalogText(entry.noteKey);
 
-    link.append(label, note);
+      const details = document.createElement('details');
+      details.className = 'note-gloss';
+      details.append(summary, buildDetailParagraph(entry));
+      details.addEventListener('mouseenter', () => { details.open = true; });
+      details.addEventListener('mouseleave', () => { details.open = false; });
 
-    const detail = document.createElement('p');
-    detail.className = 'note-detail';
-    detail.dataset.i18n = entry.detailKey;
-    detail.textContent = catalogText(entry.detailKey);
+      card.append(link, details);
+    } else {
+      const note = document.createElement('span');
+      note.className = 'note';
+      note.dataset.i18n = entry.noteKey;
+      note.textContent = catalogText(entry.noteKey);
+      link.append(note);
 
-    card.append(link, detail);
+      card.append(link, buildDetailParagraph(entry));
+    }
+
     mount.appendChild(card);
   });
 }
 
-/** Swaps the hero panel's media + caption to `entry`'s spotlight. */
-function setSpotlight(entry) {
-  const { spotlight } = entry;
+/** Swaps the hero panel's media + caption to `spotlight` (an entry's
+ * `.spotlight` field, or DEFAULT_SPOTLIGHT). */
+function setSpotlight(spotlight) {
   const isVideo = spotlight.type === 'video';
   dom['spotlight-video'].hidden = !isVideo;
   dom['spotlight-image'].hidden = isVideo;
@@ -133,20 +162,20 @@ function wireSpotlight() {
     const card = e.target.closest('.card');
     if (!card || (e.relatedTarget && card.contains(e.relatedTarget))) return;
     const entry = findCatalogEntry(card.dataset.catalogId);
-    if (entry) setSpotlight(entry);
+    if (entry) setSpotlight(entry.spotlight);
   });
   mount.addEventListener('mouseout', (e) => {
     const card = e.target.closest('.card');
     if (!card || (e.relatedTarget && card.contains(e.relatedTarget))) return;
-    setSpotlight(defaultCatalogEntry);
+    setSpotlight(DEFAULT_SPOTLIGHT);
   });
   mount.addEventListener('focusin', (e) => {
     const card = e.target.closest('.card');
     const entry = card && findCatalogEntry(card.dataset.catalogId);
-    if (entry) setSpotlight(entry);
+    if (entry) setSpotlight(entry.spotlight);
   });
   mount.addEventListener('focusout', (e) => {
-    if (e.target.closest('.card')) setSpotlight(defaultCatalogEntry);
+    if (e.target.closest('.card')) setSpotlight(DEFAULT_SPOTLIGHT);
   });
 }
 

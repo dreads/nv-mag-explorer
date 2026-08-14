@@ -144,16 +144,29 @@ while ((m = elementPattern.exec(html))) {
 }
 
 // ---------------------------------------------------------------------
-// 6. src/catalog.js: nav-card/spotlight text moved out of static index.html
-//    into this data file (see issue #18's catalog refactor), so checks 1
-//    and 5 above can no longer see it. Import the module directly (this
-//    script is already ESM) and re-run the same two checks against it:
-//    every *Key must resolve in en.json, and en.json's value must match
-//    catalog.js's own literal exactly -- catalog.js is now the "static
-//    content is authoritative" source for this text, same invariant as
-//    check 5, just relocated.
+// 6. src/catalog.js: nav-card/spotlight/default-spotlight text moved out of
+//    static index.html into this data file (see issue #18's catalog
+//    refactor), so checks 1 and 5 above can no longer see it. Import the
+//    module directly (this script is already ESM) and re-run the same two
+//    checks against every text field it exports: each *Key must resolve in
+//    en.json, and en.json's value must match catalog.js's own literal
+//    exactly -- catalog.js is now the "static content is authoritative"
+//    source for this text, same invariant as check 5, just relocated.
 // ---------------------------------------------------------------------
-const { CATALOG } = await import(path.join(ROOT, 'src', 'catalog.js'));
+function checkCatalogText(sourceLabel, key, literal) {
+  const jsonValue = getPath(en.strings, key);
+  if (jsonValue === undefined) {
+    problems.push(`${sourceLabel}: key="${key}" does not resolve to any key in locales/en.json`);
+  } else if (jsonValue !== literal) {
+    problems.push(
+      `${sourceLabel}: text does not match locales/en.json's ${key} -- ` +
+      `catalog.js: ${JSON.stringify(literal)}  JSON: ${JSON.stringify(jsonValue)}. ` +
+      'src/catalog.js is authoritative here -- update locales/en.json to match it, not the other way around.'
+    );
+  }
+}
+
+const { CATALOG, DEFAULT_SPOTLIGHT } = await import(path.join(ROOT, 'src', 'catalog.js'));
 const CATALOG_TEXT_FIELDS = [
   ['labelKey', 'label'],
   ['noteKey', 'note'],
@@ -161,31 +174,11 @@ const CATALOG_TEXT_FIELDS = [
 ];
 CATALOG.forEach((entry) => {
   CATALOG_TEXT_FIELDS.forEach(([keyField, literalField]) => {
-    const key = entry[keyField];
-    const literal = entry[literalField];
-    const jsonValue = getPath(en.strings, key);
-    if (jsonValue === undefined) {
-      problems.push(`src/catalog.js: entry "${entry.id}"'s ${keyField}="${key}" does not resolve to any key in locales/en.json`);
-    } else if (jsonValue !== literal) {
-      problems.push(
-        `src/catalog.js: entry "${entry.id}"'s ${literalField} does not match locales/en.json's ${key} -- ` +
-        `catalog.js: ${JSON.stringify(literal)}  JSON: ${JSON.stringify(jsonValue)}. ` +
-        'src/catalog.js is authoritative here -- update locales/en.json to match it, not the other way around.'
-      );
-    }
+    checkCatalogText(`src/catalog.js: entry "${entry.id}"'s ${literalField}`, entry[keyField], entry[literalField]);
   });
-  const { spotlight } = entry;
-  const spotlightJsonValue = getPath(en.strings, spotlight.captionKey);
-  if (spotlightJsonValue === undefined) {
-    problems.push(`src/catalog.js: entry "${entry.id}"'s spotlight.captionKey="${spotlight.captionKey}" does not resolve to any key in locales/en.json`);
-  } else if (spotlightJsonValue !== spotlight.caption) {
-    problems.push(
-      `src/catalog.js: entry "${entry.id}"'s spotlight.caption does not match locales/en.json's ${spotlight.captionKey} -- ` +
-      `catalog.js: ${JSON.stringify(spotlight.caption)}  JSON: ${JSON.stringify(spotlightJsonValue)}. ` +
-      'src/catalog.js is authoritative here -- update locales/en.json to match it, not the other way around.'
-    );
-  }
+  checkCatalogText(`src/catalog.js: entry "${entry.id}"'s spotlight.caption`, entry.spotlight.captionKey, entry.spotlight.caption);
 });
+checkCatalogText('src/catalog.js: DEFAULT_SPOTLIGHT.caption', DEFAULT_SPOTLIGHT.captionKey, DEFAULT_SPOTLIGHT.caption);
 
 // ---------------------------------------------------------------------
 if (problems.length) {

@@ -223,6 +223,36 @@ main {
   border-top: 1px solid var(--panel-line);
 }
 
+/* ---- Glossary-style disclosure (src/catalog.js's glossaryNote flag) ----
+   A <summary> outside the <a>, so it needs its own rule rather than relying
+   on .explore-col a .note above -- otherwise identical spacing to a plain
+   note. The dotted underline is the "this reveals more" affordance;
+   list-style/marker suppression removes the browser's default triangle so
+   the underline is the only cue, matching the plain notes' look until
+   hovered/focused. src/app.js's mouseenter/mouseleave toggle `.open` for
+   mouse users; click and Enter/Space on the focused <summary> toggle it
+   natively for everyone else, with no extra JS needed for that half. */
+.note-gloss summary {
+  display: block;
+  color: var(--ink-dim);
+  font-size: 12px;
+  margin-top: 4px;
+  line-height: 1.4;
+  cursor: pointer;
+  list-style: none;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--cyan);
+  text-underline-offset: 3px;
+}
+
+.note-gloss summary::-webkit-details-marker {
+  display: none;
+}
+
+.note-gloss summary::marker {
+  content: '';
+}
+
 .panel {
   background: linear-gradient(180deg, #121a2e 0%, var(--panel) 100%);
   border: 1px solid var(--panel-line);
