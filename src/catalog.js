@@ -40,7 +40,7 @@ export const CATALOG = [
     note: 'Like a vehicle sensing the terrain shift beneath it, the spin senses the field shift during free '
       + 'evolution — Ramsey interferometry at the quantum level.',
     noteKey: 'catalog.ramsey.note',
-    detail: 'Using a toy vehicle, observe the NV magnetic field detection detection sequence revealed on a Bloch sphere.',
+    detail: 'Using a toy vehicle, observe the NV magnetic field detection sequence revealed on a Bloch sphere.',
     detailKey: 'catalog.ramsey.detail',
     spotlight: {
       type: 'video',
