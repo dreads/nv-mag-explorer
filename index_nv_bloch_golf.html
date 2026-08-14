@@ -36,6 +36,8 @@
     -webkit-font-smoothing:antialiased;
   }
   .wrap{max-width:900px;margin:0 auto;padding:22px 20px 60px}
+  .back-nav{display:inline-block;font-size:12px;color:var(--text-muted);text-decoration:none;margin-bottom:10px}
+  .back-nav:hover{color:var(--cyan)}
   h1{font-size:23px;font-weight:700;margin:0 0 4px;letter-spacing:.2px}
   h1 .q{color:var(--cyan)}
   .sub{color:var(--text-secondary);font-size:13.5px;max-width:780px;line-height:1.6;margin:0}
@@ -55,6 +57,7 @@
 </head>
 <body>
 <div class="wrap">
+<a class="back-nav" href="index.html">← Explore the visualizers</a>
 <header>
   <h1>NV Single Qubit Explorer — <span class="q">Bloch Golf</span></h1>
   <p class="sub">Bloch golf turns the ground-state Bloch sphere into a gate-navigation game — driver
@@ -138,6 +141,16 @@
       </div>
 
     </div>
+  </div>
+
+  <!-- issue #10: Qiskit circuit aggregator -- one line appended per stroke, see
+       qiskitLineFor()/renderCircuit() below. Placement matches doc/design/aggregator.jpg. -->
+  <div style="background:var(--surface-1); border-radius:12px; border:0.5px solid var(--border); padding:12px 14px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <span style="font-size:13px; font-weight:500;">Circuit</span>
+      <button id="btn-copy-circuit" onclick="copyCircuit()" style="font-size:11.5px; padding:5px 10px;">⧉ Copy</button>
+    </div>
+    <pre id="circuit-code" style="margin:0; font-family:var(--mono); font-size:12px; line-height:1.5; color:var(--text-secondary); white-space:pre-wrap; overflow-x:auto;"></pre>
   </div>
 
   <div style="display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--text-secondary); align-items:center;">
@@ -345,6 +358,7 @@
   let target=[0,0,1];
   let anim=null;
   let history=[];
+  let circuitLines=[]; // issue #10: one Qiskit line per stroke, see qiskitLineFor()
   let moves=0, par=0, hole=1, solved=false;
   let scores=[];
 
@@ -400,12 +414,13 @@
     if(keyOf(v)===keyOf([0,0,1])){
       return newHoleImpl(); // degenerate roll landed back on the start; retry
     }
-    target=v; state=[0,0,1]; history=[]; moves=0; solved=false; anim=null;
+    target=v; state=[0,0,1]; history=[]; circuitLines=[]; moves=0; solved=false; anim=null;
     const sol=solve([0,0,1],target);
     par=sol?sol.length:n;
     document.getElementById('hole-n').textContent=hole;
     document.getElementById('par-v').textContent=par;
     hideWin();
+    renderCircuit();
     updateHUD();
   }
   window.newHole=function(){
@@ -439,6 +454,50 @@
     document.getElementById('bYhpi').title='Putter — quarter turn (90°) about the drive axis at phase '+Math.round(phase+90)+'° (≈ '+dy+'). Flip phase by 180° to reverse this turn.';
   }
 
+  // issue #10: maps one (axis, angle) stroke, taken at a given phase-dial reading, to a
+  // Qiskit gate-call line. Z is phase-independent (matches the game's own treatment of
+  // the putter's Z gate) and always gets the S gate. X/Y use the friendly named gate only
+  // when the dial reads the canonical 0 for that axis (phase 0 for X, 90 for Y); any other
+  // phase means the drive axis is actually tilted in the equatorial plane, so the general
+  // R gate (rotation by theta about cos(phi)X + sin(phi)Y) is what's really being applied
+  // -- using the friendly name there would silently export a circuit that doesn't
+  // reproduce the on-screen result.
+  function qiskitLineFor(axis,deg,phaseAtPress){
+    if(axis==='Z') return 'qc.s(0)';
+    // Canonical (world-frame-matching) whenever the dial itself reads 0 -- for BOTH X and
+    // Y, since driveAxis('Y') already bakes in a +90° offset (see driveAxis() above) that
+    // makes phase=0 line up with world Y too, not just world X. Checking the axis ANGLE
+    // (phase+90 for Y) against 0 instead of checking `phase` itself would wrongly treat
+    // phase=0 as non-canonical for Y -- this was a real bug caught by testing "Show a
+    // solution" (which resets the dial to 0 before replaying): it kept emitting the
+    // general R-gate fallback for every Y step instead of the friendly qc.y(0)/qc.ry(...).
+    const dialAt0=Math.abs(((phaseAtPress%360)+360)%360)<0.01;
+    if(dialAt0){
+      if(axis==='X') return deg===180?'qc.x(0)':'qc.sx(0)';
+      return deg===180?'qc.y(0)':'qc.ry(np.pi/2, 0)'; // no standard named √Y gate in Qiskit
+    }
+    // Non-canonical: report the true axis angle (phase, +90 for Y) the R-gate needs.
+    let phi=((phaseAtPress+(axis==='Y'?90:0))%360+360)%360;
+    if(phi>180) phi-=360;
+    const theta=deg===180?'np.pi':'np.pi/2';
+    const phiRad=(phi*Math.PI/180).toFixed(4);
+    return 'qc.r('+theta+', '+phiRad+', 0)  # phase '+Math.round(phi)+'°';
+  }
+  function renderCircuit(){
+    const header='from qiskit import QuantumCircuit\nimport numpy as np\n\nqc = QuantumCircuit(1)';
+    const body=circuitLines.length?'\n'+circuitLines.join('\n'):'\n# no strokes yet';
+    document.getElementById('circuit-code').textContent=header+body;
+  }
+  window.copyCircuit=function(){
+    const text=document.getElementById('circuit-code').textContent;
+    navigator.clipboard.writeText(text).then(()=>{
+      const b=document.getElementById('btn-copy-circuit');
+      const orig=b.textContent;
+      b.textContent='Copied!';
+      setTimeout(()=>{ b.textContent=orig; },1200);
+    }).catch(()=>{}); // clipboard access denied/unsupported -- not actionable, fail quietly
+  };
+
   // apply one gate to the live state: record history (for undo), kick off the animated
   // tween to the new orientation, and update the move counter/HUD immediately (the
   // animation is purely visual — `state` is already the post-gate value)
@@ -446,10 +505,12 @@
     if(solved||anim) return;
     const{ax,deg:dg}=gateAxisAngle([axis,deg]);
     history.push(state.slice());
+    circuitLines.push(qiskitLineFor(axis,deg,phase));
     const to=rotAxisV(state,ax,dg);
     anim={from:state.slice(),ax:ax.slice(),deg:dg,t:0,dur:Math.max(0.35,Math.abs(dg)/180*0.6)};
     state=to;
     moves++;
+    renderCircuit();
     updateHUD();
   }
   window.pulse=function(a,d){
@@ -458,8 +519,10 @@
   window.undo=function(){
     if(solved||anim||!history.length) return;
     state=history.pop();
+    circuitLines.pop();
     moves=Math.max(0,moves-1);
     hideWin();
+    renderCircuit();
     updateHUD();
   };
 
