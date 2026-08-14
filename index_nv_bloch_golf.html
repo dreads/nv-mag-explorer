@@ -59,9 +59,7 @@
   <h1>NV Single Qubit Explorer — <span class="q">Bloch Golf</span></h1>
   <p class="sub">Bloch golf turns the ground-state Bloch sphere into a gate-navigation game — driver,
     iron, and putter swings rotate the spin toward a randomly placed target in as few strokes as par
-    allows. Drag the sphere to look around; only the club buttons below move the spin. Each hole has
-    its own terrain (a fixed, disclosed resonance offset) and wind (a fixed, disclosed intensity, but
-    not the exact swing-to-swing gust) — driver feels both most, putter neither.</p>
+    allows. Drag the sphere to look around; only the club buttons below move the spin.</p>
   <p class="sr-only">Bloch golf on the diamond NV center, with the surrounding carbon lattice restored
     around the Bloch sphere and a show/hide diamond lattice toggle. A vague grey player figure stands
     at the sphere's center, facing along the drive axis as it rotates with the phase dial. The golf
@@ -104,10 +102,6 @@
           <span style="font-size:12px; color:var(--text-muted);">strokes</span>
           <span id="fid-v" style="font-size:12px; color:var(--text-secondary); margin-left:auto;">match 0%</span>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-secondary); margin-top:8px; padding-top:8px; border-top:0.5px solid var(--border);">
-          <span title="Fixed for this hole, like a green's slope — a resonance offset from the local field. Compensate by adding it to the drive phase before a driver/iron swing. Putter is unaffected.">Terrain <span id="terrain-v" style="color:var(--text-accent);">–</span></span>
-          <span title="Fixed forecast for this hole, but the exact per-swing gust isn't shown in advance — driver feels it most, iron less, putter not at all.">Wind <span id="wind-v" style="color:var(--text-accent);">–</span></span>
-        </div>
         <p id="golf-status" class="sr-only" aria-live="polite"></p>
       </div>
 
@@ -122,19 +116,19 @@
 
       <div style="background:var(--surface-2); border-radius:12px; border:0.5px solid var(--border); padding:12px 14px;">
         <div style="font-size:13px; font-weight:500; margin-bottom:8px;">Clubs</div>
-        <div style="font-size:10.5px; font-weight:600; color:var(--text-muted); letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px;" title="Biggest single move (180°). Microwave-driven, so exposed to terrain and wind — least forgiving of a gust.">Driver</div>
+        <div style="font-size:10.5px; font-weight:600; color:var(--text-muted); letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px;" title="Biggest single move (180°), aimed by the drive phase.">Driver</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
           <button id="bXpi"  onclick="pulse('X',180)">X · π</button>
           <button id="bYpi"  onclick="pulse('Y',180)">Y · π</button>
         </div>
-        <div style="font-size:10.5px; font-weight:600; color:var(--text-muted); letter-spacing:.5px; text-transform:uppercase; margin:12px 0 6px;" title="Standard, precise swing (90°). Microwave-driven, so exposed to terrain and wind, less than driver.">Iron</div>
+        <div style="font-size:10.5px; font-weight:600; color:var(--text-muted); letter-spacing:.5px; text-transform:uppercase; margin:12px 0 6px;" title="Standard, precise swing (90°), aimed by the drive phase.">Iron</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
           <button id="bXhpi" onclick="pulse('X',90)">X · π/2</button>
           <button id="bYhpi" onclick="pulse('Y',90)">Y · π/2</button>
         </div>
-        <div style="font-size:10.5px; font-weight:600; color:var(--text-muted); letter-spacing:.5px; text-transform:uppercase; margin:12px 0 6px;" title="The true bond-axis gate — always lined up the same way, no aiming needed. Immune to terrain and wind.">Putter</div>
+        <div style="font-size:10.5px; font-weight:600; color:var(--text-muted); letter-spacing:.5px; text-transform:uppercase; margin:12px 0 6px;" title="The true bond-axis gate — always lined up the same way, no aiming needed.">Putter</div>
         <div>
-          <button onclick="pulse('Z',90)" title="Quarter turn (90°) around the Z axis — the spin precesses about the N–V bond. Unaffected by drive phase, terrain, or wind." style="width:100%;">Z · π/2</button>
+          <button onclick="pulse('Z',90)" title="Quarter turn (90°) around the Z axis — the spin precesses about the N–V bond. Unaffected by drive phase." style="width:100%;">Z · π/2</button>
         </div>
       </div>
 
@@ -162,17 +156,10 @@
 
 <footer>
   <b style="color:var(--text-secondary)">Physics.</b> Same NV ground-state Bloch sphere as the Rabi and
-  Ramsey pages: X/Y pulses (driver/iron) turn about the microwave drive frame (set by the phase
-  dial), Z (putter) turns about the true N–V bond axis, unaffected by phase. Par is a breadth-first
-  search over those same five gates at their exact canonical angles, not a measured quantity, and
-  "Show a solution" always replays an exact version of that search regardless of the two effects
-  below — it's the guaranteed way out of any hole. No T₂*/dephasing is modeled on this page; terrain
-  and wind are two different, real error sources instead. Terrain is a fixed per-hole resonance
-  offset (the same Zeeman/detuning physics as the Rabi and Ramsey pages) — disclosed exactly, and
-  exactly compensable by dialing it into the phase. Wind is a fixed per-hole intensity budget for
-  random shot-to-shot microwave phase/amplitude jitter — the budget is disclosed, a given swing's
-  actual gust is not. Both apply only to driver/iron; putter is immune to each, by the same
-  phase-independence that already makes it immune to the phase dial.
+  Ramsey pages, but nothing here is driven continuously or measured with noise — every move is an
+  exact rotation: X/Y pulses (driver/iron) turn about the microwave drive frame (set by the phase
+  dial), Z (putter) turns about the true N–V bond axis. Par is a breadth-first search over those
+  same five gates, not a measured quantity. No T₂*/dephasing is modeled on this page.
 </footer>
 </div>
 
@@ -336,53 +323,21 @@
 
   // the microwave drive's X/Y axes live in the equatorial plane and rotate together
   // as the phase dial turns; Z is always the true NV bond axis, unaffected by phase
-  // (or by terrain/wind below -- it never goes through driveAxis at all)
   let phase=0;
-  // fixed per-hole resonance offset (issue #16's "terrain") and per-hole wind budget,
-  // both rolled fresh in newHoleImpl(); see gateAxisAngle()/applyGate() for how they're
-  // actually applied
-  let terrainOffset=0, windMagnitude=0;
-  // `jitterDeg` is only ever nonzero for a live, noise-subject shot (see gateAxisAngle) --
-  // the persistent drive-axis line drawn in render() calls driveAxis() with no jitter, so
-  // it always shows the *aimed* direction, not a particular shot's luck
-  function driveAxis(which,jitterDeg){
-    const ang=(phase+terrainOffset+(jitterDeg||0)+(which==='Y'?90:0))*Math.PI/180;
+  function driveAxis(which){
+    const ang=(phase+(which==='Y'?90:0))*Math.PI/180;
     return[Math.cos(ang),Math.sin(ang),0];
   }
-  // pure world X/Y, matching what rotP0()/solve() assume -- unaffected by the live phase
-  // dial, terrainOffset, or wind, unlike driveAxis()
-  function canonicalAxis(which){
-    return which==='Y'?[0,1,0]:[1,0,0];
-  }
-  // `ignoreNoise` is set only by playSolution() (see applyGate) -- "Show a solution" is
-  // this game's guaranteed-recovery escape hatch (see newHoleImpl()'s solve() call and
-  // giveUp()'s reset-and-resolve fallback), so its replayed shots must use the exact
-  // canonical axes solve() searched over, regardless of the live phase dial, terrain, or
-  // wind -- otherwise the guarantee wouldn't be real
-  function gateAxisAngle(g,ignoreNoise){
+  function gateAxisAngle(g){
     if(g[0]==='Z') return{ax:[0,0,1],deg:g[1]};
-    if(ignoreNoise) return{ax:canonicalAxis(g[0]),deg:g[1]};
-    const club=clubFor(g[0],g[1]);
-    const jitter=(Math.random()*2-1)*windMagnitude*(club?club.windFactor:1);
-    return{ax:driveAxis(g[0],jitter),deg:g[1]};
+    return{ax:driveAxis(g[0]),deg:g[1]};
   }
   // the five gates available to the player: X/Y at 180°/90° (phase-dependent axis),
-  // and a fixed Z·90°
+  // and a fixed Z·90°. Issue #14: driver/iron/putter (see the "Clubs" panel + tooltips
+  // below) is a relabeling of these same 5 gates, not a 6th/7th gate or a new mechanic.
+  // (A terrain/wind noise layer keyed off the club families was tried and reverted after
+  // playtesting -- see CLAUDE.md.)
   const GATES=[['X',180],['X',90],['Y',180],['Y',90],['Z',90]];
-  // issue #14: club identity for the same 5 gates, not a 6th/7th gate -- driver and iron
-  // are microwave (resonance)-driven, so they're the ones exposed to terrain/wind below;
-  // putter is the true-bond-axis gate, already phase-independent, so it's naturally
-  // noise-immune too (windFactor 0) -- real stakes per club without touching GATES,
-  // solve(), or par at all. windFactor scales the shared per-shot jitter budget
-  // (windMagnitude): driver swings hardest, so it's least forgiving of a gust.
-  const CLUBS=[
-    {name:'Driver',gates:[['X',180],['Y',180]],windFactor:1.5},
-    {name:'Iron',gates:[['X',90],['Y',90]],windFactor:1},
-    {name:'Putter',gates:[['Z',90]],windFactor:0},
-  ];
-  function clubFor(axis,deg){
-    return CLUBS.find(c=>c.gates.some(g=>g[0]===axis&&g[1]===deg));
-  }
 
   let state=[0,0,1];
   let target=[0,0,1];
@@ -446,27 +401,10 @@
     target=v; state=[0,0,1]; history=[]; moves=0; solved=false; anim=null;
     const sol=solve([0,0,1],target);
     par=sol?sol.length:n;
-    // issue #16: terrainOffset is fixed and disclosed (the player can read it and
-    // compensate exactly, like reading a green's slope); windMagnitude is also fixed and
-    // disclosed as an intensity label, but the actual per-shot jitter it bounds (see
-    // gateAxisAngle) is redrawn randomly on every driver/iron swing, not shown in
-    // advance -- known forecast, unknown gust. Neither is used by solve() above, so par
-    // and "Show a solution" stay exact regardless of either value.
-    terrainOffset=Math.round((Math.random()*2-1)*20);
-    windMagnitude=Math.round(Math.random()*12);
     document.getElementById('hole-n').textContent=hole;
     document.getElementById('par-v').textContent=par;
-    document.getElementById('terrain-v').textContent=(terrainOffset>=0?'+':'')+terrainOffset+'°';
-    document.getElementById('wind-v').textContent=windLabel(windMagnitude);
     hideWin();
     updateHUD();
-  }
-  // a qualitative read of the per-hole wind budget -- the number itself (the jitter cap
-  // in degrees) is deliberately not shown; only the forecast label is
-  function windLabel(mag){
-    if(mag<3) return 'Calm';
-    if(mag<7) return 'Breezy';
-    return 'Gusty';
   }
   window.newHole=function(){
     hole++;
@@ -502,9 +440,9 @@
   // apply one gate to the live state: record history (for undo), kick off the animated
   // tween to the new orientation, and update the move counter/HUD immediately (the
   // animation is purely visual — `state` is already the post-gate value)
-  function applyGate(axis,deg,ignoreNoise){
+  function applyGate(axis,deg){
     if(solved||anim) return;
-    const{ax,deg:dg}=gateAxisAngle([axis,deg],ignoreNoise);
+    const{ax,deg:dg}=gateAxisAngle([axis,deg]);
     history.push(state.slice());
     const to=rotAxisV(state,ax,dg);
     anim={from:state.slice(),ax:ax.slice(),deg:dg,t:0,dur:Math.max(0.35,Math.abs(dg)/180*0.6)};
@@ -554,14 +492,13 @@
     playSolution(sol);
   };
   // step through a solved gate sequence one move at a time, pacing each pulse by its
-  // own animation duration. ignoreNoise=true: see gateAxisAngle()'s comment -- this is
-  // the guaranteed-recovery path and must not be subject to terrain/wind itself.
+  // own animation duration
   function playSolution(seq){
     let i=0;
     function next(){
       if(i>=seq.length) return;
       const g=seq[i++];
-      applyGate(g[0],g[1],true);
+      applyGate(g[0],g[1]);
       setTimeout(next,420+g[1]/180*300);
     }
     next();
@@ -580,7 +517,7 @@
   function updateHUD(){
     document.getElementById('moves-v').textContent=moves;
     document.getElementById('fid-v').textContent='match '+Math.round(fidelity()*100)+'%';
-    document.getElementById('golf-status').textContent='Hole '+hole+', par '+par+'. '+moves+' stroke'+(moves===1?'':'s')+'. Match '+Math.round(fidelity()*100)+'%. Terrain '+(terrainOffset>=0?'+':'')+terrainOffset+' degrees, wind '+windLabel(windMagnitude)+'.';
+    document.getElementById('golf-status').textContent='Hole '+hole+', par '+par+'. '+moves+' stroke'+(moves===1?'':'s')+'. Match '+Math.round(fidelity()*100)+'%.';
   }
   function renderScorecard(){
     const total=scores.reduce((a,s)=>a+s.moves,0);
