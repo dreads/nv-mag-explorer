@@ -93,7 +93,7 @@
       </div>
     </div>
 
-    <div style="flex:0 1 240px; min-width:210px; display:flex; flex-direction:column; gap:12px;">
+    <div id="golf-sidebar" style="flex:0 1 240px; min-width:210px; display:flex; flex-direction:column; gap:12px;">
 
       <div style="background:var(--surface-2); border-radius:12px; border:0.5px solid var(--border); padding:12px 14px;">
         <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
@@ -181,10 +181,23 @@
   const canvas=document.getElementById('stage');
   const ctx=canvas.getContext('2d');
   let W,H,DPR;
+  // the sidebar (Hole/Drive phase/Clubs/Undo panels) is naturally taller than the
+  // canvas's 440px fallback height once all four of its panels stack up, which used to
+  // leave a dead gap of empty page below the canvas -- match the canvas to the sidebar's
+  // actual height instead, but only when they're genuinely side by side (same top
+  // offset); once the layout wraps to a narrow/stacked viewport there's no sidebar height
+  // to match against, so fall back to the static 440px from the inline style.
+  function syncCanvasHeight(){
+    const sidebar=document.getElementById('golf-sidebar');
+    if(!sidebar) return;
+    const sideBySide=Math.abs(canvas.getBoundingClientRect().top-sidebar.getBoundingClientRect().top)<2;
+    canvas.style.height=sideBySide?sidebar.getBoundingClientRect().height+'px':'440px';
+  }
   // size the backing bitmap for the canvas's actual CSS size × device pixel ratio,
   // so the drawing stays crisp on high-DPI screens
   function resize(){
     DPR=window.devicePixelRatio||1;
+    syncCanvasHeight();
     W=canvas.clientWidth;
     H=canvas.clientHeight;
     canvas.width=W*DPR;
@@ -259,7 +272,13 @@
     let x1=x*cy-z*sy,z1=x*sy+z*cy,y1=y;
     let cx=Math.cos(rotX),sx=Math.sin(rotX);
     let y2=y1*cx-z1*sx,z2=y1*sx+z1*cx,x2=x1;
-    const s=150*zoom;
+    // scale off the smaller of W/H (not a flat 150px) so the scene actually fills a
+    // taller canvas -- syncCanvasHeight() above can now make the canvas noticeably
+    // taller than its 440px fallback, and a fixed pixel scale would've just left the
+    // sphere small in the middle of the extra space instead of growing into it. 0.34
+    // matches this constant's old fixed-150px look at the previous default 440px height
+    // (150/440 ≈ 0.34), so today's default view is unchanged, only the taller case grows.
+    const s=Math.min(W,H)*0.34*zoom;
     return{x:W/2+x2*s,y:H/2-y2*s,z:z2};
   }
 

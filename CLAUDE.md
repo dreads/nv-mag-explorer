@@ -201,6 +201,22 @@ reproduced under both legacy and `headless:'new'` launch modes) — a known auto
 limitation, not a sign the button is broken; verify this one by hand in a real browser
 rather than trusting a headless script's clipboard read-back.
 
+**Canvas height now matches the sidebar, not a fixed 440px.** The `#stage` canvas used to
+have a flat `height:440px`, but the sidebar column (Hole/Drive phase/Clubs/Undo panels)
+naturally runs taller than that once all four panels stack up — this left a dead gap of
+empty page below the canvas on any normal desktop viewport (`doc/design/spheregap.png` is
+the reference screenshot flagging it). `syncCanvasHeight()` (called from `resize()`, which
+already runs on load and on window resize) measures `#golf-sidebar`'s actual rendered
+height and applies it to the canvas *only* when the two columns are still genuinely side
+by side (same `getBoundingClientRect().top`); once the layout wraps to a narrow viewport
+it falls back to the static 440px, since there's no sidebar height to match against
+anymore. `project()`'s scale factor changed from a flat `150*zoom` to
+`Math.min(W,H)*0.34*zoom` to match — a fixed pixel scale would've just left the sphere
+small in the middle of the newly-available space instead of actually growing into it; 0.34
+was picked to reproduce the old fixed-150px look at the old default 440px height
+(150/440 ≈ 0.34), so the default (unwrapped, no-resize) view is visually unchanged, only
+the previously-dead space now fills with a proportionally bigger scene.
+
 **Issue #16 (terrain/wind noise) was implemented and then reverted, on this same pass.**
 A fixed per-hole `terrainOffset` (disclosed exactly) and `windMagnitude` (disclosed as a
 Calm/Breezy/Gusty label, exact per-swing jitter hidden) fed into `driveAxis()`, affecting
