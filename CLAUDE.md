@@ -97,7 +97,7 @@ doc/bloch_rabi.jpg, doc/bloch_ramsey.jpg     reference screenshots only — not 
 doc/bloch_golf.jpg                      spotlight image for the golf catalog entry AND src/catalog.js's DEFAULT_SPOTLIGHT (the hero panel's no-hover/no-focus default) — captured via `npm run screenshot -- <url> <out> --selector=#id`
 doc/media/bloch-sweep.mp4               Rabi catalog entry's spotlight video — captured live from index_rabi.html, not a rendered mockup; shown only when the Rabi card is hovered/focused, not by default
 doc/media/ramsey.mp4                    Ramsey catalog entry's spotlight video — remuxed from a supplied doc/media/ramsey.mov (already H.264, so a container-only conversion via ffmpeg, no re-encode); same hover/focus-only visibility as bloch-sweep.mp4
-doc/design/                             non-code MagNav story/verification research; doesn't affect the app
+doc/design/                              mostly non-code MagNav story/verification research that doesn't affect the app, but also holds a couple of UI mockups that directly did: vector_indicator.png and aggregator.jpg were reference sketches for Bloch golf's travel-direction arcs and Qiskit circuit panel respectively — check a given file's actual use before assuming everything here is inert
 ```
 
 ## Architecture
@@ -111,6 +111,14 @@ golf), a handful of draw functions called every `requestAnimationFrame` tick aga
 or more `<canvas>` elements, and drag/slider/button event wiring at the bottom. There is
 no build step and nothing here is an ES module — everything lives in one `<script>` tag
 per file.
+
+**Issue #28**: each of the three now opens with a slim `.back-nav` link
+(`← Explore the visualizers`, styled small/muted with each page's own existing color
+tokens) as the first element inside `.wrap`, before `<header>` — the only way back to
+`index.html` from a visualizer page before this was the browser's own back button. Added
+independently to each page (same markup/CSS pattern copied three times), consistent with
+these three files having no shared module. The existing `<h1>`/description text on each
+page was deliberately left alone — it's real explanatory content, not filler to trim.
 
 **index_rabi.html** — five canvases (`bench`, `rabi`, `bloch`, `levels`, `odmr`):
 - `fieldAtDistance(d)` — `S.polarity * S.sens * B_COEFF / (d*d*d)`, the dipole field
@@ -158,6 +166,56 @@ Two deepenings of the golf analogy landed later (GitHub issues #14/#15), without
   proper limb/mesh system. Only its arm+club line rotates, toward the same projected
   `driveAxis('X')` point the pink drive-axis line is drawn from, so it visibly re-aims
   exactly when that line does.
+- **Travel-direction arcs** (also #15/#14 follow-up, per `doc/design/vector_indicator.png`):
+  `drawTravelArc(axis)`, called once each for X, Y, and Z, draws a short curved arrow at
+  the ball tangent to the great-circle path that axis's gate would carry it along —
+  computed as `axis × ball position`, sampled with the existing `rotAxisV()` and the same
+  `frameToWorld()`/`project()` pipeline everything else uses. Each arc hides itself when
+  the cross product is ~0 (ball sits on that axis, so the gate would be a no-op from
+  there) — generalized to all three axes, not special-cased for Z even though Z-at-a-pole
+  (holes start there) is the case that comes up most.
+
+**Issue #10 (Qiskit circuit aggregator)**: a panel below the canvas+sidebar row (matching
+`doc/design/aggregator.jpg`'s marked location) shows a live-updating, copy-pasteable Qiskit
+circuit — `qiskitLineFor(axis, deg, phaseAtPress)` maps one stroke to one gate-call line,
+pushed into a `circuitLines` array from inside `applyGate()` itself (the single choke point
+both manual clicks and `playSolution()`'s "Show a solution" autoplay already go through, so
+the solving sequence appearing in the circuit is free — no special-casing needed) and popped
+in `undo()`, reset in `newHoleImpl()`. `renderCircuit()` rebuilds the `<pre>` from
+`circuitLines` after each of those three. Gate mapping: `Z` is always `qc.s(0)` (matches the
+game's own phase-independent treatment of the putter's Z gate); `X`/`Y` use the friendly
+named gate (`qc.x`/`qc.sx`/`qc.y`/`qc.ry(np.pi/2, ...)` — no standard named √Y gate in
+Qiskit, hence `ry`) **only when the phase dial itself reads 0**, since that's the one
+reading where `driveAxis()`'s constructed axis matches the world-frame `X`/`Y` `solve()`/
+`rotP0()` assume (`driveAxis('Y')` bakes in a +90° offset already, so checking the axis
+*angle* against 0 instead of checking `phase` itself is the wrong condition for Y — this was
+a real bug caught by testing "Show a solution," which resets the dial to 0 before replaying
+and kept getting the general-gate fallback for every Y step until the phase-based check
+replaced the axis-angle-based one). Any other phase reading falls back to Qiskit's general
+`qc.r(theta, phi, 0)` gate (rotation by `theta` about `cos(phi)X + sin(phi)Y`) with the true
+axis angle, so the exported circuit stays correct rather than silently wrong whenever the
+dial was actually turned. Copy button uses `navigator.clipboard.writeText()` with a
+silent-catch fallback (no UI for unsupported browsers) — note for future testing: headless
+Chrome via CDP denies clipboard writes even after `overridePermissions` (`NotAllowedError`,
+reproduced under both legacy and `headless:'new'` launch modes) — a known automation
+limitation, not a sign the button is broken; verify this one by hand in a real browser
+rather than trusting a headless script's clipboard read-back.
+
+**Canvas height now matches the sidebar, not a fixed 440px.** The `#stage` canvas used to
+have a flat `height:440px`, but the sidebar column (Hole/Drive phase/Clubs/Undo panels)
+naturally runs taller than that once all four panels stack up — this left a dead gap of
+empty page below the canvas on any normal desktop viewport (`doc/design/spheregap.png` is
+the reference screenshot flagging it). `syncCanvasHeight()` (called from `resize()`, which
+already runs on load and on window resize) measures `#golf-sidebar`'s actual rendered
+height and applies it to the canvas *only* when the two columns are still genuinely side
+by side (same `getBoundingClientRect().top`); once the layout wraps to a narrow viewport
+it falls back to the static 440px, since there's no sidebar height to match against
+anymore. `project()`'s scale factor changed from a flat `150*zoom` to
+`Math.min(W,H)*0.34*zoom` to match — a fixed pixel scale would've just left the sphere
+small in the middle of the newly-available space instead of actually growing into it; 0.34
+was picked to reproduce the old fixed-150px look at the old default 440px height
+(150/440 ≈ 0.34), so the default (unwrapped, no-resize) view is visually unchanged, only
+the previously-dead space now fills with a proportionally bigger scene.
 
 **Issue #16 (terrain/wind noise) was implemented and then reverted, on this same pass.**
 A fixed per-hole `terrainOffset` (disclosed exactly) and `windMagnitude` (disclosed as a
