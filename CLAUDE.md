@@ -276,6 +276,22 @@ need to wait for it — see "Accessibility" above for the exact baseline to matc
 
 ## Code conventions
 
+- **Readability is a standing requirement, not a one-time cleanup pass — applies repo-wide,
+  not just JavaScript.** One statement per line (no dense `;`-chained one-liners), and a
+  comment on anything non-obvious (a physics formula, a canvas-drawing step, a coordinate
+  transform, a workaround). This applies to every language in this repo: the JS in
+  `index.html`/`src/*.js` and in the three visualizer pages, the Python in `verify/`, CSS,
+  build/lint scripts — all of it. Issue #17 brought `index_rabi.html`, `index_ramsey.html`,
+  and `index_nv_bloch_golf.html` up to this bar once already (see git history around
+  2026-08-12, commit "Add accessibility baseline to Rabi/Ramsey and reformat all three
+  visualizer scripts") specifically because their embedded `<script>` blocks had drifted
+  into unreadable chained-statement canvas code. Don't let new code — including new
+  canvas-drawing blocks added to those same three files — drift back into that style; write
+  it readable the first time instead of leaving it for a future cleanup pass. This rule
+  does not conflict with those three pages' other documented constraints (no modules, no
+  external dependencies, deliberate per-page duplication of shared formulas) — readability
+  is about formatting and comments, not architecture.
+
 - `index.html`'s stack: vanilla ES modules, no transpilation, Node's built-in `assert` for
   tests (`node --test`), no framework — same as bell-state-explorer.
 - `index_rabi.html`/`index_ramsey.html`/`index_nv_bloch_golf.html`: no modules, no

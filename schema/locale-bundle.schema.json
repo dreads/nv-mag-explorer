@@ -36,6 +36,10 @@
         "targetsVersion": {
           "type": "string",
           "description": "Which locales/en.js STRINGS_VERSION this bundle was written against. Informational — used to flag a bundle as possibly stale, never to reject it."
+        },
+        "translationStatus": {
+          "enum": ["machine", "human"],
+          "description": "Optional provenance marker set by scripts/translate-locale.mjs: \"machine\" means some or all of this bundle's strings were machine-translated and not yet reviewed by a fluent speaker (see issue #4's verification step). Absent means human-quality by convention, the status quo for every hand-contributed bundle before this field existed — a verifier should remove this field (or set it to \"human\") once they've checked the content."
         }
       }
     },
