@@ -59,83 +59,24 @@
             "heading": { "type": "string" },
             "subtitle": { "type": "string" },
             "navHeading": { "type": "string" },
-            "navRabiLabel": { "type": "string" },
-            "navRabiNote": { "type": "string" },
-            "navDesignLabel": { "type": "string" },
-            "navDesignNote": { "type": "string" },
-            "navGolfLabel": { "type": "string" },
-            "navGolfNote": { "type": "string" }
+            "toolboxCaption": { "type": "string" }
           }
         },
-        "hero": {
+        "catalog": {
           "type": "object",
+          "description": "One entry per src/catalog.js visualizer, keyed by that entry's id (e.g. \"rabi\"). patternProperties instead of an enumerated list per id, so a new visualizer never needs a schema edit here -- see src/catalog.js and CLAUDE.md's Visualizer catalog section.",
           "additionalProperties": false,
-          "properties": {
-            "blochCaption": { "type": "string" }
-          }
-        },
-        "purpose": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "heading": { "type": "string" },
-            "body": { "type": "string" }
-          }
-        },
-        "rabiProblem": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "heading": { "type": "string" },
-            "body": { "type": "string" }
-          }
-        },
-        "ramseyPayoff": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "heading": { "type": "string" },
-            "body": { "type": "string" }
-          }
-        },
-        "coherenceBudget": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "heading": { "type": "string" },
-            "body": { "type": "string" }
-          }
-        },
-        "golfIntro": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "heading": { "type": "string" },
-            "body": { "type": "string" }
-          }
-        },
-        "diagram": {
-          "type": "object",
-          "description": "Static markup for the aria-hidden Rabi-vs-Ramsey timeline SVG plus its sr-only prose equivalent.",
-          "additionalProperties": false,
-          "properties": {
-            "heading": { "type": "string" },
-            "rabiCaption": { "type": "string" },
-            "rabiOnLabel": { "type": "string" },
-            "ramseyCaption": { "type": "string" },
-            "ramseyPulseLabel": { "type": "string" },
-            "ramseyWaitLabel": { "type": "string" },
-            "rabiLinkLabel": { "type": "string" },
-            "ramseyLinkLabel": { "type": "string" },
-            "srDescription": { "type": "string" }
-          }
-        },
-        "footer": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "physicsNote": { "type": "string" },
-            "companionNote": { "type": "string" }
+          "patternProperties": {
+            "^[a-z][a-z0-9_-]*$": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "label": { "type": "string" },
+                "note": { "type": "string" },
+                "detail": { "type": "string" },
+                "spotlightCaption": { "type": "string" }
+              }
+            }
           }
         }
       }

@@ -36,6 +36,13 @@ and lost at least twice before — see CLAUDE.md's Known duplication/history not
    `--wait=N` (ms, default 400) pads after `networkidle0` before capturing — bump it for
    pages with a settle-in animation (Bloch golf's lattice/sphere, the Rabi/Ramsey canvases'
    `requestAnimationFrame` loops benefit from ~800ms).
+   `--selector=#id` crops to one element instead of the full viewport — this is how
+   `doc/bloch_golf.jpg` (the golf catalog entry's hero-spotlight image, also
+   `src/catalog.js`'s `DEFAULT_SPOTLIGHT`) was captured, e.g.
+   `npm run screenshot -- http://localhost:8000/index_nv_bloch_golf.html doc/bloch_golf.jpg --selector=#stage --wait=900`.
+   Rabi's and Ramsey's spotlights are short video clips instead
+   (`doc/media/bloch-sweep.mp4`/`doc/media/ramsey.mp4`), not screenshots — see CLAUDE.md's
+   file structure table.
 3. **Read the screenshot** (the `Read` tool displays PNGs directly) — a written file is not
    proof of a correct render, look at it.
 4. Stop the server: `lsof -ti:8000 -sTCP:LISTEN | xargs -r kill`

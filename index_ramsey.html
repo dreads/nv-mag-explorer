@@ -249,7 +249,9 @@
     <b style="color:var(--ink-dim)">Physics.</b> Ramsey readout <code>P(|0⟩)=½(1+cos(δτ))·e^(−τ/T₂*)</code>; accumulated phase <code>φ=δτ</code>.
     Detuning <code>δ = 2π·(f_drive − f₊)</code>, with Zeeman resonance <code>f₊ = 2.87 GHz + γB</code>, <code>γ≈28 MHz/mT</code>.
     Equivalent circuit: <code>|0⟩ – RY(π/2) – [free phase δτ] – RY(π/2) – measure</code>. Closed-form, computed client-side, no server.
-    The coherent evolution is exact; T₂* dephasing is the one open-system effect, added as the fringe envelope.
+    The coherent evolution is exact; T₂* dephasing is the one open-system effect, added as the fringe envelope —
+    the same coherence-for-signal trade bell-state-explorer's dephasing slider makes visible on a two-qubit
+    density matrix, there damping off-diagonal coherences by a factor of <code>(1 − p)</code>.
     <br><span style="color:var(--ink-faint)">Terrain height is an illustrative stand-in for crustal field magnitude; the spin physics is faithful to the two-level NV model.</span>
   </footer>
 </div>

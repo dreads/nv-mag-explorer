@@ -15,51 +15,23 @@
       "skipLink": "Saltar al contenido",
       "heading": "Por qué la interferometría de Ramsey",
       "subtitle": "El visualizador Rabi muestra la brusca oscilación cuántica de un magnetómetro. Un dispositivo real no lee esa oscilación directamente: ejecuta una secuencia de dos pulsos más inteligente llamada interferometría de Ramsey. Esta página explica por qué y cómo el mismo presupuesto de coherencia que limita el enredo en Bell-State-Explorer también limita esta medición.",
-      "navHeading": "Explora los visualizadores",
-      "navRabiLabel": "Visualizador Rabi & Zeeman",
-      "navRabiNote": "La oscilación impulsada continuamente.",
-      "navDesignLabel": "visualizador de ramsey",
-      "navDesignNote": "En diseño: línea de tiempo de secuencia de pulsos, diagrama de franjas y esfera de Bloch de acumulación de fases.",
-      "navGolfLabel": "golf",
-      "navGolfNote": "Un rompecabezas de navegación de puerta NV Single Qubit."
+      "navHeading": "Explora los visualizadores"
     },
-    "hero": {
-      "blochCaption": "El vector Bloch precediendo mientras el imán realiza un barrido automático en todo su rango: capturado en vivo desde el visualizador Rabi, no una maqueta renderizada."
-    },
-    "purpose": {
-      "heading": "Una mesa de laboratorio, no una demostración de navegación",
-      "body": "Una vista de las oscilaciones de Rabi, la acumulación de fases y la visibilidad marginal. Aquí arrastras una variable y observas cómo toda la imagen en el dominio del tiempo (la oscilación, el vector de Bloch, el patrón de franjas) responde continuamente."
-    },
-    "rabiProblem": {
-      "heading": "El problema de leer a Rabi directamente",
-      "body": "Quite el microondas de la resonancia en el visualizador Rabi y suceden dos cosas a la vez: la oscilación se acelera, ya que la frecuencia efectiva de Rabi es Ω = √(Ω₀² + δ²), y su amplitud se reduce, ya que la probabilidad de inversión escala con Ω₀²/Ω². Ambas firmas se mueven juntas, impulsadas por la misma desafinación δ que estás intentando medir. Ajuste una curva de Rabi para recuperar el campo y extraerá un número, δ, de una forma que también depende de la fuerza del impulso Ω₀: una excelente manera de explorar la física, una forma torpe de construir un instrumento."
-    },
-    "ramseyPayoff": {
-      "heading": "Lo que te compra Ramsey",
-      "body": "La interferometría de Ramsey divide la oscilación en tres pasos claros: un pulso corto de π/2 inclina el giro hacia el ecuador, luego el microondas se apaga por completo para una ventana de evolución libre τ, y un segundo pulso de π/2 convierte lo que sucedió durante ese silencio nuevamente en una población que se puede leer."
-    },
-    "coherenceBudget": {
-      "heading": "El presupuesto de coherencia",
-      "body": "Esa lectura limpia no es gratuita. El control deslizante de desfase de Bell-State-Explorer hace visible el mismo intercambio en una matriz de densidad de dos qubits: amortiguar las coherencias fuera de la diagonal en un factor de (1 − p) deja a las poblaciones intactas, pero borra exactamente la información que hizo legibles las correlaciones del estado."
-    },
-    "golfIntro": {
-      "heading": "Un rompecabezas, no una medida",
-      "body": "Los pulsos X, Y y Z giran el giro hacia un objetivo colocado aleatoriamente en tan pocos golpes como lo permita el par. A diferencia de las otras dos páginas, aquí nada se conduce continuamente ni se mide con ruido: cada movimiento es una rotación exacta."
-    },
-    "diagram": {
-      "heading": "Conduzca líneas de tiempo, una al lado de la otra",
-      "rabiCaption": "Rabi: accionamiento continuo",
-      "rabiOnLabel": "sigue conduciendo, todo el tiempo",
-      "ramseyCaption": "Ramsey: pulso, espera, pulso",
-      "ramseyPulseLabel": "π/2",
-      "ramseyWaitLabel": "alejarse - evolución libre τ",
-      "rabiLinkLabel": "Abra el visualizador de Rabi →",
-      "ramseyLinkLabel": "Abra el visualizador de Ramsey →",
-      "srDescription": "Comparación de dos líneas de tiempo horizontales. La línea de tiempo de Rabi es una única barra ininterrumpida etiquetada como \"drive on\" en toda su longitud. La línea de tiempo de Ramsey tiene tres segmentos: un pulso corto etiquetado como pi sobre dos, un espacio mucho más largo etiquetado como drive off, evolución libre tau y un segundo pulso corto etiquetado como pi sobre dos."
-    },
-    "footer": {
-      "physicsNote": "Física: frecuencia Rabi generalizada Ω = √(Ω₀² + δ²); lectura de Ramsey P(τ) = ½(1 + cos δτ)·e^(−τ/T₂*); fase acumulada φ = δτ. División Zeeman del triplete NV del estado fundamental: f± = 2,87 GHz ± γB, γ ≈ 28 MHz/mT. Todo de forma cerrada, del lado del cliente computarizado, listo para GitHub Pages.",
-      "companionNote": "Los propios números del visualizador Rabi se basan en el pie de página de esa página; El marco de desfase/coherencia anterior sigue al explorador de matriz de densidad de Bell-State-Explorer."
+    "catalog": {
+      "rabi": {
+        "label": "Visualizador Rabi & Zeeman",
+        "note": "La oscilación impulsada continuamente.",
+        "detail": "Una vista de las oscilaciones de Rabi, la acumulación de fases y la visibilidad marginal. Aquí arrastras una variable y observas cómo toda la imagen en el dominio del tiempo (la oscilación, el vector de Bloch, el patrón de franjas) responde continuamente.",
+        "spotlightCaption": "El vector Bloch precediendo mientras el imán realiza un barrido automático en todo su rango: capturado en vivo desde el visualizador Rabi, no una maqueta renderizada."
+      },
+      "ramsey": {
+        "label": "visualizador de ramsey"
+      },
+      "golf": {
+        "label": "golf",
+        "note": "Un rompecabezas de navegación de puerta NV Single Qubit.",
+        "detail": "Los pulsos X, Y y Z giran el giro hacia un objetivo colocado aleatoriamente en tan pocos golpes como lo permita el par. A diferencia de las otras dos páginas, aquí nada se conduce continuamente ni se mide con ruido: cada movimiento es una rotación exacta."
+      }
     }
   }
 }

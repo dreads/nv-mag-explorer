@@ -144,6 +144,43 @@ while ((m = elementPattern.exec(html))) {
 }
 
 // ---------------------------------------------------------------------
+// 6. src/catalog.js: nav-card/spotlight/default-spotlight text moved out of
+//    static index.html into this data file (see issue #18's catalog
+//    refactor), so checks 1 and 5 above can no longer see it. Import the
+//    module directly (this script is already ESM) and re-run the same two
+//    checks against every text field it exports: each *Key must resolve in
+//    en.json, and en.json's value must match catalog.js's own literal
+//    exactly -- catalog.js is now the "static content is authoritative"
+//    source for this text, same invariant as check 5, just relocated.
+// ---------------------------------------------------------------------
+function checkCatalogText(sourceLabel, key, literal) {
+  const jsonValue = getPath(en.strings, key);
+  if (jsonValue === undefined) {
+    problems.push(`${sourceLabel}: key="${key}" does not resolve to any key in locales/en.json`);
+  } else if (jsonValue !== literal) {
+    problems.push(
+      `${sourceLabel}: text does not match locales/en.json's ${key} -- ` +
+      `catalog.js: ${JSON.stringify(literal)}  JSON: ${JSON.stringify(jsonValue)}. ` +
+      'src/catalog.js is authoritative here -- update locales/en.json to match it, not the other way around.'
+    );
+  }
+}
+
+const { CATALOG, DEFAULT_SPOTLIGHT } = await import(path.join(ROOT, 'src', 'catalog.js'));
+const CATALOG_TEXT_FIELDS = [
+  ['labelKey', 'label'],
+  ['noteKey', 'note'],
+  ['detailKey', 'detail'],
+];
+CATALOG.forEach((entry) => {
+  CATALOG_TEXT_FIELDS.forEach(([keyField, literalField]) => {
+    checkCatalogText(`src/catalog.js: entry "${entry.id}"'s ${literalField}`, entry[keyField], entry[literalField]);
+  });
+  checkCatalogText(`src/catalog.js: entry "${entry.id}"'s spotlight.caption`, entry.spotlight.captionKey, entry.spotlight.caption);
+});
+checkCatalogText('src/catalog.js: DEFAULT_SPOTLIGHT.caption', DEFAULT_SPOTLIGHT.captionKey, DEFAULT_SPOTLIGHT.caption);
+
+// ---------------------------------------------------------------------
 if (problems.length) {
   console.error(`i18n coverage check found ${problems.length} issue(s):\n`);
   problems.forEach((p) => console.error(`  - ${p}`));

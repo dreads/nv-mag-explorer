@@ -1,5 +1,6 @@
 import { translate } from './i18n.js';
 import { loadManifest, loadLocaleBundle, detectLocale } from './locale-loader.js';
+import { CATALOG, DEFAULT_SPOTLIGHT } from './catalog.js';
 
 const LOCALE_STORAGE_KEY = 'nv-mag-locale';
 
@@ -33,8 +34,164 @@ function ensureEnglish() {
 const dom = {};
 
 function query() {
-  ['locale-picker'].forEach((id) => {
+  ['locale-picker', 'catalog-cards', 'spotlight-video', 'spotlight-image', 'spotlight-caption'].forEach((id) => {
     dom[id] = document.getElementById(id);
+  });
+}
+
+// Mirrors locales/en.json's shape ({ catalog: { <id>: { label, note, detail,
+// spotlightCaption } }, ui: { toolboxCaption } }) but built synchronously
+// from src/catalog.js's own literals -- so catalog text (and the default
+// spotlight's caption) renders correctly the instant renderCatalog() runs,
+// with no dependency on en.json's fetch ever completing.
+const catalogFallback = { catalog: {}, ui: { toolboxCaption: DEFAULT_SPOTLIGHT.caption } };
+CATALOG.forEach((entry) => {
+  catalogFallback.catalog[entry.id] = {
+    label: entry.label,
+    note: entry.note,
+    detail: entry.detail,
+    spotlightCaption: entry.spotlight.caption,
+  };
+});
+
+/** Looks up `key` in the active locale, falling back to catalogFallback's English literal. */
+function catalogText(key) {
+  return translate(activeLocale ? activeLocale.strings : {}, catalogFallback, key);
+}
+
+function findCatalogEntry(id) {
+  return CATALOG.find((entry) => entry.id === id);
+}
+
+/**
+ * Builds one detail <p> (always a plain paragraph; the caller decides
+ * whether it's always-visible or lives inside a <details>).
+ */
+function buildDetailParagraph(entry) {
+  const detail = document.createElement('p');
+  detail.className = 'note-detail';
+  detail.dataset.i18n = entry.detailKey;
+  detail.textContent = catalogText(entry.detailKey);
+  return detail;
+}
+
+/**
+ * Builds one .card per CATALOG entry into #catalog-cards. Each generated
+ * element gets a data-i18n attribute too, so the existing applyLocale()
+ * sweep (which walks every [data-i18n] element in the document) picks these
+ * up on every locale switch with no changes needed there.
+ *
+ * Entries with `glossaryNote: true` render their note/detail as a
+ * <details><summary> disclosure instead of an always-visible <span>+<p> --
+ * native keyboard/AT semantics for free (Enter/Space on the focused summary
+ * toggles it, screen readers announce expanded/collapsed), with hover-to-open
+ * layered on top in wireSpotlight() below for mouse users. See
+ * src/catalog.js's top comment for the field.
+ */
+function renderCatalog() {
+  const mount = dom['catalog-cards'];
+  mount.innerHTML = '';
+  CATALOG.forEach((entry) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.catalogId = entry.id;
+
+    const link = document.createElement('a');
+    link.href = entry.href;
+
+    const label = document.createElement('span');
+    label.className = 'label';
+    label.dataset.i18n = entry.labelKey;
+    label.textContent = catalogText(entry.labelKey);
+    link.append(label);
+
+    if (entry.glossaryNote) {
+      const summary = document.createElement('summary');
+      summary.className = 'note';
+      summary.dataset.i18n = entry.noteKey;
+      summary.textContent = catalogText(entry.noteKey);
+
+      const details = document.createElement('details');
+      details.className = 'note-gloss';
+      details.append(summary, buildDetailParagraph(entry));
+      details.addEventListener('mouseenter', () => { details.open = true; });
+      details.addEventListener('mouseleave', () => { details.open = false; });
+
+      card.append(link, details);
+    } else {
+      const note = document.createElement('span');
+      note.className = 'note';
+      note.dataset.i18n = entry.noteKey;
+      note.textContent = catalogText(entry.noteKey);
+      link.append(note);
+
+      card.append(link, buildDetailParagraph(entry));
+    }
+
+    mount.appendChild(card);
+  });
+}
+
+/** Swaps the hero panel's media + caption to `spotlight` (an entry's
+ * `.spotlight` field, or DEFAULT_SPOTLIGHT). */
+function setSpotlight(spotlight) {
+  const isVideo = spotlight.type === 'video';
+  const video = dom['spotlight-video'];
+  const image = dom['spotlight-image'];
+  video.hidden = !isVideo;
+  image.hidden = isVideo;
+  if (isVideo) {
+    // More than one CATALOG entry can be type: 'video' (e.g. Rabi and
+    // Ramsey both are), so the <source> may need to point at a different
+    // clip than whatever it currently has -- swap it and reload only when
+    // it actually changes, to avoid restarting the same clip on every
+    // hover. load() doesn't resume autoplay on its own in every browser,
+    // so play() is called explicitly; its promise is ignored since a
+    // rejection here (e.g. a stray focus/blur race) isn't actionable.
+    const source = video.querySelector('source');
+    if (source.getAttribute('src') !== spotlight.src) {
+      source.src = spotlight.src;
+      video.load();
+      video.play().catch(() => {});
+    }
+  } else {
+    image.src = spotlight.src;
+  }
+  const caption = dom['spotlight-caption'];
+  caption.dataset.i18n = spotlight.captionKey;
+  caption.textContent = catalogText(spotlight.captionKey);
+}
+
+/**
+ * Delegated hover/focus wiring on #catalog-cards, rather than one listener
+ * pair per card. mouseover/mouseout bubble from a card's inner spans/<p>
+ * too, so relatedTarget is checked to ignore moves that stay inside the
+ * same card -- otherwise crossing from the <a> to the .note-detail <p>
+ * within one card would flicker the spotlight back to default. focusin/
+ * focusout don't need that check: a card's only focusable element is its
+ * one <a>.
+ */
+function wireSpotlight() {
+  const mount = dom['catalog-cards'];
+
+  mount.addEventListener('mouseover', (e) => {
+    const card = e.target.closest('.card');
+    if (!card || (e.relatedTarget && card.contains(e.relatedTarget))) return;
+    const entry = findCatalogEntry(card.dataset.catalogId);
+    if (entry) setSpotlight(entry.spotlight);
+  });
+  mount.addEventListener('mouseout', (e) => {
+    const card = e.target.closest('.card');
+    if (!card || (e.relatedTarget && card.contains(e.relatedTarget))) return;
+    setSpotlight(DEFAULT_SPOTLIGHT);
+  });
+  mount.addEventListener('focusin', (e) => {
+    const card = e.target.closest('.card');
+    const entry = card && findCatalogEntry(card.dataset.catalogId);
+    if (entry) setSpotlight(entry.spotlight);
+  });
+  mount.addEventListener('focusout', (e) => {
+    if (e.target.closest('.card')) setSpotlight(DEFAULT_SPOTLIGHT);
   });
 }
 
@@ -144,6 +301,8 @@ async function initLocale() {
 
 function init() {
   query();
+  renderCatalog();
+  wireSpotlight();
   dom['locale-picker'].addEventListener('change', (e) => onLocaleChange(e.target.value));
   initLocale();
 }

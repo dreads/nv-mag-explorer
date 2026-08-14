@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getPath } from '../src/i18n.js';
 
 // This is the shape check a contributed locale PR is expected to pass (see
 // README's i18n/l10n/a11y section): every locales/*.json file gets
@@ -18,6 +19,21 @@ function bundleFiles() {
 
 function readBundle(file) {
   return JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, file), 'utf8'));
+}
+
+// Visits every leaf (string, number, whatever) in a strings tree, calling
+// visit(dotPath, value) for each. Recurses to any depth so both 2-level
+// sections (footer.physicsNote) and 3-level ones (catalog.rabi.label) are
+// covered without hardcoding a nesting depth here.
+function walkStrings(node, prefix, visit) {
+  Object.entries(node).forEach(([key, value]) => {
+    const dotPath = prefix ? `${prefix}.${key}` : key;
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      walkStrings(value, dotPath, visit);
+    } else {
+      visit(dotPath, value);
+    }
+  });
 }
 
 // en.json is the single source of truth for English strings — no separate
@@ -51,14 +67,11 @@ test('every locale bundle only references sections/keys that exist in locales/en
   bundleFiles().forEach((file) => {
     if (file === 'en.json') return; // it IS the reference, nothing to check against itself
     const { strings } = readBundle(file);
-    Object.entries(strings).forEach(([section, sectionStrings]) => {
-      assert.ok(en.strings[section], `${file} has an unknown strings section "${section}" (not in locales/en.json)`);
-      Object.keys(sectionStrings).forEach((key) => {
-        assert.ok(
-          key in en.strings[section],
-          `${file}'s strings.${section} has an unknown key "${key}" (not in locales/en.json — check for a typo)`
-        );
-      });
+    walkStrings(strings, '', (dotPath) => {
+      assert.ok(
+        getPath(en.strings, dotPath) !== undefined,
+        `${file} has an unknown key "${dotPath}" (not in locales/en.json — check for a typo)`
+      );
     });
   });
 });
@@ -66,10 +79,8 @@ test('every locale bundle only references sections/keys that exist in locales/en
 test('every value in every locale bundle is a string (no accidental objects/numbers)', () => {
   bundleFiles().forEach((file) => {
     const { strings } = readBundle(file);
-    Object.entries(strings).forEach(([section, sectionStrings]) => {
-      Object.entries(sectionStrings).forEach(([key, value]) => {
-        assert.equal(typeof value, 'string', `${file}'s strings.${section}.${key} should be a string, got ${typeof value}`);
-      });
+    walkStrings(strings, '', (dotPath, value) => {
+      assert.equal(typeof value, 'string', `${file}'s strings.${dotPath} should be a string, got ${typeof value}`);
     });
   });
 });
@@ -78,13 +89,11 @@ test('the qaa and qab mock bundles are complete (cover every key in locales/en.j
   ['qaa.json', 'qab.json'].forEach((file) => {
     if (!fs.existsSync(path.join(LOCALES_DIR, file))) return;
     const { strings } = readBundle(file);
-    Object.entries(en.strings).forEach(([section, sectionStrings]) => {
-      Object.keys(sectionStrings).forEach((key) => {
-        assert.ok(
-          strings[section] && key in strings[section],
-          `${file} is missing strings.${section}.${key} — it's meant to be a complete bundle`
-        );
-      });
+    walkStrings(en.strings, '', (dotPath) => {
+      assert.ok(
+        getPath(strings, dotPath) !== undefined,
+        `${file} is missing strings.${dotPath} — it's meant to be a complete bundle`
+      );
     });
   });
 });
