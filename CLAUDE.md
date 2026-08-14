@@ -93,10 +93,10 @@ test/locale-bundles.test.js             shape-validates every locales/*.json bun
 verify/                                 Python + QuTiP cross-check of the closed-form physics — see its own section below
 .github/workflows/deploy.yml            npm test + lint:i18n, then deploy to GitHub Pages
 .github/workflows/physics-verification.yml   pytest verify/ on changes to the visualizer HTML or verify/** — independent of deploy
-doc/bloch_rabi.jpg                      reference screenshot only — not referenced by src/catalog.js (Rabi's spotlight uses the video instead)
-doc/bloch_ramsey.jpg                    spotlight image for the Ramsey catalog entry (src/catalog.js) — captured via `npm run screenshot -- <url> <out> --selector=#id`
-doc/bloch_golf.jpg                      spotlight image for the golf catalog entry AND src/catalog.js's DEFAULT_SPOTLIGHT (the hero panel's no-hover/no-focus default) — same capture method as bloch_ramsey.jpg
+doc/bloch_rabi.jpg, doc/bloch_ramsey.jpg     reference screenshots only — not referenced by src/catalog.js (Rabi's and Ramsey's spotlights are both videos now)
+doc/bloch_golf.jpg                      spotlight image for the golf catalog entry AND src/catalog.js's DEFAULT_SPOTLIGHT (the hero panel's no-hover/no-focus default) — captured via `npm run screenshot -- <url> <out> --selector=#id`
 doc/media/bloch-sweep.mp4               Rabi catalog entry's spotlight video — captured live from index_rabi.html, not a rendered mockup; shown only when the Rabi card is hovered/focused, not by default
+doc/media/ramsey.mp4                    Ramsey catalog entry's spotlight video — remuxed from a supplied doc/media/ramsey.mov (already H.264, so a container-only conversion via ffmpeg, no re-encode); same hover/focus-only visibility as bloch-sweep.mp4
 doc/design/                             non-code MagNav story/verification research; doesn't affect the app
 ```
 

@@ -136,10 +136,26 @@ function renderCatalog() {
  * `.spotlight` field, or DEFAULT_SPOTLIGHT). */
 function setSpotlight(spotlight) {
   const isVideo = spotlight.type === 'video';
-  dom['spotlight-video'].hidden = !isVideo;
-  dom['spotlight-image'].hidden = isVideo;
-  if (!isVideo) {
-    dom['spotlight-image'].src = spotlight.src;
+  const video = dom['spotlight-video'];
+  const image = dom['spotlight-image'];
+  video.hidden = !isVideo;
+  image.hidden = isVideo;
+  if (isVideo) {
+    // More than one CATALOG entry can be type: 'video' (e.g. Rabi and
+    // Ramsey both are), so the <source> may need to point at a different
+    // clip than whatever it currently has -- swap it and reload only when
+    // it actually changes, to avoid restarting the same clip on every
+    // hover. load() doesn't resume autoplay on its own in every browser,
+    // so play() is called explicitly; its promise is ignored since a
+    // rejection here (e.g. a stray focus/blur race) isn't actionable.
+    const source = video.querySelector('source');
+    if (source.getAttribute('src') !== spotlight.src) {
+      source.src = spotlight.src;
+      video.load();
+      video.play().catch(() => {});
+    }
+  } else {
+    image.src = spotlight.src;
   }
   const caption = dom['spotlight-caption'];
   caption.dataset.i18n = spotlight.captionKey;

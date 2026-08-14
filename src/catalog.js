@@ -36,22 +36,17 @@ export const CATALOG = [
     // as the hidden-until-hovered/focused popup body -- see CLAUDE.md's
     // Visualizer catalog section. Any future entry can opt into the same
     // pattern by setting this flag.
-    glossaryNote: true,
+    glossaryNote: false,
     note: 'Like a vehicle sensing the terrain shift beneath it, the spin senses the field shift during free '
       + 'evolution — Ramsey interferometry at the quantum level.',
     noteKey: 'catalog.ramsey.note',
-    detail: 'Ramsey interferometry breaks the wobble into three clean steps: a short π/2 pulse tips the spin '
-      + 'onto the equator, the microwave then switches off entirely for a free-evolution window τ, and a second '
-      + 'π/2 pulse converts whatever happened during that silence back into a population you can read. That '
-      + "clean readout isn't free, though: bell-state-explorer's dephasing slider makes the same trade visible "
-      + 'on a two-qubit density matrix — damping the off-diagonal coherences by a factor of (1 − p) leaves the '
-      + "populations untouched, but erases exactly the information that made the state's correlations legible.",
+    detail: 'Using a toy vehicle, observe the NV magnetic field detection detection sequence revealed on a Bloch sphere.',
     detailKey: 'catalog.ramsey.detail',
     spotlight: {
-      type: 'image',
-      src: 'doc/bloch_ramsey.jpg',
-      caption: 'Accumulated phase φ = δτ traced across many runs of the free-evolution window τ — captured live '
-        + 'from the Ramsey visualizer, not a rendered mockup.',
+      type: 'video',
+      src: 'doc/media/ramsey.mp4',
+      caption: 'The Ramsey pulse sequence and Bloch-sphere response as the vehicle crosses terrain — captured '
+        + 'live from the Ramsey visualizer, not a rendered mockup.',
       captionKey: 'catalog.ramsey.spotlightCaption',
     },
   },
