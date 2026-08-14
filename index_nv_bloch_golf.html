@@ -57,15 +57,16 @@
 <div class="wrap">
 <header>
   <h1>NV Single Qubit Explorer — <span class="q">Bloch Golf</span></h1>
-  <p class="sub">Bloch golf turns the ground-state Bloch sphere into a gate-navigation game — X, Y,
-    and Z pulses rotate the spin toward a randomly placed target in as few strokes as par allows.
-    Drag the sphere to look around; only the pulse buttons below move the spin.</p>
+  <p class="sub">Bloch golf turns the ground-state Bloch sphere into a gate-navigation game — driver
+    and putter swings rotate the spin toward a randomly placed target in as few strokes as par
+    allows. Drag the sphere to look around; only the club buttons below move the spin.</p>
   <p class="sr-only">Bloch golf on the diamond NV center, with the surrounding carbon lattice restored
-    around the Bloch sphere and a show/hide diamond lattice toggle. The golf ball spin and its Bloch
-    sphere sit at the physical vacancy site, with the sphere's Z pole aligned to the nitrogen-vacancy
-    bond. A global microwave phase dial rotates the whole X/Y drive frame; rotations animate along the
-    true surface arc. The target is a hole with a flag planted along the sphere's outward normal. Reach
-    the hole in as few pulses as possible.</p>
+    around the Bloch sphere and a show/hide diamond lattice toggle. A vague grey player figure stands
+    at the sphere's center, facing along the drive axis as it rotates with the phase dial. The golf
+    ball spin and its Bloch sphere sit at the physical vacancy site, with the sphere's Z pole aligned
+    to the nitrogen-vacancy bond. A global microwave phase dial rotates the whole X/Y drive frame;
+    rotations animate along the true surface arc. The target is a hole with a flag planted along the
+    sphere's outward normal. Reach the hole in as few strokes as possible.</p>
 </header>
 
 <main>
@@ -114,11 +115,15 @@
       </div>
 
       <div style="background:var(--surface-2); border-radius:12px; border:0.5px solid var(--border); padding:12px 14px;">
-        <div style="font-size:13px; font-weight:500; margin-bottom:8px;">Microwave pulses</div>
+        <div style="font-size:13px; font-weight:500; margin-bottom:8px;">Clubs</div>
+        <div style="font-size:10.5px; font-weight:600; color:var(--text-muted); letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px;" title="Biggest single move (180°), aimed by the drive phase.">Driver</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
           <button id="bXpi"  onclick="pulse('X',180)">X · π</button>
-          <button id="bXhpi" onclick="pulse('X',90)">X · π/2</button>
           <button id="bYpi"  onclick="pulse('Y',180)">Y · π</button>
+        </div>
+        <div style="font-size:10.5px; font-weight:600; color:var(--text-muted); letter-spacing:.5px; text-transform:uppercase; margin:12px 0 6px;" title="Precise, short swing (90°). X/Y still need aiming with the drive phase; Z is always lined up the same way, unaffected by phase.">Putter</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <button id="bXhpi" onclick="pulse('X',90)">X · π/2</button>
           <button id="bYhpi" onclick="pulse('Y',90)">Y · π/2</button>
         </div>
         <div style="margin-top:8px;">
@@ -141,6 +146,8 @@
     <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px;height:3px;border-radius:2px;background:#D4537E;display:inline-block;"></span>Drive axis</span>
     <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:12px;height:12px;border-radius:50%;background:#F5F5F0;border:1px solid #B4B2A9;display:inline-block;"></span>Golf ball (spin)</span>
     <span style="display:inline-flex; align-items:center; gap:6px;"><span style="position:relative;width:14px;height:12px;display:inline-block;"><span style="position:absolute;left:2px;top:0;width:1.5px;height:12px;background:#5F5E5A;"></span><span style="position:absolute;left:3.5px;top:0;width:8px;height:5px;background:#E24B4A;"></span></span>Hole (target)</span>
+    <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:11px;height:11px;border-radius:50%;background:#AEB6C8;opacity:0.32;display:inline-block;"></span>Player, facing drive axis</span>
+    <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:14px;height:8px;display:inline-block;border-bottom:2px solid #D4537E;border-radius:0 0 8px 8px;"></span>Travel direction</span>
     <span id="scorecard" style="margin-left:auto; color:var(--text-muted);"></span>
   </div>
 
@@ -150,9 +157,9 @@
 <footer>
   <b style="color:var(--text-secondary)">Physics.</b> Same NV ground-state Bloch sphere as the Rabi and
   Ramsey pages, but nothing here is driven continuously or measured with noise — every move is an
-  exact rotation: X/Y pulses turn about the microwave drive frame (set by the phase dial), Z turns
-  about the true N–V bond axis. Par is a breadth-first search over those same five gates, not a
-  measured quantity. No T₂*/dephasing is modeled on this page.
+  exact rotation: X/Y pulses (driver at 180°, putter at 90°) turn about the microwave drive frame
+  (set by the phase dial), Z (also putter, at 90°) turns about the true N–V bond axis. Par is a breadth-first search over those
+  same five gates, not a measured quantity. No T₂*/dephasing is modeled on this page.
 </footer>
 </div>
 
@@ -326,7 +333,12 @@
     return{ax:driveAxis(g[0]),deg:g[1]};
   }
   // the five gates available to the player: X/Y at 180°/90° (phase-dependent axis),
-  // and a fixed Z·90°
+  // and a fixed Z·90°. Issue #14: driver/putter (see the "Clubs" panel + tooltips below)
+  // is a relabeling of these same 5 gates, not a 6th/7th gate or a new mechanic -- driver
+  // is the two 180° gates, putter is the three 90° gates (X/Y·π/2 and Z·π/2 together; an
+  // earlier "iron" tier for X/Y·π/2 was dropped as an unnecessary third category, since
+  // 90° is 90° regardless of which axis it's about). (A terrain/wind noise layer keyed off
+  // the club families was tried and reverted after playtesting -- see CLAUDE.md.)
   const GATES=[['X',180],['X',90],['Y',180],['Y',90],['Z',90]];
 
   let state=[0,0,1];
@@ -421,10 +433,10 @@
       return best[1];
     }
     const dx=dirName('X'),dy=dirName('Y');
-    document.getElementById('bXpi').title='Half turn (180°) about the drive axis at phase '+Math.round(phase)+'° (≈ '+dx+'). Direction is irrelevant for a 180° turn.';
-    document.getElementById('bXhpi').title='Quarter turn (90°) about the drive axis at phase '+Math.round(phase)+'° (≈ '+dx+'). Flip phase by 180° to reverse this turn.';
-    document.getElementById('bYpi').title='Half turn (180°) about the drive axis at phase '+Math.round(phase+90)+'° (≈ '+dy+'). Direction is irrelevant for a 180° turn.';
-    document.getElementById('bYhpi').title='Quarter turn (90°) about the drive axis at phase '+Math.round(phase+90)+'° (≈ '+dy+'). Flip phase by 180° to reverse this turn.';
+    document.getElementById('bXpi').title='Driver — half turn (180°) about the drive axis at phase '+Math.round(phase)+'° (≈ '+dx+'). Direction is irrelevant for a 180° turn.';
+    document.getElementById('bXhpi').title='Putter — quarter turn (90°) about the drive axis at phase '+Math.round(phase)+'° (≈ '+dx+'). Flip phase by 180° to reverse this turn.';
+    document.getElementById('bYpi').title='Driver — half turn (180°) about the drive axis at phase '+Math.round(phase+90)+'° (≈ '+dy+'). Direction is irrelevant for a 180° turn.';
+    document.getElementById('bYhpi').title='Putter — quarter turn (90°) about the drive axis at phase '+Math.round(phase+90)+'° (≈ '+dy+'). Flip phase by 180° to reverse this turn.';
   }
 
   // apply one gate to the live state: record history (for undo), kick off the animated
@@ -665,6 +677,70 @@
       }
     }
 
+    // ---- Player figure (issue #15) ----
+    // A vague, semi-transparent, non-gendered silhouette standing at the tee (the same
+    // vPos/o the sphere-center marker below uses), facing along the current drive axis.
+    // Deliberately a 2D screen-space "billboard," not a real 3D-posed body: this
+    // hand-rolled canvas renderer has no proper 3D mesh/limb system, and a full 3D figure
+    // would be a large, risky undertaking for something meant to read as background
+    // atmosphere, not a focal point. The body stays upright and fixed regardless of the
+    // drag-to-rotate camera (rotX/rotY) -- only the arm+club line re-aims, by projecting
+    // the same driveAxis('X') the pink drive-axis line below is drawn from, so the figure
+    // visibly re-aims exactly when that line does (i.e. when the phase dial turns).
+    (function drawPlayer(){
+      const dv=driveAxis('X');
+      const faceW=frameToWorld([dv[0]*Rb*1.3,dv[1]*Rb*1.3,0]);
+      const faceP=project([vPos[0]+faceW[0],vPos[1]+faceW[1],vPos[2]+faceW[2]]);
+      let fx=faceP.x-o.x, fy=faceP.y-o.y;
+      const fm=Math.hypot(fx,fy)||1;
+      fx/=fm; fy/=fm;
+
+      ctx.globalAlpha=0.32;
+      ctx.strokeStyle='#AEB6C8';
+      ctx.fillStyle='#AEB6C8';
+      ctx.lineCap='round';
+
+      // head + torso, fixed upright
+      const headR=6*zoom, headY=o.y-34*zoom, torsoTopY=o.y-27*zoom, torsoBotY=o.y-6*zoom;
+      ctx.beginPath();
+      ctx.arc(o.x,headY,headR,0,7);
+      ctx.fill();
+      ctx.lineWidth=4*zoom;
+      ctx.beginPath();
+      ctx.moveTo(o.x,torsoTopY);
+      ctx.lineTo(o.x,torsoBotY);
+      ctx.stroke();
+
+      // two simple legs, splayed slightly for a standing posture
+      ctx.lineWidth=3*zoom;
+      ctx.beginPath();
+      ctx.moveTo(o.x,torsoBotY);
+      ctx.lineTo(o.x-7*zoom,o.y+8*zoom);
+      ctx.moveTo(o.x,torsoBotY);
+      ctx.lineTo(o.x+7*zoom,o.y+8*zoom);
+      ctx.stroke();
+
+      // arm + club: the one part of the figure that rotates, toward the drive axis
+      const shoulderX=o.x, shoulderY=o.y-22*zoom;
+      const armLen=24*zoom;
+      const handX=shoulderX+fx*armLen, handY=shoulderY+fy*armLen;
+      ctx.lineWidth=2.5*zoom;
+      ctx.beginPath();
+      ctx.moveTo(shoulderX,shoulderY);
+      ctx.lineTo(handX,handY);
+      ctx.stroke();
+      // club head: a short stroke perpendicular to the club shaft at the far end
+      const px=-fy, py=fx;
+      ctx.lineWidth=3*zoom;
+      ctx.beginPath();
+      ctx.moveTo(handX-px*7*zoom,handY-py*7*zoom);
+      ctx.lineTo(handX+px*7*zoom,handY+py*7*zoom);
+      ctx.stroke();
+
+      ctx.globalAlpha=1;
+      ctx.lineCap='butt';
+    })();
+
     // ---- Bloch sphere rings ----
     // one great-circle ring per coordinate plane (Y-Z, X-Z, X-Y), each traced as 72
     // straight segments through frameToWorld + project
@@ -766,6 +842,52 @@
     ctx.stroke();
     ctx.globalAlpha=1;
     drawGolfBall(sp.x,sp.y,8.5*zoom);
+
+    // travel-direction indicator: a short curved arrow at the ball, tangent to the
+    // great-circle path an X/Y pulse would carry it along right now -- i.e. lying in the
+    // plane perpendicular to the drive axis (dv), which *is* the rotation plane for those
+    // gates. Points in the positive-angle direction, since every X/Y button in this game
+    // rotates that way (aim is chosen via the phase dial, not a separate sign toggle) --
+    // so this always shows the true direction of travel for the next driver/putter
+    // X-or-Y swing. See doc/design/vector_indicator.png for the reference sketch this
+    // follows.
+    {
+      const cross=[
+        dv[1]*drawVec[2]-dv[2]*drawVec[1],
+        dv[2]*drawVec[0]-dv[0]*drawVec[2],
+        dv[0]*drawVec[1]-dv[1]*drawVec[0],
+      ];
+      const crossLen=Math.hypot(cross[0],cross[1],cross[2]);
+      if(crossLen>0.02){ // ball sits on the drive axis itself -- no tangent to show
+        const arcSpan=26, steps=10, pts=[];
+        for(let i=0;i<=steps;i++){
+          const v=rotAxisV(drawVec,dv,arcSpan*i/steps);
+          const w=frameToWorld([v[0]*Rb,v[1]*Rb,v[2]*Rb]);
+          pts.push(project([vPos[0]+w[0],vPos[1]+w[1],vPos[2]+w[2]]));
+        }
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x,pts[0].y);
+        for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+        ctx.lineWidth=2.5*zoom;
+        ctx.strokeStyle=CDRIVE;
+        ctx.globalAlpha=0.8;
+        ctx.stroke();
+        ctx.globalAlpha=1;
+        // arrowhead at the far end, oriented along the local tangent there
+        const tip=pts[pts.length-1], prev=pts[pts.length-2];
+        let hx=tip.x-prev.x, hy=tip.y-prev.y;
+        const hl=Math.hypot(hx,hy)||1;
+        hx/=hl; hy/=hl;
+        const ah=6*zoom, lx=-hy, ly=hx;
+        ctx.beginPath();
+        ctx.moveTo(tip.x+hx*ah,tip.y+hy*ah);
+        ctx.lineTo(tip.x-lx*ah*0.6,tip.y-ly*ah*0.6);
+        ctx.lineTo(tip.x+lx*ah*0.6,tip.y+ly*ah*0.6);
+        ctx.closePath();
+        ctx.fillStyle=CDRIVE;
+        ctx.fill();
+      }
+    }
 
     // sphere-center marker
     ctx.beginPath();

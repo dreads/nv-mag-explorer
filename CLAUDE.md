@@ -129,14 +129,49 @@ per file.
 continuously-driven signal: `newHoleImpl()` picks a random reachable target Bloch vector by
 composing 2–5 random gates from `GATES` (`X`/`Y` at 90°/180° about the drive frame, `Z` at
 90° about the true N–V bond axis); `solve(from, to)` is a breadth-first search over the
-same five gates that both sets `par` and powers "Show a solution"; `pulse(axis, deg)` /
-`applyGate` animate the chosen rotation with an eased tween, not an instant jump. No T2*,
-no detuning, no measurement noise — every move is an exact rotation, deliberately unlike
-the other two pages (see its footer and `golfIntro` strings). It arrived as a pasted
-Claude-Artifact export (fragment only, no `<!DOCTYPE>`/`<head>`, an unloaded Tabler Icons
-font dependency, and CSS custom properties referenced but never defined) and was wrapped
-into a proper standalone page plus given a baseline accessibility pass — see
-"Accessibility" below for exactly what changed and what's still worth revisiting.
+same five gates, at their exact canonical (world-frame) angles, that both sets `par` and
+powers "Show a solution"; `pulse(axis, deg)` / `applyGate` animate the chosen rotation with
+an eased tween, not an instant jump. It arrived as a pasted Claude-Artifact export
+(fragment only, no `<!DOCTYPE>`/`<head>`, an unloaded Tabler Icons font dependency, and CSS
+custom properties referenced but never defined) and was wrapped into a proper standalone
+page plus given a baseline accessibility pass — see "Accessibility" below for exactly what
+changed and what's still worth revisiting.
+
+Two deepenings of the golf analogy landed later (GitHub issues #14/#15), without adding a
+6th gate or touching `GATES`/`solve()`/par:
+- **Clubs (#14)**: `CLUBS` groups the same 5 gates into driver (`X`/`Y·π`, the two 180°
+  gates) and putter (`X`/`Y`/`Z·π/2`, the three 90° gates) — a relabeling for the
+  UI/tooltips, not new physics. An earlier three-tier version split `X`/`Y·π/2` into its
+  own "iron" class, separate from `Z·π/2`'s "putter"; that tier was dropped as an
+  unnecessary distinction — 90° is 90° regardless of which axis it's about, so all three
+  90° gates are just "putter" now. Verified numerically (composing the actual rotation
+  matrices) before landing club identity at all: the current 5-gate set keeps the ball
+  confined to exactly 6 points on the sphere (the octahedral rotation group) no matter how
+  many moves are made, which is *why* `solve()`'s BFS/par/exact win check all work — adding
+  literally any other angle (tried `Y·60°`, `Y·45°`, `Y·120°`) blows the reachable set past
+  5,000 distinct points almost immediately. That's the actual reason club identity comes
+  from regrouping the existing 5 gates rather than adding new angles for a "putter."
+- **Player figure (#15)**: a vague, semi-transparent grey silhouette (`drawPlayer()`,
+  called from `render()`) standing at `vPos` (the same point the sphere-center marker
+  uses), upright and fixed in screen space regardless of the drag-to-rotate camera — a 2D
+  "billboard," not a real 3D-posed body, since this hand-rolled canvas renderer has no
+  proper limb/mesh system. Only its arm+club line rotates, toward the same projected
+  `driveAxis('X')` point the pink drive-axis line is drawn from, so it visibly re-aims
+  exactly when that line does.
+
+**Issue #16 (terrain/wind noise) was implemented and then reverted, on this same pass.**
+A fixed per-hole `terrainOffset` (disclosed exactly) and `windMagnitude` (disclosed as a
+Calm/Breezy/Gusty label, exact per-swing jitter hidden) fed into `driveAxis()`, affecting
+only the phase-driven X/Y gates (not `Z`), with `applyGate()`'s `ignoreNoise` flag keeping "Show a solution" exact
+regardless — stress-tested across 25 randomized holes with no failures, so the mechanism
+itself worked as designed. It was reverted anyway after real playtesting: starting a hole
+already offset by terrain (e.g. drive axis at "15°" for no visible reason) read as
+confusing rather than as a puzzle element, and the fidelity-percentage win condition made
+"very close but not quite" (e.g. stuck at 99% match) a frustrating dead end rather than a
+near-miss. If this is revisited, both of those UX problems — not just the underlying
+math — need an answer, not only a correctness argument. Full historical detail (the design
+reasoning, the safety-net analysis, the numeric verification) is in this file's git history
+around the two commits that added and then reverted it, not repeated here.
 
 All three pages predate the i18n work and are **not** wired into
 `scripts/check-i18n-coverage.js` or any locale bundle — they remain English-only
