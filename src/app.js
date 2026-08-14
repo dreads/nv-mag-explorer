@@ -1,5 +1,6 @@
 import { translate } from './i18n.js';
 import { loadManifest, loadLocaleBundle, detectLocale } from './locale-loader.js';
+import { CATALOG } from './catalog.js';
 
 const LOCALE_STORAGE_KEY = 'nv-mag-locale';
 
@@ -33,8 +34,119 @@ function ensureEnglish() {
 const dom = {};
 
 function query() {
-  ['locale-picker'].forEach((id) => {
+  ['locale-picker', 'catalog-cards', 'spotlight-video', 'spotlight-image', 'spotlight-caption'].forEach((id) => {
     dom[id] = document.getElementById(id);
+  });
+}
+
+// Mirrors locales/en.json's shape ({ catalog: { <id>: { label, note, detail,
+// spotlightCaption } } }) but built synchronously from src/catalog.js's own
+// literals -- so catalog text renders correctly the instant renderCatalog()
+// runs, with no dependency on en.json's fetch ever completing.
+const catalogFallback = { catalog: {} };
+CATALOG.forEach((entry) => {
+  catalogFallback.catalog[entry.id] = {
+    label: entry.label,
+    note: entry.note,
+    detail: entry.detail,
+    spotlightCaption: entry.spotlight.caption,
+  };
+});
+
+/** Looks up `key` in the active locale, falling back to catalogFallback's English literal. */
+function catalogText(key) {
+  return translate(activeLocale ? activeLocale.strings : {}, catalogFallback, key);
+}
+
+const defaultCatalogEntry = CATALOG.find((entry) => entry.default) || CATALOG[0];
+
+function findCatalogEntry(id) {
+  return CATALOG.find((entry) => entry.id === id);
+}
+
+/**
+ * Builds one .card per CATALOG entry into #catalog-cards. Each generated
+ * element gets a data-i18n attribute too, so the existing applyLocale()
+ * sweep (which walks every [data-i18n] element in the document) picks these
+ * up on every locale switch with no changes needed there.
+ */
+function renderCatalog() {
+  const mount = dom['catalog-cards'];
+  mount.innerHTML = '';
+  CATALOG.forEach((entry) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.catalogId = entry.id;
+
+    const link = document.createElement('a');
+    link.href = entry.href;
+
+    const label = document.createElement('span');
+    label.className = 'label';
+    label.dataset.i18n = entry.labelKey;
+    label.textContent = catalogText(entry.labelKey);
+
+    const note = document.createElement('span');
+    note.className = 'note';
+    note.dataset.i18n = entry.noteKey;
+    note.textContent = catalogText(entry.noteKey);
+
+    link.append(label, note);
+
+    const detail = document.createElement('p');
+    detail.className = 'note-detail';
+    detail.dataset.i18n = entry.detailKey;
+    detail.textContent = catalogText(entry.detailKey);
+
+    card.append(link, detail);
+    mount.appendChild(card);
+  });
+}
+
+/** Swaps the hero panel's media + caption to `entry`'s spotlight. */
+function setSpotlight(entry) {
+  const { spotlight } = entry;
+  const isVideo = spotlight.type === 'video';
+  dom['spotlight-video'].hidden = !isVideo;
+  dom['spotlight-image'].hidden = isVideo;
+  if (!isVideo) {
+    dom['spotlight-image'].src = spotlight.src;
+  }
+  const caption = dom['spotlight-caption'];
+  caption.dataset.i18n = spotlight.captionKey;
+  caption.textContent = catalogText(spotlight.captionKey);
+}
+
+/**
+ * Delegated hover/focus wiring on #catalog-cards, rather than one listener
+ * pair per card. mouseover/mouseout bubble from a card's inner spans/<p>
+ * too, so relatedTarget is checked to ignore moves that stay inside the
+ * same card -- otherwise crossing from the <a> to the .note-detail <p>
+ * within one card would flicker the spotlight back to default. focusin/
+ * focusout don't need that check: a card's only focusable element is its
+ * one <a>.
+ */
+function wireSpotlight() {
+  const mount = dom['catalog-cards'];
+
+  mount.addEventListener('mouseover', (e) => {
+    const card = e.target.closest('.card');
+    if (!card || (e.relatedTarget && card.contains(e.relatedTarget))) return;
+    const entry = findCatalogEntry(card.dataset.catalogId);
+    if (entry) setSpotlight(entry);
+  });
+  mount.addEventListener('mouseout', (e) => {
+    const card = e.target.closest('.card');
+    if (!card || (e.relatedTarget && card.contains(e.relatedTarget))) return;
+    setSpotlight(defaultCatalogEntry);
+  });
+  mount.addEventListener('focusin', (e) => {
+    const card = e.target.closest('.card');
+    const entry = card && findCatalogEntry(card.dataset.catalogId);
+    if (entry) setSpotlight(entry);
+  });
+  mount.addEventListener('focusout', (e) => {
+    if (e.target.closest('.card')) setSpotlight(defaultCatalogEntry);
   });
 }
 
@@ -144,6 +256,8 @@ async function initLocale() {
 
 function init() {
   query();
+  renderCatalog();
+  wireSpotlight();
   dom['locale-picker'].addEventListener('change', (e) => onLocaleChange(e.target.value));
   initLocale();
 }

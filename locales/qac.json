@@ -11,8 +11,10 @@
       "heading": "[qac] Roqa Ramsey elgorai",
       "languageLabel": "[qac] Roqavel"
     },
-    "rabiProblem": {
-      "heading": "[qac] Zora vintal Rabi tresqui"
+    "catalog": {
+      "ramsey": {
+        "label": "[qac] Bantu Ramsey"
+      }
     }
   }
 }

@@ -16,13 +16,14 @@ pattern from one half applies to the other — check which file you're in first.
 
 **The backlog lives in GitHub issues** (`dreads/nv-mag-explorer`), not in this file. Run
 `gh issue list` before assuming what's tracked vs. only described here — this file
-explains *why* things are the way they are; issues track *what's next*. Two examples
-directly relevant to the state described below: issue #18 (turn `index.html`'s
-hand-copied nav cards into a data-driven catalog) and #19 (bring `index_rabi.html`/
-`index_ramsey.html`'s accessibility up to `index_nv_bloch_golf.html`'s baseline).
+explains *why* things are the way they are; issues track *what's next*. Issue #18 (turn
+`index.html`'s hand-copied nav cards into a data-driven catalog) is resolved — see
+"Visualizer catalog" below for the `src/catalog.js` shape that replaced it. Issue #19
+(bring `index_rabi.html`/`index_ramsey.html`'s accessibility up to
+`index_nv_bloch_golf.html`'s baseline) is still open.
 `index_nv_bloch_golf.html` (Bloch golf, a gate-navigation puzzle on the same Bloch sphere)
-was added as the third peer visualizer by hand — its nav card in `index.html` is marked
-with an HTML comment as the interim pattern issue #18 replaces.
+is the third peer visualizer, now a generated `src/catalog.js` entry like the other two
+rather than the hand-added nav card it started as.
 
 **Unresolved naming inconsistency, observed 2026-08-12, not normalized either
 direction**: the repo/README call this project "NV Magnetometry," but
@@ -76,7 +77,8 @@ index.html                              "Why Ramsey?" explainer + visualizer nav
 index_rabi.html                         Rabi/Zeeman visualizer — single-file, canvas-rendered, English-only, untested
 index_ramsey.html                       Ramsey interferometry visualizer — same style as index_rabi.html
 index_nv_bloch_golf.html                Bloch golf — gate-navigation puzzle, same style as the two above, with a baseline a11y pass (see "Accessibility" below)
-src/app.js                              index.html's render/locale wiring only — NOT used by the three visualizer pages
+src/app.js                              index.html's render/locale wiring, catalog render + spotlight logic — NOT used by the three visualizer pages
+src/catalog.js                          single source of truth for index.html's nav cards + hero spotlight panel — see "Visualizer catalog" below
 src/i18n.js                             translate()/getPath()/interpolate() — ported verbatim from bell-state-explorer
 src/locale-loader.js                    locale discovery/fetch, fetch injectable — ported verbatim from bell-state-explorer
 src/styles.css                          index.html's stylesheet only — the visualizer pages have their own inline <style>
@@ -91,7 +93,8 @@ test/locale-bundles.test.js             shape-validates every locales/*.json bun
 verify/                                 Python + QuTiP cross-check of the closed-form physics — see its own section below
 .github/workflows/deploy.yml            npm test + lint:i18n, then deploy to GitHub Pages
 .github/workflows/physics-verification.yml   pytest verify/ on changes to the visualizer HTML or verify/** — independent of deploy
-doc/bloch_rabi.jpg, doc/bloch_ramsey.jpg     reference screenshots
+doc/bloch_rabi.jpg                      reference screenshot only — not referenced by src/catalog.js (Rabi's spotlight uses the video instead)
+doc/bloch_ramsey.jpg, doc/bloch_golf.jpg     spotlight images for the Ramsey/golf catalog entries (src/catalog.js) — captured via `npm run screenshot -- <url> <out> --selector=#id`, cropped to the visualizer's own canvas element, same framing convention for both
 doc/media/bloch-sweep.mp4               hero video on index.html — captured live from index_rabi.html, not a rendered mockup
 doc/design/                             non-code MagNav story/verification research; doesn't affect the app
 ```
@@ -140,8 +143,14 @@ single-file pages by design (see README's i18n/l10n/a11y section).
 
 ### Accessibility (status per page — read before assuming parity)
 
-- **index.html**: full `aria-hidden` + `.sr-only`-equivalent treatment for its one SVG
-  visual and hero video, per bell-state-explorer's convention (see README).
+- **index.html**: the hero panel's `<video>`/`<img>` (the "spotlight," swapped by
+  `setSpotlight()` in `src/app.js` as the visitor hovers/focuses a nav card) are both
+  `aria-hidden="true"` — decorative, same convention as bell-state-explorer's SVG visuals.
+  Its caption `<p aria-live="polite">` is the accessible equivalent, doubling as the visible
+  caption; `setSpotlight()` updates its `textContent` on every hover/focus change, so a
+  screen-reader user gets an equivalent announcement to what a sighted/mouse user sees.
+  index.html no longer has any SVG visual (the Rabi-vs-Ramsey timeline diagram that used to
+  need its own `aria-hidden`+`.sr-only` treatment was removed in the catalog refactor).
 - **index_nv_bloch_golf.html**: brought to a baseline pass — `<canvas id="stage">` is
   `aria-hidden="true"`; a `.sr-only` paragraph carries the original detailed description of
   the scene (vacancy site, lattice, target) and a separate `#golf-status`
@@ -164,17 +173,36 @@ single-file pages by design (see README's i18n/l10n/a11y section).
 ### index.html + src/app.js / i18n.js / locale-loader.js
 
 This trio follows bell-state-explorer's i18n architecture closely, with one deliberate
-deviation documented in the README: **no static `locales/en.js` copy**. Because this page
-has no model or `render()` — every `[data-i18n]` element's static HTML text already *is*
-the correct default-English render — `en.json` is fetched lazily via `ensureEnglish()`,
-the same way every contributed locale is, rather than shipped as a duplicate JS module.
-`src/i18n.js` and `src/locale-loader.js` are otherwise ported verbatim. `src/app.js` is
-much thinner than bell's equivalent: no model, no slider-driven readouts, so
-`applyLocale(bundle)` (walk `[data-i18n]`, set `document.title`/meta description
-specially) plus the picker wiring is the entire render path.
+deviation documented in the README: **no static `locales/en.js` copy**. Most of this page
+has no model or `render()` — every other `[data-i18n]` element's static HTML text already
+*is* the correct default-English render — so `en.json` is fetched lazily via
+`ensureEnglish()`, the same way every contributed locale is, rather than shipped as a
+duplicate JS module. `src/i18n.js` and `src/locale-loader.js` are otherwise ported
+verbatim.
+
+**The one exception, since the issue #18 catalog refactor**: the nav cards and hero
+spotlight panel *do* have a render step now — `renderCatalog()`/`setSpotlight()` in
+`src/app.js`, driven by `src/catalog.js`. This is a deliberate, issue-endorsed tradeoff
+against the "zero JS for the English default" property above, scoped narrowly: a no-JS
+visitor sees an empty nav (the `#catalog-cards` mount div renders nothing without JS), but
+still sees a correct default spotlight panel (its `<video>`/caption keep a static HTML
+seed) and every other part of the page. It is *not* a new network dependency — `src/app.js`
+builds a `catalogFallback` object synchronously from `src/catalog.js`'s own English
+literals at module load, so the catalog still needs no `en.json` round-trip to render
+correctly, only JS execution. See `src/catalog.js`'s top comment and the "Visualizer
+catalog" section below for the full shape.
+
+`applyLocale(bundle)` (walk `[data-i18n]`, set `document.title`/meta description specially)
+plus the picker wiring covers everything else — including the generated catalog cards,
+since `renderCatalog()`/`setSpotlight()` tag every element they create with `data-i18n`
+too, so they're picked up by `applyLocale()`'s existing generic sweep with no special-casing
+needed there.
 
 **Static HTML in `index.html` is authoritative over `locales/en.json` — not the other way
-around.** When a `[data-i18n]` element's visible text in `index.html` and its matching
+around** (one carve-out: the nav-card/spotlight text that used to live in `index.html`'s
+static markup now lives in `src/catalog.js`'s literals instead, since the catalog refactor
+moved it out of the HTML entirely — `src/catalog.js` is authoritative for that text
+specifically, `scripts/check-i18n-coverage.js` enforces both halves independently). When a `[data-i18n]` element's visible text in `index.html` and its matching
 `locales/en.json` string disagree, sync the JSON to the HTML. This isn't a hypothetical —
 it happened live during this repo's Bloch-golf work (`ui.navGolfNote` was hand-edited in
 `index.html` but the matching `en.json` key wasn't updated to match) and had happened
@@ -217,22 +245,34 @@ Runs via `.github/workflows/physics-verification.yml`, triggered only on changes
 `index_rabi.html`, `index_ramsey.html`, or `verify/**` — independent of and does not gate
 `deploy.yml`.
 
-## Visualizer catalog (why this is a real gap, not just a style preference)
+## Visualizer catalog
 
-Tracked in GitHub issue #18, not here — this section is the context an issue title won't
-carry. Adding Bloch golf as the third nav entry meant touching three files by hand in
+Resolved via GitHub issue #18 — this section is the context an issue title won't carry.
+Before this, adding Bloch golf as the third nav entry meant touching three files by hand in
 lockstep: the `<div class="card">` markup in `index.html`, `locales/en.json` (new
 `navGolfLabel`/`navGolfNote`/`golfIntro.*` keys), and `schema/locale-bundle.schema.json`.
-That's the concrete cost a data-driven catalog (one entry per visualizer, rendered by
-`src/app.js`) would remove — worth knowing before touching any of those three files again
-for a fourth visualizer, rather than repeating the same three-file-by-hand pattern.
-Whether the Rabi-vs-Ramsey drive-timeline SVG comparison joins that same data structure or
-stays a fixed two-way diagram is an open sub-question noted on the issue, not decided here
-— Bloch golf's shape (a discrete puzzle) doesn't fit that comparison, which is why it
-wasn't force-fit into it.
 
-Rabi/Ramsey accessibility parity (issue #19) is independent of this refactor and doesn't
-need to wait for it — see "Accessibility" above for the exact baseline to match.
+**Now**: `src/catalog.js` exports one `CATALOG` array, one object per visualizer —
+`id`/`href`/`label`/`note`/`detail` (each with a literal English string and its
+`locales/en.json` key) plus a `spotlight` (media type/src/caption for the hero panel — see
+"index.html + src/app.js" above). `src/app.js`'s `renderCatalog()` builds the nav cards from
+it and `setSpotlight()` swaps the hero panel's media/caption on hover or focus of a card.
+**To add a fifth visualizer**: append one entry to `src/catalog.js` — that alone is enough
+for a correct English render. `schema/locale-bundle.schema.json`'s `catalog` section uses
+`patternProperties` (any `^[a-z][a-z0-9_-]*$` id), so it never needs a per-visualizer edit.
+A `locales/*.json` translation is optional and can land whenever a translator gets to it —
+same "partial bundles are fine, fall back per-key" philosophy as everything else here.
+`scripts/check-i18n-coverage.js` fails the build if `src/catalog.js`'s literals and
+`locales/en.json`'s values for the same keys ever drift apart, the same invariant the
+static-HTML content-diff check already enforced for the rest of the page.
+
+The Rabi-vs-Ramsey drive-timeline SVG comparison that used to sit below the nav cards was
+**removed**, not folded into the catalog — Bloch golf's shape (a discrete puzzle) never fit
+that two-way diagram, and generalizing a fixed A-vs-B comparison to an N-entry catalog
+didn't have an obvious right answer, so it was dropped rather than force-fit.
+
+Rabi/Ramsey accessibility parity (issue #19) is independent of this refactor and remains
+open — see "Accessibility" above for the exact baseline to match.
 
 ## Physics conventions
 
@@ -330,3 +370,8 @@ need to wait for it — see "Accessibility" above for the exact baseline to matc
 - Never use the phrase "full stop" in prose (docs, PRs, commit messages, chat) — rephrase
   or just end the sentence with a period.
 - Avoid use of "sharp edge" in prose to describe risk (docs, PRs, commit messages, chat).
+- PR descriptions: terse, neutral voice — no marketing language, no "This PR..."
+  throat-clearing, state what changed and why in as few words as accurate. When the branch
+  turned up real bugs or was verified locally beyond `npm test`/`lint:i18n`, give those
+  their own `## Bugs found` / `## Local verification` sections rather than folding them
+  into the summary.

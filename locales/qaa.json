@@ -14,47 +14,27 @@
       "skipLink": "Sâütér âü cöñtéñü",
       "heading": "Pöurquöi l’Íntérférömétríe dé Rämséy",
       "subtitle": "Lé vïsüälïséür Räbï möñtré lé wöbblé qüäñtïqüé brüt d’ün mägnétömètre. Ün äppäréïl réél né lït päs cé wöbblé dïréctéméñt — ïl éxécüté üné séqüéñcé à déüx ïmpülsïöñs plüs ïñtéllïgéñté äppéléé l’ïñtérférömétríé dé Rämséy. Céttè pägé éxplïqüé pöürqüöï, ét cömméñt lé mêmé büdgét dé cöhérèñcé qüï lïmïté l’ïñtrïcâtïöñ dâñs bell-state-explorer lïmïté äüssï céttè mésüré.",
-      "navHeading": "Éxplörér lés vïsüälïséürs",
-      "navRabiLabel": "Vïsüälïséür Räbï ét Zééman",
-      "navRabiNote": "L’öscïllâtïöñ cöñtïñüélléméñt éñtrâîñéé.",
-      "navDesignLabel": "Vïsüälïséür Rämséy",
-      "navDesignNote": "Éñ cöñcéptïöñ — chrönölögïé dé séquéñcé d’ïmpülsïöñs, träcé dé fräñgés, ét üñé sphère dé Blöch àccümülâñt lä phâsé.",
-      "navGolfLabel": "Gölf dé Blöch",
-      "navGolfNote": "Ün cässé-têté dé nävïgâtïön pär pörtés sür lä mêmé sphère dé Blöch."
+      "navHeading": "Éxplörér lés vïsüälïséürs"
     },
-    "hero": {
-      "blochCaption": "Lé véctéür dé Blöch précéssâñt tâñdïs qüé l’äïmâñt bäläyé tôüté sä pläge — câptüré éñ dïréct dépüïs lé vïsüälïséür Räbï, päs ün mockup réñdü."
-    },
-    "purpose": {
-      "heading": "Ün bäñc dé läböràtöïré, päs üñé démö dé nävïgâtïöñ",
-      "body": "Mälgré lé nöm « MägNäv », lé pöïñt dé cés pägés n’ést päs lä plänïfïcâtïöñ d’ïtïñérâïre — c’ést d’öbsérvér lä dÿnâmïqüé qüäñtïqüé sé prödüïre. Lés öscïllâtïöñs dé Räbï, l’äccümülâtïöñ dé phâsé, lä vïsïbïlïté dés fräñgés: lä plüpärt dés mänüéls ét ârtïclés né möñtréñt qü’üné équâtïöñ clösé öü ün séül träcé stätïqüé. Icï vöüs fâïtés glïssér üné värïâblé ét vöüs vöyéz töüté lä ïmâgé témpörélle — l’öscïllâtïöñ, lé véctéür dé Blöch, lé mötïf dé fräñgés — répöñdré éñ cöñtïnü, dé lä mêmé fâçöñ döñt vöüs cârâctérïséréz ün câptéür réél sür ün bâñc."
-    },
-    "rabiProblem": {
-      "heading": "Lé prôblèmé âvéc lâ léctüré dïréctè dé Räbï",
-      "body": "Bâläyéz lâ mïcrö-öñdé höns résönâñcé dâñs lé vïsüälïséür Räbï ét déüx chösés sé prödüïséñt éñ mêmé témps: l’öscïllâtïöñ àccéléré, püïsqüé lâ fréquéñcé dé Räbï éffécïtïvé ést Ω = √(Ω₀² + δ²), ét söñ àmplïtüdé rétrécït, püïsqüé lâ prôbâbïlïté dé rétöurnémeñt sè mèt à l’échéllé âvéc Ω₀²/Ω². Lés déüx sïgnâtürés sè déplâcéñt éñsémblé, éñtrâîñéés pâr lâ mêmé désâccördâñcé δ qüé vöüs éssâyéz dé mésürér. Àjüstér üné cöürbé dé Räbï pöür récüpérér lé chämp ét vöüs éxträyéz ün séül nömbré, δ, d’üné förmé qüï dépéñd âüssï dé lâ förcé d’éñtrâîñémeñt Ω₀ — üné böñné fâçöñ d’éxplörér lâ phÿsïqüé, üné fâçöñ mâlâdröïté dé cönstrüïré ün ïñstrüméñt."
-    },
-    "ramseyPayoff": {
-      "heading": "Cé qüé Rämséy vöüs âppörté",
-      "body": "L’ïñtérférömétríé dé Rämséy dïvïsé lé wöbblé éñ tröïs étâpés cläïrés: üné cöürté ïmpülsïöñ π/2 bâsçülé lé spïñ sür l’équâtéür, lâ mïcrö-öñdé s’étéïñt éñsüïté éñtïéréméñt péñdâñt üné féñêtré d’évölütïöñ lïbré τ, ét üné sécöñdé ïmpülsïöñ π/2 cönvértït cé qüï s’ést pâssé péñdâñt cé sïléñcé éñ üné pöpülâtïöñ qüé vöüs pöüvéz lïré. Péñdâñt qüé l’éñtrâîñémeñt ést étéïñt, lé spïñ précéssé sïmplémeñt à lâ vïtéssé dé désâccördâñcé, âccümülâñt üné phâsé φ = δτ. Bâläyéz τ ét lâ léctüré träcé P(τ) = ½(1 + cös δτ) — ün mötïf dé fräñgés döñt lâ fréquéñcé ést δ, pöïñt fïñâl. Äücün cöüplägé d’âmplïtüdé, äücüné âmbïguïté dé förcé d’éñtrâîñémeñt: lïséz l’éspâcémeñt dés fräñgés, ïñvérséz pöür lé chämp."
-    },
-    "coherenceBudget": {
-      "heading": "Lé büdgét dé cöhérèñcé",
-      "body": "Céttè léctüré prôpré ñ’ést pâs grâtüïté. Lé cürséür dé déphâsâgé dé bell-state-explorer réñd vïsïblé lé mêmé écháñgé sür üné mâtrïcé dé déñsïté à déüx qübïts: âttéñüér lés cöhérèñcés höns-dïâgönâlé pâr ün fâctéür dé (1 − p) läïssé lés pöpülâtïöñs ïñtâctés, mâïs éfâcé éxâctéméñt l’ïñförmâtïöñ qüï réñdâït lés cörrélâtïöñs dé l’étât lïsïblés. Üné féñêtré d’évölütïöñ lïbré dé Rämséy dépéñsé lâ mêmé möññâïé — lâ vïsïbïlïté dés fräñgés ïcï décrôît cömmé e^(−τ/T₂*), döñc âttéñdré plüs löñgtémps pöür âccümülér plüs dé phâsé sâïgné âüssï lâ cöhérèñcé nécéssâïré pöür rélïré céttè phâsé. Il ÿ â üñ τ öptïmâl, fïxé pâr T₂*, ét âü-délà vöüs mésüréz dü brüït, päs ün chämp."
-    },
-    "golfIntro": {
-      "heading": "Ün cässé-têté, päs üné mésüré",
-      "body": "Dés ïmpülsïöñs X, Y, ét Z fönt töürnér lé spïñ vérs üné cïblé pläcéé äü häsârd, éñ äüssï péü dé cöups qüé lé pär lé pérmét. Cöñträïréméñt äüx déüx äütrés pägés, rïéñ ïcï n’ést éñtrâîñé éñ cöñtïnü nï mésüré ävéc dü brüït — châqüé möüvéméñt ést üné rötâtïöñ éxâcté."
-    },
-    "diagram": {
-      "heading": "Chrönölögïés d’éñtrâîñémeñt, côté à côté",
-      "rabiCaption": "Räbï: éñtrâîñémeñt cöñtïñü",
-      "rabiOnLabel": "éñtrâîñémeñt äctïf — töüt lé témps",
-      "ramseyCaption": "Rämséy: ïmpülsïöñ, âttéñtè, ïmpülsïöñ",
-      "ramseyPulseLabel": "π/2",
-      "ramseyWaitLabel": "éñtrâîñémeñt étéïñt — évölütïöñ lïbré τ",
-      "rabiLinkLabel": "Ôüvrïr lé vïsüälïséür Räbï →",
-      "ramseyLinkLabel": "Ôüvrïr lé vïsüälïséür Rämséy →",
-      "srDescription": "Déüx chrönölögïés hörïzöñtâlés cömpâréés. Lâ chrönölögïé Räbï ést üné séülé bârré ïñïñtérrömpüé étïquétéé éñtrâîñémeñt äctïf pöür töüté sâ löñguéür. Lâ chrönölögïé Rämséy â tröïs ségméñts: üné cöürté ïmpülsïöñ étïquétéé pï süür déüx, üñ écârt bïéñ plüs löñg étïquété éñtrâîñémeñt étéïñt, évölütïöñ lïbré täü, ét üné sécöñdé cöürté ïmpülsïöñ étïquétéé pï süür déüx."
+    "catalog": {
+      "ramsey": {
+        "label": "Vïsüälïséür Rämséy",
+        "note": "Ïmpülsïöñ, âttéñté, ïmpülsïöñ — phâsé âccümüléé péñdâñt lé sïléñcé, püïs lüé.",
+        "detail": "L’ïñtérférömétríé dé Rämséy dïvïsé lé wöbblé éñ tröïs étâpés cläïrés: üné cöürté ïmpülsïöñ π/2 bâsçülé lé spïñ sür l’équâtéür, lâ mïcrö-öñdé s’étéïñt éñsüïté éñtïéréméñt péñdâñt üné féñêtré d’évölütïöñ lïbré τ, ét üné sécöñdé ïmpülsïöñ π/2 cönvértït cé qüï s’ést pâssé péñdâñt cé sïléñcé éñ üné pöpülâtïöñ qüé vöüs pöüvéz lïré. Céttè léctüré prôpré n’ést päs grâtüïté: lé cürséür dé déphâsâgé dé bell-state-explorer réñd vïsïblé lé mêmé écháñgé sür üné mâtrïcé dé déñsïté à déüx qübïts.",
+        "spotlightCaption": "Phâsé âccümüléé φ = δτ träcéé à trâvérs dé nömbréüx éssäïs dé lâ féñêtré d’évölütïöñ lïbré τ — câptüré éñ dïréct dépüïs lé vïsüälïséür Rämséy, päs ün mockup réñdü."
+      },
+      "rabi": {
+        "label": "Vïsüälïséür Räbï ét Zééman",
+        "note": "L’öscïllâtïöñ cöñtïñüélléméñt éñtrâîñéé.",
+        "detail": "Üné vüé dés öscïllâtïöñs dé Räbï, dé l’àccümülâtïöñ dé phâsé, ét dé lâ vïsïbïlïté dés fräñgés. Icï vöüs fâïtés glïssér üné värïâblé ét vöüs vöyéz töüté l’ïmâgé témpörélle — l’öscïllâtïöñ, lé véctéür dé Blöch, lé mötïf dé fräñgés — répöñdré éñ cöñtïnü.",
+        "spotlightCaption": "Lé véctéür dé Blöch précéssâñt tâñdïs qüé l’äïmâñt bäläyé tôüté sä pläge — câptüré éñ dïréct dépüïs lé vïsüälïséür Räbï, päs ün mockup réñdü."
+      },
+      "golf": {
+        "label": "Gölf dé Blöch",
+        "note": "Ün cässé-têté dé nävïgâtïön pär pörtés sür lä mêmé sphère dé Blöch.",
+        "detail": "Dés ïmpülsïöñs X, Y, ét Z fönt töürnér lé spïñ vérs üné cïblé pläcéé äü häsârd, éñ äüssï péü dé cöups qüé lé pär lé pérmét. Cöñträïréméñt äüx déüx äütrés pägés, rïéñ ïcï n’ést éñtrâîñé éñ cöñtïnü nï mésüré ävéc dü brüït — châqüé möüvéméñt ést üné rötâtïöñ éxâcté.",
+        "spotlightCaption": "Châqüé cöup ést üné rötâtïöñ éxâcté — dés ïmpülsïöñs X, Y, ét Z fâïsâñt töürnér lé spïñ vérs üné cïblé pläcéé äü häsârd — câptüré éñ dïréct dépüïs lé vïsüälïséür Gölf dé Blöch, päs ün mockup réñdü."
+      }
     },
     "footer": {
       "physicsNote": "Phÿsïqüé: fréquéñcé dé Räbï géñérâlïséé Ω = √(Ω₀² + δ²); léctüré dé Rämséy P(τ) = ½(1 + cös δτ)·e^(−τ/T₂*); phâsé âccümüléé φ = δτ. Séparätïöñ dé Zééman dü trïplét dé l’étät fönd du NV: f± = 2.87 GHz ± γB, γ ≈ 28 MHz/mT. Töüt éñ förmé clöse, câlcülé côté clïéñt, prêt pöür GitHub Pages.",
