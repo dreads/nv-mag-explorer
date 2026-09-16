@@ -439,6 +439,165 @@ open — see "Accessibility" above for the exact baseline to match.
   repo; don't assume `schema/`'s only file (`locale-bundle.schema.json`) has a sibling for
   app state, because it doesn't.
 
+## Rabi Soccer Shootout (`index_shootout.html`)
+
+Full design and physics contract: see the Rabi Soccer Shootout section of the README.
+Read it before touching the physics core, the measurement layer, or the scoring.
+
+### Architecture
+
+Keep the **mechanics layer** (physics, controls, measurement, scoring, bots)
+separate from the **theme layer** (sprites, strings, colours). The theme is
+expected to be swapped; the mechanics are not.
+
+### Hard constraints
+
+- **Single self-contained HTML file.** No build step, no bundler, no CDN script
+  tags, no external runtime dependencies, no server. Must work from `file://`
+  and from static GitHub Pages hosting.
+- **Hand-rolled renderer.** Vendoring three.js was considered and rejected. A
+  sphere, a ball, a centred sprite and a shadow is painter's-algorithm work. Do
+  not reintroduce a 3D library.
+- **Playable on phone and desktop with one pointer.** Aim by drag, hold to
+  charge, release to kick, plus a shoot control. No keyboard-only interactions,
+  no hover-dependent affordances, no multi-touch gestures.
+- **No Python at runtime.** Python appears only in `verify/`, offline — extending
+  the existing Rabi/Ramsey QuTiP cross-check rather than starting a second,
+  parallel Python validation directory.
+- **Closed form only.** No ODE integrator, no RK4, no numerical propagation of
+  the Bloch equations. If a feature seems to need one, it conflicts with the
+  piecewise-constant control model — raise it rather than working around it.
+
+### Physics core
+
+- Evolution within a touch is Rodrigues rotation about
+  `n̂ = (Ω₀ cos φ, Ω₀ sin φ, δ)/Ω`, `Ω = √(Ω₀² + δ²)`, through `θ = Ω t`. Exact.
+  No small-angle or on-resonance substitution. Guard division only for the
+  `Ω₀ = δ = 0` case.
+- `Ω₀`, `φ` and `δ` are constant for the duration of a touch. Any path that
+  mutates them mid-touch is a bug, including animation code that interpolates an
+  input while a touch is in flight. Animate the arc, not the parameters.
+- **`δ` is a level parameter, not a player control.** `Ω₀` is a fixed constant.
+  The player holds only `φ` and `t`. Adding a detuning slider would break both
+  the control budget and the level-design model.
+- Dephasing is a post-touch envelope on `x` and `y` only. It is an approximation,
+  documented as such, and UI copy must not describe the simulation as exact
+  without that qualification.
+- `T₁` is omitted in v1. If added, it relaxes toward `+z` and the assumptions
+  section must be updated in the same commit. Note that `T₁` is also the only
+  thing that would make a purity-based run terminator viable — see the clock
+  note below.
+
+### Purity
+
+- `R = |r|` is non-increasing. Rotations preserve it, dephasing reduces it,
+  nothing in v1 increases it.
+- Dephasing acts only on `x` and `y`, so loss is zero at the poles and fastest at
+  the equator. This is not a quirk to smooth out — it is what makes crossing the
+  sphere cost something, and it must survive any refactor of the decay code.
+- `|z| ≤ R`, so the reachable shot probability narrows to `½` as `R → 0`. A dead
+  ball is a coin flip. Do not clamp or rescale `P` to hide this.
+
+### The clock
+
+- The run ends on a **plain match clock**. Do not replace it with a purity
+  threshold: dephasing does not touch `z`, so a state parked at a pole keeps a
+  perfect shot indefinitely and the run would never end.
+- Three time contributions: touch duration, a fixed plant-and-turn cost per
+  touch, and nothing else.
+- The plant-and-turn cost is load-bearing twice over. It prevents subdividing
+  into arbitrarily short touches, which would numerically recover continuous
+  steering and void the piecewise-constant model. It is also the anti-nausea
+  mechanism — the world slews during it instead of snapping. Do not remove it or
+  zero it as a simplification.
+
+### Measurement and the shootout
+
+- A shot is a projective `z`-basis measurement with `P = (1 − z)/2`.
+- **Measurement collapses the state, so the control sequence is replayed from the
+  start for each of the five shots.** Do not implement the shootout as five
+  samples of one stored state. The replay is the point: it is how a Rabi
+  experiment is actually run, and it is what makes the season chart honest.
+- `N = 5` means observable fractions are only 0, 0.2, 0.4, 0.6, 0.8, 1.0. Levels
+  are deliberately designed with targets this cannot resolve. Do not "fix" this
+  by rounding, interpolating, or displaying a smoothed fraction.
+- Overtime is five more replays, `N = 10`, resolution 0.1. Offered on a tie and
+  on request; never automatic.
+- Score the deterministic aim (engineered `P` versus `P_target`) separately from
+  the statistical result. Display the result with an error bar of
+  `√(P(1−P)/N)`. Collapsing the two into one score makes losses read as unfair.
+- **Seeded PRNG only, never `Math.random`.** Head-to-head reproducibility, ghost
+  replay determinism, and coach-inset replay all depend on it. Store the seed
+  with the ghost.
+
+### Bots
+
+- The bot obeys every constraint the player does: piecewise-constant touches, the
+  plant-and-turn cost, the clock, the dephasing. Setting the state directly or
+  exempting the bot from per-touch cost is an obvious shortcut and it destroys
+  the head-to-head, because the player would be losing to a rule difference.
+- Bot runs are solved algebraically and replayed as animation. No per-frame
+  solving — that is what keeps it affordable on a phone.
+- Store ghosts as control sequence plus seed, not as sampled trajectories.
+  Trajectory data is larger, drifts if the physics is corrected, and will not
+  round-trip through a share link.
+
+### Presentation budget
+
+Controls, complete: aim, charge, release, shoot.
+
+Readouts, complete: shadow trace, current `P`, shot count with error bar, match
+clock, coach inset.
+
+Anything beyond these needs justification in the pull request. The budget was set
+deliberately and drift here is the most likely way this tool becomes as cluttered
+as the thing it is trying to improve on.
+
+- Sprites: back views only — idle, two-frame dribble, wind-up, kick, slump. Five
+  states. Rabi is always centred and always facing away, so he never needs
+  rendering at an angle.
+- All character expression goes in the shadow silhouette, which is rendered
+  anyway.
+- The shadow trace is `z(t)` and must be the real computed value, not a decorative
+  sine. It is the Rabi oscillation and its correctness is the point.
+- The coach inset shows sphere, position and trail. **It does not show the
+  target.** That was a deliberate decision.
+
+### Claims and language
+
+- Player cam is a frame co-moving with the state's trajectory. The simulation is
+  *already* in the rotating frame — that is what `δ` means. Do not label player
+  cam "the rotating frame."
+- Do not describe the physics or the visualization as novel. Every ingredient is
+  textbook. The claim is integration, accessibility and teaching design.
+- The soccer mapping is an analogy. Do not write copy implying it is quantitative.
+- Any simplification introduced goes into the README assumptions section in the
+  same commit.
+
+### Testing expectations
+
+Physics and measurement changes are not done until these pass:
+
+- On resonance with `T₂*` disabled, a `θ = π` touch from `+z` lands on `−z` to
+  numerical precision.
+- Off resonance, peak population matches `Ω₀²/(Ω₀² + δ²)` — exactly `0.5` at
+  `δ = Ω₀`, `0.2` at `δ = 2Ω₀`.
+- Single-touch reachability matches `z_min = 1 − 2(Ω₀²/Ω²)`; targets below it are
+  unreachable in one touch and reachable in two.
+- A touch with `n̂ · r = 0` traces a great circle; `n̂ · r ≠ 0` traces a small
+  circle that never reaches the antipode.
+- `R` never exceeds 1 and is non-increasing across any sequence.
+- A state parked exactly at a pole loses no purity over an arbitrarily long idle.
+  A state on the equator decays as `exp(−t/T₂*)`.
+- Headless bot harness over many thousands of runs: observed goal fraction
+  converges to `(1 − z)/2`, and the spread matches `√(P(1−P)/N)`.
+- A ghost replayed twice with the same seed produces bit-identical outcomes,
+  including shootout results.
+- Zero console errors on load, after a full run, and after a head-to-head with
+  overtime.
+- Renders and plays at an acceptable frame rate on a mid-range phone, not only on
+  desktop.
+
 ## Code conventions
 
 - **Readability is a standing requirement, not a one-time cleanup pass — applies repo-wide,
