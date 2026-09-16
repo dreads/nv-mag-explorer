@@ -387,7 +387,10 @@ function drawSeq(u){
   ctx.setLineDash([]);
   ctx.fillStyle=COL['--cyan'];
   ctx.font='11px '+MONO;
-  ctx.fillText('free evolution τ — microwave OFF, phase φ=δτ accrues',xP1b+8,y-46);
+  // this caption runs off the right edge once the canvas is narrower than
+  // its own pixel width (phones); the .explain paragraph below the canvas
+  // already carries the same explanation in HTML, so hiding it loses nothing
+  if (w > 480) ctx.fillText('free evolution τ — microwave OFF, phase φ=δτ accrues',xP1b+8,y-46);
 
   // a single π/2 pulse block, drawn as a rotated label inside a rounded rect
   function pulse(cx,label){
@@ -421,10 +424,12 @@ function drawSeq(u){
   ctx.fillText('M',x1-6,y+5);
   ctx.textAlign='left';
 
-  // laser initialization marker at the start of the wire
+  // laser initialization marker at the start of the wire; "pulse 1"'s own
+  // label sits close by (P1_END=0.14 puts it near x0), so the narrow-canvas
+  // form drops " init" to stop the two labels from overlapping on phones
   ctx.fillStyle=COL['--green'];
   ctx.font='10px '+MONO;
-  ctx.fillText('|0⟩ init',x0-2,y+44);
+  ctx.fillText(w > 400 ? '|0⟩ init' : '|0⟩',x0-2,y+44);
 
   // playhead: a vertical line + downward-pointing triangle at sequence position u
   const px=x0+(x1-x0)*u;

@@ -363,7 +363,11 @@ function drawBench(){
     ctx.stroke();
     if(d%2===0) ctx.fillText(d+'',tx-3,railY+18);
   }
-  ctx.fillText('distance from sensor (cm) →',x1-146,railY+18);
+  // this caption collides with the tick numbers and the magnet's own label
+  // once the canvas is narrower than the caption's own pixel width (phones);
+  // the slider label already says the same thing in HTML, so hiding it here
+  // loses no information
+  if (w > 420) ctx.fillText('distance from sensor (cm) →',x1-146,railY+18);
 
   // sensor housing, drawn fixed at d=0
   ctx.save();
