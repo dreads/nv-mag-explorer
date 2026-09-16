@@ -1,4 +1,4 @@
-# NV Magnetometry — Rabi & Zeeman Visualizer
+# NV Diamond Quantum Playground
 
 Interactive visualization of an NV-diamond quantum magnetometer: Rabi oscillations, the
 Zeeman effect, and Ramsey interferometry. No build step for the app itself, plain static
@@ -25,13 +25,16 @@ explains *why* things are the way they are; issues track *what's next*. Issue #1
 is the third peer visualizer, now a generated `src/catalog.js` entry like the other two
 rather than the hand-added nav card it started as.
 
-**Unresolved naming inconsistency, observed 2026-08-12, not normalized either
-direction**: the repo/README call this project "NV Magnetometry," but
-`index_nv_bloch_golf.html`'s `<title>`/`<h1>` say "NV Single Qubit Explorer" — a same-day
-hand-edit, not something from an earlier session. Could be the start of a deliberate
-rebrand (golf isn't about magnetometry at all, so a broader name would make sense as the
-catalog grows) or just a one-page wording choice. Don't silently pick one and propagate it
-— ask, or check for a GitHub issue about it first.
+**Naming inconsistency, observed 2026-08-12, resolved at the repo level 2026-09-16**: the
+repo/README used to call this project "NV Magnetometry," while `index_nv_bloch_golf.html`'s
+`<title>`/`<h1>` said "NV Single Qubit Explorer." Asked directly, rather than silently
+picked: the repo (this file's own `<h1>` and README's `<h1>`) is now **"NV Diamond Quantum
+Playground"** — broad enough to cover magnetometry, Ramsey, and the single-qubit-control
+games (golf, the in-progress Rabi Soccer Shootout) without implying any one of them is
+primary, and "Playground" rather than "Toolkit" because these are toy sims/games for
+education, not a production toolkit. `index_nv_bloch_golf.html`'s own page `<title>`/`<h1>`
+("NV Single Qubit Explorer") was deliberately left alone — a per-page title distinct from
+the repo's own branding is fine and wasn't part of what was asked to change.
 
 ## Running locally
 
@@ -651,6 +654,10 @@ Physics and measurement changes are not done until these pass:
 
 ## Writing conventions
 
+- **README.md has a "Table of contents" section right after the intro paragraph,
+  listing every `##` heading in document order as a GitHub-anchor link.** Update it
+  in the same commit any time a `##` section is added, removed, renamed, or
+  reordered — don't let it drift out of sync with the actual headings.
 - Never use the phrase "full stop" in prose (docs, PRs, commit messages, chat) — rephrase
   or just end the sentence with a period.
 - Avoid use of "sharp edge" in prose to describe risk (docs, PRs, commit messages, chat).
