@@ -30,6 +30,11 @@ locale-key side of that refactor. Adding a fifth visualizer means appending one 
 `schema/locale-bundle.schema.json` in lockstep, since the schema's `catalog` section uses
 `patternProperties` to accept any id.
 
+[Issue #33](https://github.com/dreads/nv-mag-explorer/issues/33) tracks a fourth
+peer visualizer, Rabi Soccer Shootout (`index_soccer_shootout.html`, not yet
+built) — see its own section below for what it is and the phased-in scope of
+the first pass.
+
 ## Deploy to GitHub Pages
 
 No build step, no server — everything here is static files, matching [bell-state-explorer](https://github.com/dreads/bell-state-explorer)'s deploy pattern exactly:
@@ -137,6 +142,42 @@ Values in the sensible NV range: 2.87 GHz zero-field resonance, ~1–20 MHz Rabi
 - Only English ships as a maintained locale — same contribution model as bell-state-explorer: open a PR adding `locales/<code>.json` + one `locales/manifest.json` entry, pass `npm test` + `npm run lint:i18n`, verify locally before requesting review.
 
 **Not yet built**, same caveat bell-state-explorer's own README carries: `dir="rtl"`-driven CSS logical-property fixes beyond the cheap ones already in `src/styles.css` (`margin-inline`/`inset-inline-start`), and `Intl.NumberFormat` at any display boundary (this page has no live numeric readouts to format). None of the three visualizer pages (`index_rabi.html`, `index_ramsey.html`, `index_nv_bloch_golf.html`) have been ported to the **i18n** half of this architecture — they predate it and remain single-file, English-only pages for now, and `npm run lint:i18n` doesn't scan any of them. The **accessibility** half is now split across the three: `index_nv_bloch_golf.html` has the aria-hidden/sr-only baseline (see above); `index_rabi.html`/`index_ramsey.html` still have neither — see "Where this is headed" above.
+
+## Rabi Soccer Shootout
+
+Not yet built — tracked as
+[issue #33](https://github.com/dreads/nv-mag-explorer/issues/33). A fourth peer
+visualizer, `index_soccer_shootout.html`, in the same single-file/no-build/
+English-only style as `index_rabi.html`/`index_ramsey.html`/
+`index_nv_bloch_golf.html`: a playable game built directly on the Rabi physics
+above rather than a separate topic.
+
+Rabi's Soccer Shootout casts the player as Rabi, a raccoon seen from behind on
+a spherical pitch. The Bloch vector is his position (`+z` = `|0⟩`, pinned to
+the N–V bond axis, same convention as the rest of the catalog). A touch of the
+ball is an exact closed-form Rodrigues rotation — the player aims its phase
+`φ` by drag and its duration `t` by how long the kick is charged; the drive
+strength `Ω₀` is fixed and the detuning `δ` is set by the level, not the
+player, so the whole control surface is two fingers' worth of input driving
+the same generalized-Rabi physics `index_rabi.html` plots as a curve. A shot
+is a projective z-basis measurement (`P = (1−z)/2`); because measurement
+collapses the state, taking five shots means replaying the same control
+sequence from scratch five times — not sampling one stored state — which is
+also exactly how a real Rabi experiment turns a prepared state into a
+probability.
+
+Full design rationale — the dephasing/purity model that shrinks the pitch, why
+the shootout is scored as deterministic aim and statistical result
+separately, the bot tiers, the season chart, the theme layer — lives in
+`doc/design/RABI_SHOOTOUT_SPEC.md` and in CLAUDE.md's own "Rabi Soccer
+Shootout" section (hard constraints and testing bar); this summary intentionally
+doesn't restate either.
+
+**First pass scope** (see issue #33 for the full breakdown): touch physics,
+one fixed level, the 5-shot shootout with its error bar, and a plain match
+clock. Bots, ghosts, the season chart, the coach inset, overtime, and real
+sprite art are deliberately deferred to follow-up work so the initial build
+stays reviewable.
 
 ## Known-simple / next steps
 
