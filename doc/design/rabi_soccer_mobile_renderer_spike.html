@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shootout renderer spike</title>
+<style>
+  :root{
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    --bg:#0e1116; --fg:#e6e9ef; --dim:#8b93a3; --line:#2a3140;
+    --ok:#4ade80; --warn:#fbbf24; --bad:#f87171; --accent:#60a5fa;
+  }
+  *{box-sizing:inherit}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    -webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%}
+  #stage{position:relative;width:100%;height:62vh;background:#0a0d12}
+  canvas{display:block;width:100%;height:100%}
+  #hud{position:absolute;top:8px;left:8px;pointer-events:none;
+    text-shadow:0 1px 3px #000;font-size:12px}
+  #hud b{font-size:22px;font-weight:700}
+  #verdict{position:absolute;top:8px;right:8px;padding:3px 8px;border-radius:4px;
+    font-weight:700;font-size:12px}
+  .panel{padding:10px 12px;border-top:1px solid var(--line)}
+  .row{display:flex;align-items:center;gap:8px;margin:7px 0}
+  .row label{flex:0 0 108px;color:var(--dim);font-size:12px}
+  .row input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+  .row .val{flex:0 0 66px;text-align:right;font-variant-numeric:tabular-nums}
+  .toggles{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  button{background:#1a2030;color:var(--fg);border:1px solid var(--line);
+    border-radius:5px;padding:7px 10px;font:inherit;font-size:12px;cursor:pointer}
+  button.on{background:var(--accent);color:#06101f;border-color:var(--accent);font-weight:700}
+  #stats{white-space:pre;font-size:12px;color:var(--dim);line-height:1.5}
+  #stats .n{color:var(--fg)}
+  .note{color:var(--dim);font-size:11px;margin-top:8px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="hud"><b id="fps">--</b> fps<br><span id="sub"></span></div>
+  <div id="verdict">--</div>
+</div>
+
+<div class="panel">
+  <div class="row"><label>DPR cap</label>
+    <input type="range" id="dpr" min="0.5" max="3" step="0.25" value="2">
+    <span class="val" id="dprv"></span></div>
+  <div class="row"><label>Tessellation</label>
+    <input type="range" id="tess" min="6" max="48" step="2" value="24">
+    <span class="val" id="tessv"></span></div>
+  <div class="row"><label>Trail pts</label>
+    <input type="range" id="trail" min="0" max="4000" step="100" value="1200">
+    <span class="val" id="trailv"></span></div>
+  <div class="row"><label>Trace pts</label>
+    <input type="range" id="trace" min="0" max="6000" step="200" value="3000">
+    <span class="val" id="tracev"></span></div>
+  <div class="row"><label>Target fps</label>
+    <input type="range" id="tgt" min="24" max="60" step="6" value="30">
+    <span class="val" id="tgtv"></span></div>
+  <div class="toggles">
+    <button id="bFill" class="on">translucent fill</button>
+    <button id="bWire" class="on">wireframe</button>
+    <button id="bInset" class="on">coach inset</button>
+    <button id="bIncr" class="on">incremental trace</button>
+    <button id="bWorst">worst case</button>
+    <button id="bReset">reset stats</button>
+  </div>
+</div>
+
+<div class="panel"><div id="stats"></div>
+  <div class="note">
+    Sustained fps is the worst 10-second window since reset — that is the number
+    that matters, not the instantaneous reading. Run four minutes before judging:
+    phones throttle. Turn OFF "incremental trace" to see the O(n) per-frame cost
+    of re-stroking the whole trace each frame.
+  </div>
+</div>
+
+<script>
+"use strict";
+const cv=document.getElementById("c"), ctx=cv.getContext("2d",{alpha:false});
+const $=id=>document.getElementById(id);
+
+const cfg={dpr:2,tess:24,trail:1200,trace:3000,target:30,
+  fill:true,wire:true,inset:true,incr:true};
+
+// ---- preallocated buffers: no per-frame allocation ------------------------
+const MAXT=6000, MAXTR=4000;
+const traceX=new Float32Array(MAXT), traceY=new Float32Array(MAXT);
+let traceN=0;
+const trailV=new Float32Array(MAXTR*3); let trailN=0, trailHead=0;
+let segs=null, segN=0;            // wireframe segments, rebuilt on tess change
+let order=null, depth=null;       // painter sort scratch
+
+function buildSphere(n){
+  const lat=n, lon=n, list=[];
+  for(let i=1;i<lat;i++){
+    const th=Math.PI*i/lat, st=Math.sin(th), ct=Math.cos(th);
+    for(let j=0;j<lon;j++){
+      const a=2*Math.PI*j/lon, b=2*Math.PI*(j+1)/lon;
+      list.push(st*Math.cos(a),st*Math.sin(a),ct, st*Math.cos(b),st*Math.sin(b),ct);
+    }
+  }
+  for(let j=0;j<lon;j++){
+    const a=2*Math.PI*j/lon;
+    for(let i=0;i<lat;i++){
+      const t1=Math.PI*i/lat, t2=Math.PI*(i+1)/lat;
+      list.push(Math.sin(t1)*Math.cos(a),Math.sin(t1)*Math.sin(a),Math.cos(t1),
+                Math.sin(t2)*Math.cos(a),Math.sin(t2)*Math.sin(a),Math.cos(t2));
+    }
+  }
+  segN=list.length/6;
+  segs=new Float32Array(list);
+  order=new Int32Array(segN); depth=new Float32Array(segN);
+}
+
+// ---- offscreen trace canvas ----------------------------------------------
+const off=document.createElement("canvas"); const octx=off.getContext("2d");
+let offW=0,offH=0,offPen=-1;
+function sizeOff(w,h){ if(w===offW&&h===offH)return; offW=off.width=w; offH=off.height=h;
+  octx.clearRect(0,0,w,h); offPen=-1; }
+
+// ---- state ----------------------------------------------------------------
+let R=1, ang=0, tilt=0.6, rot=0;
+const vec=new Float32Array(3);
+function stepState(dt){
+  ang+=dt*1.7; rot+=dt*0.25;
+  R=0.25+0.75*(0.5+0.5*Math.cos(ang*0.11));      // purity breathes
+  const p=ang, q=tilt+0.55*Math.sin(ang*0.37);
+  vec[0]=R*Math.sin(q)*Math.cos(p); vec[1]=R*Math.sin(q)*Math.sin(p); vec[2]=R*Math.cos(q);
+  // trail ring buffer
+  trailV[trailHead*3]=vec[0]; trailV[trailHead*3+1]=vec[1]; trailV[trailHead*3+2]=vec[2];
+  trailHead=(trailHead+1)%MAXTR; if(trailN<MAXTR)trailN++;
+}
+
+// ---- projection (no allocation) ------------------------------------------
+let cw=0,ch=0,cxp=0,cyp=0,rad=0,ca=1,sa=0;
+function setView(w,h){ cw=w; ch=h; cxp=w*0.5; cyp=h*0.46; rad=Math.min(w,h)*0.38; }
+let px=0,py=0,pz=0;
+function proj(x,y,z){ const X=x*ca-y*sa, Y=x*sa+y*ca;
+  const d=1/(2.6-Y*0.55); px=cxp+X*rad*d*2.6; py=cyp-z*rad*d*2.6; pz=Y; }
+
+function draw(dt){
+  ctx.fillStyle="#0a0d12"; ctx.fillRect(0,0,cw,ch);
+  ca=Math.cos(rot); sa=Math.sin(rot);
+
+  if(cfg.fill){
+    const g=ctx.createRadialGradient(cxp-rad*0.3,cyp-rad*0.3,rad*0.1,cxp,cyp,rad);
+    g.addColorStop(0,"rgba(96,165,250,0.16)"); g.addColorStop(1,"rgba(96,165,250,0.03)");
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cxp,cyp,rad,0,6.2832); ctx.fill();
+  }
+
+  if(cfg.wire&&segs){
+    for(let i=0;i<segN;i++){ const o=i*6;
+      depth[i]=(segs[o]*sa+segs[o+1]*ca)+(segs[o+3]*sa+segs[o+4]*ca); order[i]=i; }
+    const ord=order.subarray(0,segN);
+    Array.prototype.sort.call(ord,(a,b)=>depth[a]-depth[b]);   // painter
+    ctx.lineWidth=1;
+    for(let k=0;k<segN;k++){ const i=ord[k],o=i*6;
+      const f=(depth[i]+2)/4;
+      ctx.strokeStyle="rgba(120,150,200,"+(0.06+0.30*f).toFixed(3)+")";
+      ctx.beginPath();
+      proj(segs[o],segs[o+1],segs[o+2]); ctx.moveTo(px,py);
+      proj(segs[o+3],segs[o+4],segs[o+5]); ctx.lineTo(px,py);
+      ctx.stroke(); }
+  }
+
+  if(cfg.trail&&trailN){
+    const n=Math.min(cfg.trail,trailN);
+    ctx.strokeStyle="rgba(96,165,250,0.55)"; ctx.lineWidth=2; ctx.beginPath();
+    for(let k=0;k<n;k++){ const i=(trailHead-n+k+MAXTR)%MAXTR;
+      proj(trailV[i*3],trailV[i*3+1],trailV[i*3+2]);
+      k?ctx.lineTo(px,py):ctx.moveTo(px,py); }
+    ctx.stroke();
+  }
+
+  proj(vec[0],vec[1],vec[2]);
+  ctx.fillStyle="#fbbf24"; ctx.beginPath(); ctx.arc(px,py,6,0,6.2832); ctx.fill();
+
+  drawTrace();
+  if(cfg.inset) drawInset();
+}
+
+function drawTrace(){
+  const h=Math.round(ch*0.17), w=cw, y0=ch-h;
+  if(!cfg.trace){ return; }
+  sizeOff(w,h);
+  const val=(1-vec[2])/2;
+  if(traceN<cfg.trace){ traceX[traceN]=traceN; traceY[traceN]=val; traceN++; }
+  else { traceX.copyWithin(0,1,cfg.trace); traceY.copyWithin(0,1,cfg.trace);
+         traceY[cfg.trace-1]=val; offPen=-1; octx.clearRect(0,0,w,h); }
+  const n=Math.min(traceN,cfg.trace), sx=w/Math.max(1,cfg.trace);
+
+  if(cfg.incr){
+    octx.strokeStyle="#4ade80"; octx.lineWidth=1.5;
+    if(offPen<0){ offPen=0; }
+    if(n>offPen+1){
+      octx.beginPath();
+      for(let i=Math.max(0,offPen);i<n;i++){
+        const X=i*sx, Y=h-traceY[i]*h*0.9-h*0.05;
+        i===Math.max(0,offPen)?octx.moveTo(X,Y):octx.lineTo(X,Y); }
+      octx.stroke(); offPen=n-1;
+    }
+    ctx.drawImage(off,0,y0);
+  } else {
+    // deliberate worst case: re-stroke the whole trace every frame
+    ctx.strokeStyle="#f87171"; ctx.lineWidth=1.5; ctx.beginPath();
+    for(let i=0;i<n;i++){ const X=i*sx, Y=y0+h-traceY[i]*h*0.9-h*0.05;
+      i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }
+    ctx.stroke();
+  }
+  ctx.strokeStyle="rgba(255,255,255,0.10)"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,y0); ctx.lineTo(cw,y0); ctx.stroke();
+}
+
+function drawInset(){
+  const s=Math.min(cw,ch)*0.22, ox=cw-s-10, oy=10, r=s*0.42, cx=ox+s/2, cy=oy+s/2;
+  ctx.fillStyle="rgba(10,14,22,0.75)"; ctx.fillRect(ox,oy,s,s);
+  ctx.strokeStyle="rgba(120,150,200,0.35)"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,6.2832); ctx.stroke();
+  for(let i=1;i<4;i++){ const rr=r*Math.sin(Math.PI*i/4);
+    ctx.beginPath(); ctx.ellipse(cx,cy-r*Math.cos(Math.PI*i/4)*0.0,rr,rr*0.32,0,0,6.2832); ctx.stroke(); }
+  const n=Math.min(300,trailN);
+  ctx.strokeStyle="rgba(96,165,250,0.6)"; ctx.beginPath();
+  for(let k=0;k<n;k++){ const i=(trailHead-n+k+MAXTR)%MAXTR;
+    const X=cx+(trailV[i*3]*ca-trailV[i*3+1]*sa)*r, Y=cy-trailV[i*3+2]*r;
+    k?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }
+  ctx.stroke();
+  ctx.fillStyle="#fbbf24"; ctx.beginPath();
+  ctx.arc(cx+(vec[0]*ca-vec[1]*sa)*r, cy-vec[2]*r, 3, 0, 6.2832); ctx.fill();
+}
+
+// ---- stats ----------------------------------------------------------------
+const RING=600; const ft=new Float32Array(RING); let fi=0, fn=0;
+let t0=0, frames=0, longF=0, sustained=Infinity, winStart=0, winFrames=0;
+let startedAt=performance.now();
+function resetStats(){ fi=fn=frames=longF=winFrames=0; sustained=Infinity;
+  winStart=performance.now(); startedAt=winStart; }
+function pct(p){ const n=Math.min(fn,RING); if(!n)return 0;
+  const a=Array.prototype.slice.call(ft,0,n).sort((x,y)=>x-y);
+  return a[Math.min(n-1,Math.floor(n*p))]; }
+
+function resize(){
+  const d=Math.min(cfg.dpr, window.devicePixelRatio||1);
+  const r=cv.getBoundingClientRect();
+  cv.width=Math.round(r.width*d); cv.height=Math.round(r.height*d);
+  ctx.setTransform(d,0,0,d,0,0);
+  setView(r.width,r.height); offW=offH=0; offPen=-1;
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  ft[fi]=now-(last-dt*1000)||0; // placeholder, overwritten below
+  const frameMs=dt*1000;
+  ft[fi]=frameMs; fi=(fi+1)%RING; if(fn<RING)fn++;
+  frames++; winFrames++; if(frameMs>33.4)longF++;
+
+  stepState(dt); draw(dt);
+
+  if(now-winStart>=10000){
+    const f=winFrames/((now-winStart)/1000);
+    if(f<sustained) sustained=f;
+    winStart=now; winFrames=0;
+  }
+  if(frames%10===0) hud(now);
+  requestAnimationFrame(loop);
+}
+
+function hud(now){
+  const p50=pct(0.5), p95=pct(0.95), inst=1000/Math.max(0.001,p50);
+  const sus=isFinite(sustained)?sustained:inst;
+  const mins=((now-startedAt)/60000);
+  $("fps").textContent=inst.toFixed(0);
+  $("sub").textContent="sustained "+sus.toFixed(0)+" | "+mins.toFixed(1)+" min";
+  const v=$("verdict"), pass=sus>=cfg.target;
+  v.textContent = mins<1 ? "WARMING UP" : (pass?"PASS":"FAIL");
+  v.style.background = mins<1?"#334155":(pass?"var(--ok)":"var(--bad)");
+  v.style.color = mins<1?"#cbd5e1":"#07140b";
+  const mem=performance.memory?("\nheap            "+(performance.memory.usedJSHeapSize/1048576).toFixed(1)+" MB"):"";
+  $("stats").innerHTML=
+    "device DPR      <span class='n'>"+(window.devicePixelRatio||1)+"</span>  (capped "+Math.min(cfg.dpr,window.devicePixelRatio||1)+")\n"+
+    "backing store   <span class='n'>"+cv.width+" x "+cv.height+"</span>\n"+
+    "wire segments   <span class='n'>"+segN+"</span>\n"+
+    "frame p50/p95   <span class='n'>"+p50.toFixed(1)+" / "+p95.toFixed(1)+" ms</span>\n"+
+    "long frames     <span class='n'>"+longF+"</span> of "+frames+" ("+(100*longF/Math.max(1,frames)).toFixed(1)+"%)\n"+
+    "sustained 10s   <span class='n'>"+sus.toFixed(1)+" fps</span>   target "+cfg.target+mem;
+}
+
+// ---- controls -------------------------------------------------------------
+function bindRange(id,key,fmt,after){
+  const el=$(id), out=$(id+"v");
+  const upd=()=>{ cfg[key]=parseFloat(el.value); out.textContent=fmt(cfg[key]); after&&after(); };
+  el.addEventListener("input",upd); upd();
+}
+bindRange("dpr","dpr",v=>v.toFixed(2)+"x",resize);
+bindRange("tess","tess",v=>v+" lat/lon",()=>buildSphere(cfg.tess));
+bindRange("trail","trail",v=>v+"",null);
+bindRange("trace","trace",v=>v+"",()=>{traceN=0;offPen=-1;offW=offH=0;});
+bindRange("tgt","target",v=>v+" fps",null);
+
+function bindToggle(id,key,extra){
+  const b=$(id);
+  b.addEventListener("click",()=>{ cfg[key]=!cfg[key]; b.classList.toggle("on",cfg[key]);
+    extra&&extra(); });
+}
+bindToggle("bFill","fill"); bindToggle("bWire","wire"); bindToggle("bInset","inset");
+bindToggle("bIncr","incr",()=>{offPen=-1;offW=offH=0;});
+
+$("bWorst").addEventListener("click",()=>{
+  $("dpr").value=3; $("tess").value=48; $("trail").value=4000; $("trace").value=6000;
+  ["dpr","tess","trail","trace"].forEach(i=>$(i).dispatchEvent(new Event("input")));
+  cfg.fill=cfg.wire=cfg.inset=true; cfg.incr=false;
+  ["bFill","bWire","bInset"].forEach(i=>$(i).classList.add("on"));
+  $("bIncr").classList.remove("on");
+  resetStats();
+});
+$("bReset").addEventListener("click",resetStats);
+
+window.addEventListener("resize",resize);
+buildSphere(cfg.tess); resize(); resetStats(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>
